@@ -10,6 +10,9 @@ layout(std140) uniform Camera {
 uniform mat4 ModelMatrix = mat4(1.0);
 
 uniform int useNormalMap = 1;
+uniform float R = 0.5;
+uniform float F0 = 0.5;
+uniform float k = 0.5;
 
 uniform layout(binding = 0) sampler2D Texture;
 uniform layout(binding = 1) sampler2D NormalMap;
@@ -18,9 +21,15 @@ in layout(location = 0) vec3 world_position;
 in layout(location = 1) vec3 world_normal;
 in layout(location = 2) vec2 texcoord;
 
-out layout(location = 0) vec4 colorDepthOut;
+out layout(location = 0) vec4 colorMatOut;
 out layout(location = 1) vec4 worldPositionOut;
 out layout(location = 2) vec4 worldNormalOut;
+
+vec2 encode_normal(vec3 n)
+{
+    vec2 enc = normalize(n.xy) * (sqrt(-n.z * 0.5 + 0.5));
+    return enc * 0.5 + 0.5;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 // C/P From http://www.geeks3d.com/20130122/normal-mapping-without-precomputed-tangent-space-vectors/
@@ -57,13 +66,15 @@ vec3 perturb_normal( vec3 N, vec3 V, vec2 texcoord )
 
 void main(void)
 {	
-	worldNormalOut.rgb = (useNormalMap > 0) ? perturb_normal(normalize(world_normal), world_position, texcoord) : 
+	vec3 n = (useNormalMap > 0) ? perturb_normal(normalize(world_normal), world_position, texcoord) : 
 						 normalize(world_normal);
-	worldNormalOut.a = 1.0;
+	worldNormalOut.xy = encode_normal(n);
+	worldNormalOut.z = F0;
+	worldNormalOut.w = k;
 	
 	worldPositionOut.xyz = world_position;
 	worldPositionOut.w = gl_FragCoord.z;
 	
-	colorDepthOut.rgb = texture(Texture, texcoord).rgb;
-	colorDepthOut.w = 0.0;
+	colorMatOut.rgb = texture(Texture, texcoord).rgb;
+	colorMatOut.w = R;
 }
