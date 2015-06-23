@@ -1,12 +1,13 @@
-#include <App.hpp>
+#include <Application.hpp>
+#include <NoisyTerrain.hpp>
 
 #include <glm/gtx/transform.hpp>
 
-class Test : public App
+class Test : public Application
 {
 	virtual void run_init() override
 	{
-		App::run_init();
+		Application::run_init();
 		
 		auto& Deferred = loadProgram("Deferred",
 			load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
@@ -26,20 +27,17 @@ class Test : public App
 		Texture2D& GroundNormalMap = ResourcesManager::getInstance().getTexture<Texture2D>("GroundNormalMap");
 		GroundNormalMap.load("in/Textures/Tex0_n.jpg");
 
-		Mesh& Plane = ResourcesManager::getInstance().getMesh("Plane");;
+		Mesh& Plane = ResourcesManager::getInstance().getMesh("Plane");
 		float s = 100.f;
-		Plane.getVertices().push_back(Mesh::Vertex(glm::vec3(-s, 0.f, -s), glm::vec3(0.f, 1.0f, 0.0f), glm::vec2(0.f, 20.f)));
-		Plane.getVertices().push_back(Mesh::Vertex(glm::vec3(-s, 0.f, s), glm::vec3(0.f, 1.0f, 0.0f), glm::vec2(0.f, 0.f)));
-		Plane.getVertices().push_back(Mesh::Vertex(glm::vec3(s, 0.f, s), glm::vec3(0.f, 1.0f, 0.0f), glm::vec2(20.f, 0.f)));
-		Plane.getVertices().push_back(Mesh::Vertex(glm::vec3(s, 0.f, -s), glm::vec3(0.f, 1.0f, 0.0f), glm::vec2(20.f, 20.f)));
-		Plane.getTriangles().push_back(Mesh::Triangle(0, 1, 2));
-		Plane.getTriangles().push_back(Mesh::Triangle(0, 2, 3));
-		Plane.setBoundingBox({glm::vec3(-s, 0.f, -s), glm::vec3(s, 0.f, s)});
+		Plane = create(NoisyTerrain(), glm::vec2(-s), glm::vec2(s), glm::vec2(400));
+		Plane.setBoundingBox({glm::vec3(-s, 0.f, -s), glm::vec3(s, 100.f, s)});
 		Plane.createVAO();
 		Plane.getMaterial().setShadingProgram(Deferred);
 		Plane.getMaterial().setUniform("Texture", GroundTexture);
 		Plane.getMaterial().setUniform("useNormalMap", 1);
 		Plane.getMaterial().setUniform("NormalMap", GroundNormalMap);
+		Plane.getMaterial().setUniform("R", 0.2f);
+		Plane.getMaterial().setUniform("F0", 0.5f);
 
 		_scene.add(MeshInstance(Plane));
 
@@ -53,7 +51,15 @@ class Test : public App
 			part->getMaterial().setUniform("Texture", ModelTexture);
 			part->getMaterial().setUniform("NormalMap", GroundNormalMap);
 			part->getMaterial().setUniform("useNormalMap", 1);
-			_scene.add(MeshInstance(*part, glm::scale(glm::mat4(1.0), glm::vec3(0.04))));
+			for(int i = 0; i < 10; ++i)
+			{
+				for(int j = 0; j < 10; ++j)
+				{
+					auto& m = _scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(10.0 * i, 0.0, 10.0 * j)), glm::vec3(0.04))));
+					m.getMaterial().setUniform("R", (i + 1) * 0.1f);
+					m.getMaterial().setUniform("F0", (j + 1) * 0.1f);
+				}
+			}
 		}
 
 		const size_t LightCount = 100;
@@ -64,7 +70,7 @@ class Test : public App
 		for(size_t i = 0; i < LightCount; ++i)
 		{
 			_scene.getPointLights().push_back(PointLight{
-				glm::vec4((float) (i % 10) * 10.0f, 2.f, (float) (i / 10) * 10.0f, 1.0f), 	// Position
+				glm::vec4((float) (i % 10) * 10.0f, 3.f, (float) (i / 10) * 10.0f - 5.0f, 1.0f), 	// Position
 				glm::vec4(1.0)		// Color
 			});
 		}
@@ -74,15 +80,15 @@ class Test : public App
 		_scene.getLights().resize(2);
 		
 		_scene.getLights()[0].init();
-		_scene.getLights()[0].setColor(glm::vec4(0.8));
-		_scene.getLights()[0].setPosition(glm::vec3(0.0, 40.0, 100.0));
-		_scene.getLights()[0].lookAt(glm::vec3(0.0, 10.0, 0.0));
+		_scene.getLights()[0].setColor(glm::vec4(1.0));
+		_scene.getLights()[0].setPosition(glm::vec3(50.0, 50.0, 120.0));
+		_scene.getLights()[0].lookAt(glm::vec3(50.0, 0.0, 50.0));
 		_scene.getLights()[0].updateMatrices();
 		
 		_scene.getLights()[1].init();
-		_scene.getLights()[1].setColor(glm::vec4(0.6, 0.0, 0.0, 1.0));
-		_scene.getLights()[1].setPosition(glm::vec3(100.0, 40.0, 100.0));
-		_scene.getLights()[1].lookAt(glm::vec3(50.0, 10.0, 50.0));
+		_scene.getLights()[1].setColor(glm::vec4(0.9, 0.6, 0.6, 1.0));
+		_scene.getLights()[1].setPosition(glm::vec3(120.0, 50.0, 50.0));
+		_scene.getLights()[1].lookAt(glm::vec3(50.0, 0.0, 50.0));
 		_scene.getLights()[1].updateMatrices();
 
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)

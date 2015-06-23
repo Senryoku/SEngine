@@ -46,5 +46,5 @@ private:
 			_farHeight;
 			
 	std::array<Plane, 6>	_planes;
-	bool 							_changed = true;
+	bool 					_changed = true;
 };

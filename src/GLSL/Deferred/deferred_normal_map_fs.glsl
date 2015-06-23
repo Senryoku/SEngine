@@ -10,8 +10,8 @@ layout(std140) uniform Camera {
 uniform mat4 ModelMatrix = mat4(1.0);
 
 uniform int useNormalMap = 1;
-uniform float R = 0.5;
-uniform float F0 = 0.5;
+uniform float R = 0.4;
+uniform float F0 = 0.1;
 uniform float k = 0.5;
 
 uniform layout(binding = 0) sampler2D Texture;

@@ -48,7 +48,7 @@ public:
 	**/
 	void initVFC();
 	
-	std::vector<InstanceData>&			getInstancesData()			{ return _instances_data; }
+	std::vector<InstanceData>&			getInstancesData()		{ return _instances_data; }
 	const std::vector<InstanceData>&	getInstancesData() const	{ return _instances_data; }
 	
 	Buffer&				getInstancesAttributes()		{ return _instances_attributes; }

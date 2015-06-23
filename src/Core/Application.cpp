@@ -1,4 +1,4 @@
-#include <App.hpp>
+#include <Application.hpp>
 
 #include <functional>
 
@@ -12,17 +12,17 @@ struct CameraStruct
 	glm::mat4	projection;
 };
 
-App::App() :
+Application::Application() :
 	_resolution(_width, _height, 0.0)
 {
 }
 
-App::~App()
+Application::~Application()
 {
 	clean();
 }
 
-void App::init(const std::string& windowName)
+void Application::init(const std::string& windowName)
 {
 	// Window and Context creation
 	if (glfwInit() == false)
@@ -67,19 +67,19 @@ void App::init(const std::string& windowName)
 	_camera_buffer.bind(0);
 }
 
-void App::clean()
+void Application::clean()
 {
 	glfwDestroyWindow(_window);
 }
 
-void App::run_init()
+void Application::run_init()
 {
 	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.loadFromFile("src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl");
 	DeferredShadowCS.compile();
 }
 
-void App::in_loop_timing()
+void Application::in_loop_timing()
 {
 	TimeManager::getInstance().update();
 	_frameTime = TimeManager::getInstance().getRealDeltaTime();
@@ -92,7 +92,7 @@ void App::in_loop_timing()
 	} else _frameTime = 0.0;
 }
 
-void App::in_loop_fps_camera()
+void Application::in_loop_fps_camera()
 {
 	if(_controlCamera)
 	{
@@ -125,12 +125,12 @@ void App::in_loop_fps_camera()
 	_camera_buffer.data(&CamS, sizeof(CameraStruct), Buffer::Usage::DynamicDraw);
 }
 
-void App::in_loop_render()
+void Application::in_loop_render()
 {
 	_offscreenRender.bind();
 	_offscreenRender.clear();
 	
-	_scene.draw();
+	_scene.draw(_projection, _camera.getMatrix());
 
 	_offscreenRender.unbind();
 	
@@ -162,7 +162,7 @@ void App::in_loop_render()
 	glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
-void App::run()
+void Application::run()
 {
 	run_init();
 	
@@ -171,7 +171,14 @@ void App::run()
 	while(!glfwWindowShouldClose(_window))
 	{ 
 		in_loop_timing();
+		glfwSetWindowTitle(_window, std::string("NamelessEngine2 - ")
+										.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
+										.append("ms - FPS: ")
+										.append(std::to_string(1.0f/TimeManager::getInstance().getRealDeltaTime()))
+									.c_str());
+		
 		in_loop_fps_camera();
+		
 		in_loop_render();
 
 		glfwSwapBuffers(_window);
@@ -179,7 +186,7 @@ void App::run()
 	}
 }
 
-void App::screen(const std::string& path) const
+void Application::screen(const std::string& path) const
 {
 	GLubyte* pixels = new GLubyte[4 * _width * _height];
 
@@ -190,12 +197,12 @@ void App::screen(const std::string& path) const
 	delete[] pixels;
 }
 
-void App::error_callback(int error, const char* description)
+void Application::error_callback(int error, const char* description)
 {
 	std::cerr << "GLFW Error (" << error << "): " << description << std::endl;
 }
 
-void App::resize_callback(GLFWwindow* _window, int width, int height)
+void Application::resize_callback(GLFWwindow* _window, int width, int height)
 {
 	_width = width;
 	_height = height;
@@ -215,7 +222,7 @@ void App::resize_callback(GLFWwindow* _window, int width, int height)
 	std::cout << "Reshaped to " << width << "*" << height  << " (" << ((GLfloat) _width)/_height << ")" << std::endl;
 }
 
-void App::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
+void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
 {
 	if(action == GLFW_PRESS)
 	{
@@ -315,7 +322,7 @@ void App::key_callback(GLFWwindow* _window, int key, int scancode, int action, i
 	}
 }
 
-void App::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods)
+void Application::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods)
 {	
 	float z = _mouse.z;
 	float w = _mouse.w;
@@ -339,7 +346,7 @@ void App::mouse_button_callback(GLFWwindow* _window, int button, int action, int
 	_mouse = glm::vec4(_mouse.x, _mouse.y, z, w);
 }
 
-void App::mouse_position_callback(GLFWwindow* _window, double xpos, double ypos)
+void Application::mouse_position_callback(GLFWwindow* _window, double xpos, double ypos)
 {
 	_mouse = glm::vec4(xpos, ypos, _mouse.z, _mouse.w);
 }

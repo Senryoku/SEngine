@@ -1,6 +1,6 @@
 #pragma once
 
-#include <chrono>
+#include <Clock.hpp>
 
 #include <Singleton.hpp>
 
@@ -8,7 +8,7 @@ class TimeManager : public Singleton<TimeManager>
 {
 	public:
 	using Real = double;
-	using TimePoint = std::chrono::high_resolution_clock::time_point;
+	using TimePoint = Clock::time_point;
 	using Seconds = std::chrono::duration<Real>;
 	
 	/** @brief Default Constructor
@@ -65,5 +65,5 @@ class TimeManager : public Singleton<TimeManager>
 	TimePoint	_lastUpdate;			///< TimePoint of the last call to update()
 	
 	inline TimePoint now() const
-	{ return std::chrono::high_resolution_clock::now(); }
+	{ return Clock::now(); }
 };

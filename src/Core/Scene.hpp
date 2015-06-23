@@ -48,7 +48,7 @@ public:
 		_dirtyLights = false;
 	}
 	
-	void draw()
+	void draw(const glm::mat4& p, const glm::mat4& v)
 	{
 		if(_dirtyLights)
 			updateLights();
@@ -58,13 +58,15 @@ public:
 		
 		for(auto& o : _objects)
 		{
-			o.draw();
+			if(o.isVisible(p, v))
+				o.draw();
 		}
 	}
 	
-	void add(const MeshInstance& m)
+	MeshInstance& add(const MeshInstance& m)
 	{
 		_objects.push_back(m);
+		return _objects.back();
 	}
 	
 private:

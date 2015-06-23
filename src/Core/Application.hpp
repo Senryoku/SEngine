@@ -12,11 +12,11 @@
 #include <Query.hpp>
 #include <Buffer.hpp>
 
-class App : public Singleton<App>
+class Application : public Singleton<Application>
 {
 public:
-	App();
-	virtual ~App();
+	Application();
+	virtual ~Application();
 
 	void init(const std::string& windowName = "Default Window");
 	
