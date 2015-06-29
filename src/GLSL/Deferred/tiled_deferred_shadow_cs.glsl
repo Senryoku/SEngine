@@ -103,21 +103,20 @@ bool sphereAABBIntersect(vec3 min, vec3 max, vec3 center, float radius)
  * k : diffuse reflection
 **/
 vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, float F0, float k)
-{
-    vec3 normal = normalize(n);   
+{ 
     vec3 lightDirection = normalize(lp - p);
 
-    float NdotL = max(dot(normal, lightDirection), 0.000001);
+    float NdotL = max(dot(n, lightDirection), 0.000001);
     
     float specular = 0.0;
-    if(NdotL > 0.0)
+    //if(NdotL > 0.0)
     {
         // calculate intermediary values
         vec3 halfVector = normalize(lightDirection + rd);
-        float NdotH = max(dot(normal, halfVector), 0.000001); 
-        float NdotV = max(dot(normal, rd), 0.000001); // note: this could also be NdotL, which is the same value
-        float VdotH = max(dot(rd, halfVector), 0.0);
-        float mSquared = R * R;
+        const float NdotH = max(dot(n, halfVector), 0.000001); 
+        const float NdotV = max(dot(n, rd), 0.000001); // note: this could also be NdotL, which is the same value
+        const float VdotH = max(dot(rd, halfVector), 0.000001);
+        const float mSquared = R * R;
         
         // geometric attenuation
         float NH2 = 2.0 * NdotH;
@@ -139,7 +138,7 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
         
         specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14);
     }
-    
+	
     return NdotL * lc * (c * k + specular * (1.0 - k));
 }
 
@@ -221,15 +220,11 @@ void main(void)
 	{
 		vec3 color = colmat.xyz;
 		vec4 data = imageLoad(Normal, ivec2(pixel));
-		vec3 normal = decode_normal(data.xy);
+		vec3 normal = normalize(decode_normal(data.xy));
 		
 		vec4 ColorOut = vec4(ambiant * color, 1.0);
 	
 		vec3 V = normalize(cameraPosition - position.xyz);
-		
-		bool transparent = colmat.a < 0.0;
-		if(transparent)
-			ColorOut.a = abs(colmat.a);
 		
 		for(int l2 = 0; l2 < local_lights_count; ++l2)
 		{

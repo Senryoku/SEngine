@@ -63,10 +63,6 @@ class Test : public Application
 		for(auto part : Model)
 		{
 			part->createVAO();
-			part->getMaterial().setShadingProgram(Deferred);
-			part->getMaterial().setUniform("Texture", ModelTexture);
-			part->getMaterial().setUniform("NormalMap", GroundNormalMap);
-			part->getMaterial().setUniform("useNormalMap", 1);
 			for(int i = 0; i < 10; ++i)
 			{
 				for(int j = 0; j < 10; ++j)
@@ -78,18 +74,35 @@ class Test : public Application
 			}
 		}
 		
-		auto Sponza = Mesh::load("in/3DModels/sponza/sponza.obj");
+		auto Sponza = Mesh::load("in/3DModels/crytek-sponza/sponza.obj");
 		for(auto part : Sponza)
 		{
 			part->createVAO();
-			part->getMaterial().setShadingProgram(Deferred);
-			//part->getMaterial().setUniform("useNormalMap", 0);
 			part->getMaterial().setUniform("R", 0.8f);
 			part->getMaterial().setUniform("F0", 0.5f);
+			//part->computeNormals();
 			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(150.0, 0.0, 150.0)), glm::vec3(0.04))));
 		}
 		
-		const size_t LightCount = 1000;
+		auto Droid = Mesh::load("in/3DModels/Attack_Droid_2011/attack_droid.obj");
+		for(auto part : Droid)
+		{
+			part->createVAO();
+			part->getMaterial().setUniform("R", 0.8f);
+			part->getMaterial().setUniform("F0", 0.9f);
+			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(30.0, 0.0, 150.0)), glm::vec3(0.4))));
+		}
+		
+		auto Dragon = Mesh::load("in/3DModels/alduin/alduin.obj");
+		for(auto part : Dragon)
+		{
+			part->createVAO();
+			part->getMaterial().setUniform("R", 0.8f);
+			part->getMaterial().setUniform("F0", 0.5f);
+			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(150.0, 0.0, 30.0)), glm::vec3(0.04))));
+		}
+		
+		const size_t LightCount = 10;
 		DeferredShadowCS.getProgram().setUniform("lightCount", LightCount);
 		DeferredShadowCS.getProgram().setUniform("lightRadius", 10.0f);
 		DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
@@ -104,7 +117,7 @@ class Test : public Application
 
 		// Shadow casting lights ---------------------------------------------------
 
-		_scene.getLights().resize(2);
+		_scene.getLights().resize(5);
 		
 		_scene.getLights()[0].init();
 		_scene.getLights()[0].setColor(glm::vec4(1.0));
@@ -117,6 +130,24 @@ class Test : public Application
 		_scene.getLights()[1].setPosition(glm::vec3(120.0, 50.0, 50.0));
 		_scene.getLights()[1].lookAt(glm::vec3(50.0, 0.0, 50.0));
 		_scene.getLights()[1].updateMatrices();
+		
+		_scene.getLights()[2].init();
+		_scene.getLights()[2].setColor(glm::vec4(1.0));
+		_scene.getLights()[2].setPosition(glm::vec3(30.0, 50.0, 140.0));
+		_scene.getLights()[2].lookAt(glm::vec3(30.0, 0.0, 150.0));
+		_scene.getLights()[2].updateMatrices();
+		
+		_scene.getLights()[3].init();
+		_scene.getLights()[3].setColor(glm::vec4(1.0));
+		_scene.getLights()[3].setPosition(glm::vec3(140.0, 75.0, 30.0));
+		_scene.getLights()[3].lookAt(glm::vec3(150.0, 0.0, 30.0));
+		_scene.getLights()[3].updateMatrices();
+		
+		_scene.getLights()[4].init();
+		_scene.getLights()[4].setColor(glm::vec4(1.0));
+		_scene.getLights()[4].setPosition(glm::vec3(160.0, 150.0, 160.0));
+		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
+		_scene.getLights()[4].updateMatrices();
 
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		{
@@ -133,6 +164,9 @@ class Test : public Application
 		{
 			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);
 		}
+		
+		/// @todo Fix bug (black dots) when light position == camera position
+		//_scene.getPointLights()[0].position = glm::vec4(_camera.getPosition(), 1.0);
 	}
 };
 

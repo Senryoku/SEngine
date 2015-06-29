@@ -65,9 +65,14 @@ vec3 perturb_normal( vec3 N, vec3 V, vec2 texcoord )
 }
 
 void main(void)
-{	
+{
+	vec4 c = texture(Texture, texcoord);
+	if(c.a == 0.0) // Fully transparent, discard the fragment
+		discard;
+		
 	vec3 n = (useNormalMap > 0) ? perturb_normal(normalize(world_normal), world_position, texcoord) : 
 						 normalize(world_normal);
+
 	worldNormalOut.xy = encode_normal(n);
 	worldNormalOut.z = F0;
 	worldNormalOut.w = k;
@@ -75,6 +80,6 @@ void main(void)
 	worldPositionOut.xyz = world_position;
 	worldPositionOut.w = gl_FragCoord.z;
 	
-	colorMatOut.rgb = texture(Texture, texcoord).rgb;
+	colorMatOut.rgb = c.rgb;
 	colorMatOut.w = R;
 }
