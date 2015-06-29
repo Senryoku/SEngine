@@ -1,6 +1,7 @@
 #include <Mesh.hpp>
 
 #include <iostream>
+#include <algorithm>
 
 #include <assimp/Importer.hpp> 	// C++ importer interface
 #include <assimp/scene.h> 			// Output data structure
@@ -121,6 +122,8 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 		return M;
 	}
 	
+	std::string rep = path.substr(0, path.find_last_of('/') + 1);
+	
 	if(scene->HasMeshes())
 	{
 		M.resize(scene->mNumMeshes);
@@ -142,6 +145,41 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 			M[meshIdx] = &ResourcesManager::getInstance().getMesh(name);
 			
 			//std::cout << "Material Index: " << LoadedMesh->mMaterialIndex << std::endl;
+			aiMaterial* m = scene->mMaterials[LoadedMesh->mMaterialIndex];
+			
+			aiString DiffuseTexture;
+			M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("Deferred"));
+			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), DiffuseTexture) == AI_SUCCESS)
+			{
+				std::string p = rep;
+				p.append(DiffuseTexture.C_Str());
+				std::replace(p.begin(), p.end(), '\\', '/');
+				//std::cout << "Loading " << p << std::endl;
+				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
+				if(!t.isValid())
+					t.load(p);
+				if(t.isValid())
+					M[meshIdx]->getMaterial().setUniform("Texture", t);
+			}
+			
+			M[meshIdx]->getMaterial().setUniform("useNormalMap", 0);
+			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), DiffuseTexture) == AI_SUCCESS
+				|| m->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), DiffuseTexture) == AI_SUCCESS)
+			{
+				std::string p = rep;
+				p.append(DiffuseTexture.C_Str());
+				std::replace(p.begin(), p.end(), '\\', '/');
+				//std::cout << "Loading NM " << p << std::endl;
+				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
+				if(!t.isValid())
+					t.load(p);
+				if(t.isValid())
+				{
+					M[meshIdx]->getMaterial().setUniform("NormalMap", t);
+					M[meshIdx]->getMaterial().setUniform("useNormalMap", 1);
+				}
+			}
+			
 			aiVector3D* n = LoadedMesh->mNormals;
 			aiVector3D** t = LoadedMesh->mTextureCoords;
 			aiVector3D& minmax = LoadedMesh->mVertices[0];

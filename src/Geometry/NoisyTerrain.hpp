@@ -14,9 +14,7 @@ public:
 	NoisyTerrain();
 	NoisyTerrain(const std::vector<double> & a, 
 					const std::vector<double> & l, 
-					const std::vector<double> & p,
-					float minBound, 
-					float maxBound);
+					const std::vector<double> & p);
 
 	double getHeight(double x, double y) const;
 	inline double operator()(double x, double y) const override { return getHeight(x, y); }
@@ -25,5 +23,4 @@ private:
 	std::vector<double>		_a;			///< Amplitudes
 	std::vector<double>		_l;			///< Frequencies
 	std::vector<double>		_p;			///< Phases
-	float _minBound, _maxBound;
 };

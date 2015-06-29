@@ -47,3 +47,4 @@ CMakeFiles/*
 Makefile
 *.cmake
 lib/*
+in/*

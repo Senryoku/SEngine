@@ -48,14 +48,14 @@ class TimeManager : public Singleton<TimeManager>
 	
 	inline Real getRuntime() const { return _runtime; }
 	
-	inline float& getRuntimeRef() { return _floatRunTime; }
+	inline Real& getRuntimeRef() { return _floatRunTime; }
 	
 	private:
 	static constexpr Real s_minTimeFrame = 1.f/1000.f;
 	static constexpr Real s_maxTimeFrame = 1.f/1.f;
 	
 	Real		_runtime = 0.f;
-	float		_floatRunTime;
+	Real		_floatRunTime;
 	
 	Real		_timerate; 				///< TimeRate
 	

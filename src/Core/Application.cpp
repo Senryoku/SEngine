@@ -79,6 +79,10 @@ void Application::run_init()
 	DeferredShadowCS.compile();
 }
 
+void Application::in_loop_update()
+{
+}
+
 void Application::in_loop_timing()
 {
 	TimeManager::getInstance().update();
@@ -178,6 +182,8 @@ void Application::run()
 									.c_str());
 		
 		in_loop_fps_camera();
+		
+		in_loop_update();
 		
 		in_loop_render();
 

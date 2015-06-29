@@ -30,6 +30,8 @@ public:
 	
 	virtual void in_loop_fps_camera();
 	
+	virtual void in_loop_update();
+	
 	virtual void in_loop_render();
 
 	void screen(const std::string& path) const;

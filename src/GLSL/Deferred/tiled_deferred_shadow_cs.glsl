@@ -44,7 +44,7 @@ uniform float lightRadius = 100.0;
 
 uniform unsigned int shadowCount = 0;
 
-uniform float	minDiffuse = 0.0;
+uniform vec3	ambiant = vec3(0.1);
 uniform float	bias = 0.00001f;
 
 uniform vec3	cameraPosition;
@@ -223,7 +223,7 @@ void main(void)
 		vec4 data = imageLoad(Normal, ivec2(pixel));
 		vec3 normal = decode_normal(data.xy);
 		
-		vec4 ColorOut = vec4(0.0, 0.0, 0.0, 1.0);
+		vec4 ColorOut = vec4(ambiant * color, 1.0);
 	
 		vec3 V = normalize(cameraPosition - position.xyz);
 		

@@ -26,17 +26,33 @@ class Test : public Application
 		GroundTexture.load("in/Textures/Tex0.jpg");
 		Texture2D& GroundNormalMap = ResourcesManager::getInstance().getTexture<Texture2D>("GroundNormalMap");
 		GroundNormalMap.load("in/Textures/Tex0_n.jpg");
+		Texture2D& GrassTexture = ResourcesManager::getInstance().getTexture<Texture2D>("GrassTexture");
+		GrassTexture.load("in/Textures/Lawn_grass_pxr128.png");
+		Texture2D& GrassNormalMap = ResourcesManager::getInstance().getTexture<Texture2D>("GrassNormalMap");
+		GrassNormalMap.load("in/Textures/Lawn_grass_pxr128_normal.png");
 
 		Mesh& Plane = ResourcesManager::getInstance().getMesh("Plane");
-		float s = 100.f;
-		Plane = create(NoisyTerrain(), glm::vec2(-s), glm::vec2(s), glm::vec2(400));
+		float s = 250.f;
+		auto T = NoisyTerrain({3.f, 0.5f, 0.1f, 0.05f, 0.005f},
+								{15.f, 4.f, 3.f, 2.f, 1.f},
+								{0.125f/2.f, 0.125f, 0.25f, 0.5f, 1.f});
+		Plane = create(T, glm::vec2(0.0), glm::vec2(s), glm::vec2(200));
+		for(auto& v : Plane.getVertices())
+		{
+			v.texcoord *= 0.3f;
+		}
 		Plane.setBoundingBox({glm::vec3(-s, 0.f, -s), glm::vec3(s, 100.f, s)});
 		Plane.createVAO();
-		Plane.getMaterial().setShadingProgram(Deferred);
-		Plane.getMaterial().setUniform("Texture", GroundTexture);
+		Plane.getMaterial().setShadingProgram(loadProgram("Terrain",
+			load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
+			load<FragmentShader>("src/GLSL/Deferred/deferred_terrain_fs.glsl")
+		));
+		Plane.getMaterial().setUniform("Texture0", GroundTexture);
+		Plane.getMaterial().setUniform("Texture1", GrassTexture);
 		Plane.getMaterial().setUniform("useNormalMap", 1);
-		Plane.getMaterial().setUniform("NormalMap", GroundNormalMap);
-		Plane.getMaterial().setUniform("R", 0.2f);
+		Plane.getMaterial().setUniform("NormalMap0", GroundNormalMap);
+		Plane.getMaterial().setUniform("NormalMap1", GrassNormalMap);
+		Plane.getMaterial().setUniform("R", 0.8f);
 		Plane.getMaterial().setUniform("F0", 0.5f);
 
 		_scene.add(MeshInstance(Plane));
@@ -61,8 +77,19 @@ class Test : public Application
 				}
 			}
 		}
-
-		const size_t LightCount = 100;
+		
+		auto Sponza = Mesh::load("in/3DModels/sponza/sponza.obj");
+		for(auto part : Sponza)
+		{
+			part->createVAO();
+			part->getMaterial().setShadingProgram(Deferred);
+			//part->getMaterial().setUniform("useNormalMap", 0);
+			part->getMaterial().setUniform("R", 0.8f);
+			part->getMaterial().setUniform("F0", 0.5f);
+			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(150.0, 0.0, 150.0)), glm::vec3(0.04))));
+		}
+		
+		const size_t LightCount = 1000;
 		DeferredShadowCS.getProgram().setUniform("lightCount", LightCount);
 		DeferredShadowCS.getProgram().setUniform("lightRadius", 10.0f);
 		DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
@@ -70,7 +97,7 @@ class Test : public Application
 		for(size_t i = 0; i < LightCount; ++i)
 		{
 			_scene.getPointLights().push_back(PointLight{
-				glm::vec4((float) (i % 10) * 10.0f, 3.f, (float) (i / 10) * 10.0f - 5.0f, 1.0f), 	// Position
+				glm::vec4((float) (i % 25) * 10.0f, 3.f, (float) (i / 25) * 10.0f - 5.0f, 1.0f), 	// Position
 				glm::vec4(1.0)		// Color
 			});
 		}
@@ -98,6 +125,14 @@ class Test : public Application
 		}
 		
 		DeferredShadowCS.getProgram().setUniform("shadowCount", _scene.getLights().size());
+	}
+	
+	virtual void in_loop_update() override
+	{
+		for(auto& l :_scene.getPointLights())
+		{
+			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);
+		}
 	}
 };
 
