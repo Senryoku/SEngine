@@ -13,6 +13,12 @@ class Test : public Application
 			load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
 			load<FragmentShader>("src/GLSL/Deferred/deferred_normal_map_fs.glsl")
 		);
+		
+		auto& LightDraw = loadProgram("LightDraw",
+			load<VertexShader>("src/GLSL/Debug/light_vs.glsl"),
+			load<GeometryShader>("src/GLSL/Debug/light_gs.glsl"),
+			load<FragmentShader>("src/GLSL/Debug/light_fs.glsl")
+		);
 
 		ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 		
@@ -28,6 +34,7 @@ class Test : public Application
 		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
 		
 		Deferred.bindUniformBlock("Camera", _camera_buffer); 
+		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 
 		Texture2D& GroundTexture = ResourcesManager::getInstance().getTexture<Texture2D>("GroundTexture");
 		GroundTexture.load("in/Textures/Tex0.jpg");
@@ -109,16 +116,17 @@ class Test : public Application
 			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(150.0, 0.0, 30.0)), glm::vec3(0.04))));
 		}
 		
-		const size_t LightCount = 10;
+		const size_t LightCount = 1000;
 		DeferredShadowCS.getProgram().setUniform("lightCount", LightCount);
 		DeferredShadowCS.getProgram().setUniform("lightRadius", 10.0f);
 		DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
+		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		for(size_t i = 0; i < LightCount; ++i)
 		{
 			_scene.getPointLights().push_back(PointLight{
 				glm::vec4((float) (i % 25) * 10.0f, 3.f, (float) (i / 25) * 10.0f - 5.0f, 1.0f), 	// Position
-				glm::vec4(1.0)		// Color
+				glm::vec4((i % 13) / 13.0, (i % 27) / 27.0, (i % 57) / 57.0, 1.0)		// Color
 			});
 		}
 
@@ -167,7 +175,8 @@ class Test : public Application
 	}
 	
 	virtual void in_loop_update() override
-	{		
+	{
+		/*
 		_scene.getLights()[4].setPosition(glm::vec3(150.0, 150.0, 150.0)
 												+ 20.0f * glm::vec3(std::cos(0.1f * TimeManager::getInstance().getRuntime()), 0.0,
 																	std::sin(0.1f * TimeManager::getInstance().getRuntime())));
@@ -175,7 +184,7 @@ class Test : public Application
 		_scene.getLights()[4].drawShadowMap(_scene.getObjects());
 		
 		blur(_scene.getLights()[4].getShadowMap(), _scene.getLights()[4].getResolution());
-		
+		*/
 		for(auto& l :_scene.getPointLights())
 		{
 			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);
@@ -183,6 +192,15 @@ class Test : public Application
 		
 		/// @todo Fix bug (black dots) when light position == camera position
 		//_scene.getPointLights()[0].position = glm::vec4(_camera.getPosition(), 1.0);
+	}
+	
+	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override
+	{
+		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
+		ld.setUniform("cameraPosition", _camera.getPosition());
+		ld.use();
+		glDrawArrays(GL_POINTS, 0, 1024);
+		ld.useNone();
 	}
 };
 

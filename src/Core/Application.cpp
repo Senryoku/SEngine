@@ -140,6 +140,8 @@ void Application::in_loop_render()
 	_offscreenRender.clear();
 	
 	_scene.draw(_projection, _camera.getMatrix());
+	
+	offscreen_render(_projection, _camera.getMatrix());
 
 	_offscreenRender.unbind();
 	

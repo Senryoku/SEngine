@@ -12,15 +12,6 @@
  * Normal.w			=> Diffuse Reflection (k)
 **************/
 
-vec3 decode_normal(vec2 enc)
-{
-    vec4 nn = vec4(enc, 0, 0) * vec4(2, 2, 0, 0) + vec4(-1, -1, 1, -1);
-    float l = dot(nn.xyz,-nn.xyw);
-    nn.z = l;
-    nn.xy *= sqrt(l);
-    return nn.xyz * 2 + vec3(0,0,-1);
-}
-
 struct LightStruct
 {
 	vec4		position;
@@ -90,6 +81,15 @@ bool sphereAABBIntersect(vec3 min, vec3 max, vec3 center, float radius)
     if(center.z < min.z) r -= square(center.z - min.z);
     else if(center.z > max.z) r -= square(center.z - max.z);
     return r > 0;
+}
+
+vec3 decode_normal(vec2 enc)
+{
+    vec4 nn = vec4(enc, 0, 0) * vec4(2, 2, 0, 0) + vec4(-1, -1, 1, -1);
+    float l = dot(nn.xyz,-nn.xyw);
+    nn.z = l;
+    nn.xy *= sqrt(l);
+    return nn.xyz * 2 + vec3(0,0,-1);
 }
 
 /**

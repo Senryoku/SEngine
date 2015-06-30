@@ -34,6 +34,8 @@ public:
 	virtual void in_loop_update();
 	
 	virtual void in_loop_render();
+	
+	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) {};
 
 	void screen(const std::string& path) const;
 	
