@@ -19,7 +19,7 @@ const glm::mat4 Light::s_depthBiasMVP
 
 Program* 			Light::s_depthProgram = nullptr;
 VertexShader*		Light::s_depthVS = nullptr;
-FragmentShader*		Light::s_depthFS = nullptr;
+FragmentShader*	Light::s_depthFS = nullptr;
 Program* 			Light::s_depthInstanceProgram = nullptr;
 VertexShader*		Light::s_depthInstanceVS = nullptr;
 
@@ -35,7 +35,13 @@ Light::Light(unsigned int shadowMapResolution) :
 void Light::init()
 {
 	initPrograms();
-	
+
+	_shadowMapFramebuffer.getColor().init();
+	_shadowMapFramebuffer.getColor().bind();
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _shadowMapResolution, _shadowMapResolution, 0, GL_RGBA, GL_FLOAT, nullptr);
+	_shadowMapFramebuffer.getColor().set(Texture::Parameter::MinFilter, GL_LINEAR_MIPMAP_LINEAR);
+	_shadowMapFramebuffer.getColor().set(Texture::Parameter::MagFilter, GL_LINEAR);
+	_shadowMapFramebuffer.getColor().unbind();
 	_shadowMapFramebuffer.init();
 	_gpuBuffer.init();
 }
@@ -53,7 +59,7 @@ void Light::updateMatrices()
 void Light::bind() const
 {
 	getShadowBuffer().bind();
-	getShadowBuffer().clear(BufferBit::Depth);
+	getShadowBuffer().clear(BufferBit::All);
 	getShadowMapProgram().setUniform("DepthVP", getMatrix());
 	getShadowMapProgram().use();
 	glCullFace(GL_FRONT);
@@ -62,7 +68,7 @@ void Light::bind() const
 void Light::bindInstanced() const
 {
 	getShadowBuffer().bind();
-	getShadowBuffer().clear(BufferBit::Depth);
+	getShadowBuffer().clear(BufferBit::All);
 	getShadowMapInstanceProgram().setUniform("DepthVP", getMatrix());
 	getShadowMapInstanceProgram().use();
 	glCullFace(GL_FRONT);
@@ -78,6 +84,7 @@ void Light::unbind() const
 void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 {
 	bind();
+	getShadowMap().bind();
 	
 	for(auto& b : objects)
 		if(b.isVisible(getProjectionMatrix(), getViewMatrix()))
@@ -87,6 +94,10 @@ void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 		}
 
 	unbind();
+	
+	getShadowMap().bind();
+	glGenerateMipmap(GL_TEXTURE_2D);
+	getShadowMap().unbind();
 }
 	
 void Light::initPrograms()

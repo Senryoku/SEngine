@@ -7,7 +7,10 @@ in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 normal;
 in layout(location = 2) vec2 texcoord;
 
+out layout(location = 0) vec4 final_position;
+
 void main()
 {
-	gl_Position =  DepthVP * ModelMatrix * vec4(position, 1.f);
+	final_position =  DepthVP * ModelMatrix * vec4(position, 1.f);
+	gl_Position = final_position;
 }

@@ -43,9 +43,10 @@ uniform unsigned int lightCount = 75;
 uniform float lightRadius = 100.0;
 
 uniform unsigned int shadowCount = 0;
+uniform float MinVariance = 0.0000001;
+uniform float ShadowClamp = 0.8;
 
 uniform vec3	ambiant = vec3(0.1);
-uniform float	bias = 0.00001f;
 
 uniform vec3	cameraPosition;
 
@@ -239,15 +240,24 @@ void main(void)
 		for(int shadow = 0; shadow < shadowCount; ++shadow)
 		{
 			vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
-			if((sc.x/sc.w >= 0 && sc.x/sc.w <= 1.f) &&
-				(sc.y/sc.w >= 0 && sc.y/sc.w <= 1.f) && ((sc.x/sc.w * 2.0 - 1.0)*(sc.x/sc.w * 2.0 - 1.0) + (sc.y/sc.w * 2.0 - 1.0)*(sc.y/sc.w * 2.0 - 1.0) < 1.0))
-			{				
-				if(textureProj(ShadowMaps[shadow], sc.xyw).z + bias >= sc.z/sc.w)
+			sc /= sc.w;
+			float r = (sc.x * 2.0 - 1.0) * (sc.x * 2.0 - 1.0) + (sc.y * 2.0 - 1.0) * (sc.y * 2.0 - 1.0);
+			if((sc.x >= 0 && sc.x <= 1.f) &&
+				(sc.y >= 0 && sc.y <= 1.f) && 
+				r < 1.0)
+			{
+				float visibility = 1.0;
+				vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
+				float d = sc.z - moments.x;
+				if(d > 0.0)
 				{
-					ColorOut.rgb += cookTorrance(position.xyz, normal, V, color, 
-										Shadows[shadow].position.xyz, Shadows[shadow].color.rgb, 
-										abs(colmat.a), data.z, data.w);
+					float variance = moments.y - (moments.x * moments.x);
+					variance = max(variance, MinVariance);
+					visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
 				}
+				ColorOut.rgb += visibility * cookTorrance(position.xyz, normal, V, color, 
+									Shadows[shadow].position.xyz, Shadows[shadow].color.rgb, 
+									abs(colmat.a), data.z, data.w);
 			}
 		}
 		

@@ -11,6 +11,7 @@
 #include <Camera.hpp>
 #include <Query.hpp>
 #include <Buffer.hpp>
+#include <Blur.hpp>
 
 class Application
 {
@@ -70,6 +71,8 @@ protected:
 	Framebuffer<Texture2D, 3>	_offscreenRender;
 	
 	Scene							_scene;
+	
+	bool	_debug = true;
 
 	// Callbacks (GLFW)
 	void error_callback(int error, const char* description);

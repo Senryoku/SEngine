@@ -19,7 +19,7 @@
 class Light
 {
 public:
-	using ShadowBuffer = Framebuffer<Texture2D, 0, Texture2D, true>;
+	using ShadowBuffer = Framebuffer<Texture2D, 1, Texture2D, true>;
 	
 	struct GPUData
 	{
@@ -33,7 +33,7 @@ public:
 	 *
 	 * @param shadowMapResolution Resolution of the shadow map depth texture.
 	**/
-	Light(unsigned int shadowMapResolution = 4096);
+	Light(unsigned int shadowMapResolution = 2048);
 	
 	/**
 	 * Destructor
@@ -147,7 +147,9 @@ public:
 	/**
 	 * @return Light's shadow map depth texture.
 	**/
-	inline const Texture2D& getShadowMap() const { return _shadowMapFramebuffer.getDepth(); }
+	inline const Texture2D& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
+	
+	inline const size_t& getResolution() const { return _shadowMapResolution; }
 	
 	/**
 	 * Updates Light's internal transformation matrices according to

@@ -15,6 +15,13 @@ class Test : public Application
 		);
 
 		ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
+		
+		ComputeShader& GaussianBlur = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlur");
+		GaussianBlur.loadFromFile("src/GLSL/gaussian_blur_h_cs.glsl");
+		GaussianBlur.compile();
+		ComputeShader& GaussianBlurV = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurV");
+		GaussianBlurV.loadFromFile("src/GLSL/gaussian_blur_v_cs.glsl");
+		GaussianBlurV.compile();
 
 		_camera.speed() = 15;
 		_camera.setPosition(glm::vec3(0.0, 15.0, -20.0));
@@ -152,6 +159,7 @@ class Test : public Application
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		{
 			_scene.getLights()[i].drawShadowMap(_scene.getObjects());
+			blur(_scene.getLights()[i].getShadowMap(), _scene.getLights()[i].getResolution());
 			DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
 		}
 		
@@ -159,12 +167,14 @@ class Test : public Application
 	}
 	
 	virtual void in_loop_update() override
-	{
+	{		
 		_scene.getLights()[4].setPosition(glm::vec3(150.0, 150.0, 150.0)
 												+ 20.0f * glm::vec3(std::cos(0.1f * TimeManager::getInstance().getRuntime()), 0.0,
 																	std::sin(0.1f * TimeManager::getInstance().getRuntime())));
 		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
 		_scene.getLights()[4].drawShadowMap(_scene.getObjects());
+		
+		blur(_scene.getLights()[4].getShadowMap(), _scene.getLights()[4].getResolution());
 		
 		for(auto& l :_scene.getPointLights())
 		{

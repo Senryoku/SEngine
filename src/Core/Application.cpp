@@ -164,8 +164,7 @@ void Application::in_loop_render()
 
 	DeferredShadowCS.compute(_resolution.x / DeferredShadowCS.getWorkgroupSize().x + 1, _resolution.y / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
 	DeferredShadowCS.memoryBarrier();
-
-		
+	
 	Framebuffer<>::unbind(FramebufferTarget::Draw);
 	_offscreenRender.bind(FramebufferTarget::Read);
 	glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
@@ -239,6 +238,20 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 	{
 		switch(key)
 		{
+			case GLFW_KEY_N:
+			{
+				std::cout << "Debug: Toggle debug flag." << std::endl;
+				_debug = !_debug;
+				break;
+			}
+			case GLFW_KEY_M:
+			{
+				std::cout << "Debug: Dumping shadow map... ";
+				_scene.getLights()[0].getShadowMap().dump("0.png");
+				_scene.getLights()[4].getShadowMap().dump("test.png");
+				std::cout << "Ok." << std::endl;
+				break;
+			}
 			case GLFW_KEY_ESCAPE:
 			{
 				glfwSetWindowShouldClose(_window, GL_TRUE);
