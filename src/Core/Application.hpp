@@ -17,6 +17,7 @@ class Application
 {
 public:
 	Application();
+	Application(int argc, char* argv[]);
 	virtual ~Application();
 
 	void init(const std::string& windowName = "Default Window");

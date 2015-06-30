@@ -48,3 +48,4 @@ Makefile
 *.cmake
 lib/*
 in/*
+out/*

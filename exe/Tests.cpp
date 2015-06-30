@@ -5,6 +5,12 @@
 
 class Test : public Application
 {
+public:
+	Test(int argc, char* argv[]) : 
+		Application(argc, argv)
+	{
+	}
+	
 	virtual void run_init() override
 	{
 		Application::run_init();
@@ -199,14 +205,14 @@ class Test : public Application
 		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
 		ld.setUniform("cameraPosition", _camera.getPosition());
 		ld.use();
-		glDrawArrays(GL_POINTS, 0, 1024);
+		glDrawArrays(GL_POINTS, 0, 1000);
 		ld.useNone();
 	}
 };
 
 int main(int argc, char* argv[])
 {
-	Test _app;
+	Test _app(argc, argv);
 	_app.init();	
 	_app.run();
 }

@@ -22,6 +22,16 @@ Application::Application() :
 	s_instance = this;
 }
 
+Application::Application(int argc, char* argv[])
+{
+	if(s_instance != nullptr)
+		std::cerr << "Warning: You should have only one Application running at a time! Some callbacks will not work properly." << std::endl;
+	s_instance = this;
+	
+	if(argc > 1)
+		_fullscreen = true;
+}
+
 Application::~Application()
 {
 	clean();
@@ -37,7 +47,16 @@ void Application::init(const std::string& windowName)
 	}
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	_window = glfwCreateWindow(_width, _height, windowName.c_str(), nullptr, nullptr);
+	if(_fullscreen)
+	{
+		auto monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		_width = mode->width;
+		_height = mode->height;
+		_window = glfwCreateWindow(_width, _height, windowName.c_str(), monitor, nullptr);
+	} else {
+		_window = glfwCreateWindow(_width, _height, windowName.c_str(), nullptr, nullptr);
+	}
 	
 	if (!_window)
 	{
