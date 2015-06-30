@@ -28,32 +28,32 @@ Camera::Camera(glm::vec3 position,
 
 void Camera::strafeRight(float dt)
 {
-	_position += dt*_speed*_cross;
+	_position += dt * _speed * _cross;
 }
 
 void Camera::strafeLeft(float dt)
 {
-	_position -= dt*_speed*_cross;
+	_position -= dt * _speed * _cross;
 }
 
 void Camera::moveForward(float dt)
 {
-	_position += dt*_speed*_direction;
+	_position += dt * _speed * _direction;
 }
 
 void Camera::moveBackward(float dt)
 {
-	_position -= dt*_speed*_direction;
+	_position -= dt * _speed * _direction;
 }
 
 void Camera::moveUp(float dt)
 {
-	_position += dt*_speed*_up;
+	_position += dt * _speed * _up;
 }
 
 void Camera::moveDown(float dt)
 {
-	_position -= dt*_speed*_up;
+	_position -= dt * _speed * _up;
 }
 
 void Camera::look(glm::vec2 v)

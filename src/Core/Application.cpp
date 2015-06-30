@@ -5,6 +5,8 @@
 #include <stb_image_write.hpp>
 #include <glm/gtx/transform.hpp>
 
+Application* Application::s_instance = nullptr;
+
 // TEMP
 struct CameraStruct
 {
@@ -15,6 +17,9 @@ struct CameraStruct
 Application::Application() :
 	_resolution(_width, _height, 0.0)
 {
+	if(s_instance != nullptr)
+		std::cerr << "Warning: You should have only one Application running at a time! Some callbacks will not work properly." << std::endl;
+	s_instance = this;
 }
 
 Application::~Application()

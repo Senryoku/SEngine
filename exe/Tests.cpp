@@ -74,13 +74,13 @@ class Test : public Application
 			}
 		}
 		
-		auto Sponza = Mesh::load("in/3DModels/crytek-sponza/sponza.obj");
+		auto Sponza = Mesh::load("in/3DModels/sponza/sponza.obj");
 		for(auto part : Sponza)
 		{
+			//part->computeNormals();
 			part->createVAO();
 			part->getMaterial().setUniform("R", 0.8f);
 			part->getMaterial().setUniform("F0", 0.5f);
-			//part->computeNormals();
 			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(150.0, 0.0, 150.0)), glm::vec3(0.04))));
 		}
 		
@@ -145,7 +145,7 @@ class Test : public Application
 		
 		_scene.getLights()[4].init();
 		_scene.getLights()[4].setColor(glm::vec4(1.0));
-		_scene.getLights()[4].setPosition(glm::vec3(160.0, 150.0, 160.0));
+		_scene.getLights()[4].setPosition(glm::vec3(170.0, 150.0, 170.0));
 		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
 		_scene.getLights()[4].updateMatrices();
 
@@ -160,6 +160,12 @@ class Test : public Application
 	
 	virtual void in_loop_update() override
 	{
+		_scene.getLights()[4].setPosition(glm::vec3(150.0, 150.0, 150.0)
+												+ 20.0f * glm::vec3(std::cos(0.1f * TimeManager::getInstance().getRuntime()), 0.0,
+																	std::sin(0.1f * TimeManager::getInstance().getRuntime())));
+		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
+		_scene.getLights()[4].drawShadowMap(_scene.getObjects());
+		
 		for(auto& l :_scene.getPointLights())
 		{
 			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);

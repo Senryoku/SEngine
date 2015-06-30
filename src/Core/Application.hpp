@@ -12,7 +12,7 @@
 #include <Query.hpp>
 #include <Buffer.hpp>
 
-class Application : public Singleton<Application>
+class Application
 {
 public:
 	Application();
@@ -77,6 +77,9 @@ protected:
 	void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
+	
+	static Application* s_instance;
+	static Application& getInstance() { return *s_instance; }
 	
 	static void s_error_callback(int error, const char* description)
 	{ getInstance().error_callback(error, description); }
