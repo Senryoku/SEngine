@@ -217,8 +217,10 @@ void main(void)
 	
 	//Compute lights' contributions
 	
-	if(lit > 0 && isVisible && colmat.w > 0)
+	if(isVisible && colmat.w <= 0.0)
 	{
+		imageStore(ColorMaterial, ivec2(pixel), vec4(colmat.xyz, 1.0));
+	} else if(lit > 0 && isVisible) {
 		vec3 color = colmat.xyz;
 		vec4 data = imageLoad(Normal, ivec2(pixel));
 		vec3 normal = normalize(decode_normal(data.xy));

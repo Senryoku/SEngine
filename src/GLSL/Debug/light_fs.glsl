@@ -20,7 +20,7 @@ out layout(location = 0) vec4 colorMaterialOut;
 out layout(location = 1) vec4 worldPositionOut;
 out layout(location = 2) vec4 worldNormalOut;
 
-uniform float R = 0.4;
+uniform float R = 0.0;
 uniform float F0 = 0.1;
 uniform float k = 0.5;
 
