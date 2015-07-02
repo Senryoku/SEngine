@@ -245,12 +245,15 @@ void main(void)
 		
 			vec3 V = normalize(cameraPosition - position.xyz);
 			
+			float sqRad = lightRadius * lightRadius;
+			
 			// Simple Point Lights
 			for(int l2 = 0; l2 < local_lights_count; ++l2)
 			{
-				float d = length(position.xyz - Lights[local_lights[l2]].position.xyz);
-				if(d < lightRadius)
-					ColorOut.rgb += (1.0 - square(d/lightRadius)) * 
+				float d = dot(position.xyz - Lights[local_lights[l2]].position.xyz,
+							position.xyz - Lights[local_lights[l2]].position.xyz);
+				if(d < sqRad)
+					ColorOut.rgb += (1.0 - d/sqRad) * (1.0 - d/sqRad) *
 						cookTorrance(position.xyz, normal, V, color,
 							Lights[local_lights[l2]].position.xyz, Lights[local_lights[l2]].color.rgb,
 							abs(colmat.a), data.z, data.w);
@@ -261,12 +264,12 @@ void main(void)
 			{
 				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
 				sc /= sc.w;
-				float r = (sc.x * 2.0 - 1.0) * (sc.x * 2.0 - 1.0) + (sc.y * 2.0 - 1.0) * (sc.y * 2.0 - 1.0);
+				float r = (sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5);
 				if((sc.x >= 0 && sc.x <= 1.f) &&
 					(sc.y >= 0 && sc.y <= 1.f) && 
-					r < 1.0)
+					r < 0.25)
 				{
-					float visibility = 1.0;
+					float visibility = 1.0; // Trying to use sc or r cause weird glitches Oô
 					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
 					float d = sc.z - moments.x;
 					if(d > 0.0)
