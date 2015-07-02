@@ -73,3 +73,9 @@ T mod(T x, T y)
 
     return m;
 }
+
+template<typename T>
+T triangleWave(T t, T p)
+{
+	return std::abs(2.0 * (t / p - std::floor(t / p + 0.5)));
+}

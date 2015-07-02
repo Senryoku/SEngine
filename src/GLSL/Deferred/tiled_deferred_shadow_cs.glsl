@@ -37,12 +37,16 @@ uniform unsigned int shadowCount = 0;
 uniform float MinVariance = 0.0000001;
 uniform float ShadowClamp = 0.8;
 
+uniform float Bloom = 1.0;
+
+uniform float Gamma = 2.2;
+uniform float Exposure = 5.0;
 uniform vec3	ambiant = vec3(0.1);
 
 uniform vec3	cameraPosition;
 
 layout(binding = 0, rgba32f) uniform image2D ColorMaterial;
-layout(binding = 1, rgba32f) uniform readonly image2D PositionDepth;
+layout(binding = 1, rgba32f) uniform image2D PositionDepth;
 layout(binding = 2, rgba32f) uniform readonly image2D Normal;
 
 layout(binding = 3) uniform sampler2D ShadowMaps[8];
@@ -143,6 +147,17 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
     return NdotL * lc * (c * k + specular * (1.0 - k));
 }
 
+// Reinhard Tone Mapping
+vec3 reinhard(vec3 c)
+{
+	return c / (c + vec3(1.0));
+}
+
+vec3 exposureToneMapping(vec3 c, float e)
+{
+	return vec3(1.0) - exp(-c * e);
+}
+
 const int highValue = 2147483646;
 const float boxfactor = 10000.0f; // Minimize the impact of the use of int for bounding boxes
 
@@ -217,50 +232,67 @@ void main(void)
 	
 	//Compute lights' contributions
 	
-	if(isVisible && colmat.w <= 0.0)
+	if(isVisible)
 	{
-		imageStore(ColorMaterial, ivec2(pixel), vec4(colmat.xyz, 1.0));
-	} else if(lit > 0 && isVisible) {
 		vec3 color = colmat.xyz;
-		vec4 data = imageLoad(Normal, ivec2(pixel));
-		vec3 normal = normalize(decode_normal(data.xy));
-		
 		vec4 ColorOut = vec4(ambiant * color, 1.0);
-	
-		vec3 V = normalize(cameraPosition - position.xyz);
-		
-		for(int l2 = 0; l2 < local_lights_count; ++l2)
+		if(colmat.w <= 0.0)
 		{
-			float d = length(position.xyz - Lights[local_lights[l2]].position.xyz);
-			if(d < lightRadius)
-				ColorOut.rgb += (1.0 - square(d/lightRadius)) * 
-					cookTorrance(position.xyz, normal, V, color,
-						Lights[local_lights[l2]].position.xyz, Lights[local_lights[l2]].color.rgb,
-						abs(colmat.a), data.z, data.w);
-		}
+			ColorOut = vec4(color, 1.0);
+		} else if(lit > 0) {
+			vec4 data = imageLoad(Normal, ivec2(pixel));
+			vec3 normal = normalize(decode_normal(data.xy));
 		
-		for(int shadow = 0; shadow < shadowCount; ++shadow)
-		{
-			vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
-			sc /= sc.w;
-			float r = (sc.x * 2.0 - 1.0) * (sc.x * 2.0 - 1.0) + (sc.y * 2.0 - 1.0) * (sc.y * 2.0 - 1.0);
-			if((sc.x >= 0 && sc.x <= 1.f) &&
-				(sc.y >= 0 && sc.y <= 1.f) && 
-				r < 1.0)
+			vec3 V = normalize(cameraPosition - position.xyz);
+			
+			// Simple Point Lights
+			for(int l2 = 0; l2 < local_lights_count; ++l2)
 			{
-				float visibility = 1.0;
-				vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
-				float d = sc.z - moments.x;
-				if(d > 0.0)
-				{
-					float variance = moments.y - (moments.x * moments.x);
-					variance = max(variance, MinVariance);
-					visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
-				}
-				ColorOut.rgb += visibility * cookTorrance(position.xyz, normal, V, color, 
-									Shadows[shadow].position.xyz, Shadows[shadow].color.rgb, 
-									abs(colmat.a), data.z, data.w);
+				float d = length(position.xyz - Lights[local_lights[l2]].position.xyz);
+				if(d < lightRadius)
+					ColorOut.rgb += (1.0 - square(d/lightRadius)) * 
+						cookTorrance(position.xyz, normal, V, color,
+							Lights[local_lights[l2]].position.xyz, Lights[local_lights[l2]].color.rgb,
+							abs(colmat.a), data.z, data.w);
 			}
+			
+			// Shadow casting Spot Lights
+			for(int shadow = 0; shadow < shadowCount; ++shadow)
+			{
+				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
+				sc /= sc.w;
+				float r = (sc.x * 2.0 - 1.0) * (sc.x * 2.0 - 1.0) + (sc.y * 2.0 - 1.0) * (sc.y * 2.0 - 1.0);
+				if((sc.x >= 0 && sc.x <= 1.f) &&
+					(sc.y >= 0 && sc.y <= 1.f) && 
+					r < 1.0)
+				{
+					float visibility = 1.0;
+					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
+					float d = sc.z - moments.x;
+					if(d > 0.0)
+					{
+						float variance = moments.y - (moments.x * moments.x);
+						variance = max(variance, MinVariance);
+						visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
+					}
+					ColorOut.rgb += visibility * cookTorrance(position.xyz, normal, V, color, 
+										Shadows[shadow].position.xyz, Shadows[shadow].color.rgb, 
+										abs(colmat.a), data.z, data.w);
+				}
+			}
+		}
+
+		// Delay Tone Mapping and Gamma Correction if using Bloom
+		if(Bloom > 0.0) 
+		{
+			// Storing thresholded color for Bloom
+			imageStore(PositionDepth, ivec2(pixel), (dot(ColorOut.rgb, vec3(0.2126, 0.7152, 0.0722)) > Bloom) ? ColorOut : vec4(0.0));
+		} else { 
+			// Tone Mapping
+			ColorOut.rgb = exposureToneMapping(ColorOut.rgb, Exposure);
+
+			// Gamma correction (Deactivated for now)
+			//ColorOut.rgb = pow(ColorOut.rgb, vec3(1.0 / Gamma));
 		}
 		
 		imageStore(ColorMaterial, ivec2(pixel), ColorOut);

@@ -60,6 +60,9 @@ protected:
 	bool 		_controlCamera = true;
 	double 	_mouse_x = 0.0, 
 				_mouse_y = 0.0;
+				
+	float		_exposure = 2.0f;
+	float		_bloom = 1.0f;
 
 	UniformBuffer _camera_buffer;
 

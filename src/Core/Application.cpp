@@ -101,6 +101,10 @@ void Application::run_init()
 	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.loadFromFile("src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl");
 	DeferredShadowCS.compile();
+	
+	loadProgram("BloomBlend",
+				load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
+				load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl"));
 }
 
 void Application::in_loop_update()
@@ -169,7 +173,7 @@ void Application::in_loop_render()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	_offscreenRender.getColor(0).bindImage(0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	_offscreenRender.getColor(1).bindImage(1, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	_offscreenRender.getColor(1).bindImage(1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	_offscreenRender.getColor(2).bindImage(2, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	
 	size_t lc = 0;
@@ -182,13 +186,32 @@ void Application::in_loop_render()
 	DeferredShadowCS.getProgram().setUniform("Normal", (int) 2);	
 	
 	DeferredShadowCS.getProgram().setUniform("cameraPosition", _camera.getPosition());
+	DeferredShadowCS.getProgram().setUniform("Exposure", _exposure);
+	DeferredShadowCS.getProgram().setUniform("Bloom", _bloom);
 
 	DeferredShadowCS.compute(_resolution.x / DeferredShadowCS.getWorkgroupSize().x + 1, _resolution.y / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
 	DeferredShadowCS.memoryBarrier();
 	
 	Framebuffer<>::unbind(FramebufferTarget::Draw);
-	_offscreenRender.bind(FramebufferTarget::Read);
-	glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	
+	if(_bloom > 0.0)
+	{
+		for(int i = 0; i < 1; ++i)
+			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y);
+		//_offscreenRender.getColor(1).generateMipmaps();
+		_offscreenRender.getColor(0).bind(0);
+		_offscreenRender.getColor(1).bind(1);
+		
+		// Blend
+		Program& BloomBlend = ResourcesManager::getInstance().getProgram("BloomBlend");
+		BloomBlend.use();
+		BloomBlend.setUniform("Exposure", _exposure);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
+	} else {
+		// No post process, just blit.
+		_offscreenRender.bind(FramebufferTarget::Read);
+		glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	}
 }
 
 void Application::run()
@@ -245,8 +268,11 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 	_projection = glm::perspective(inRad, (float) _width/_height, 0.1f, 1000.0f);
 	
 	_offscreenRender = Framebuffer<Texture2D, 3>(_width, _height);
+	_offscreenRender.getColor(0).setPixelType(Texture::PixelType::Float);
 	_offscreenRender.getColor(0).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(1).setPixelType(Texture::PixelType::Float);
 	_offscreenRender.getColor(1).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(2).setPixelType(Texture::PixelType::Float);
 	_offscreenRender.getColor(2).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
 	_offscreenRender.init();
 	
@@ -263,6 +289,36 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			{
 				std::cout << "Debug: Toggle debug flag." << std::endl;
 				_debug = !_debug;
+				break;
+			}
+			case GLFW_KEY_KP_1:
+			{
+				_bloom -= 0.1;
+				std::cout << "Bloom: " << _bloom << std::endl;
+				break;
+			}
+			case GLFW_KEY_KP_2:
+			{
+				_bloom += 0.1;
+				std::cout << "Bloom: " << _bloom << std::endl;
+				break;
+			}
+			case GLFW_KEY_KP_3:
+			{
+				_bloom = -_bloom;
+				std::cout << "Toggle Bloom (" << _bloom << ")" << std::endl;
+				break;
+			}
+			case GLFW_KEY_KP_4:
+			{
+				_exposure -= 0.1;
+				std::cout << "Exposure: " << _exposure << std::endl;
+				break;
+			}
+			case GLFW_KEY_KP_5:
+			{
+				_exposure += 0.1;
+				std::cout << "Exposure: " << _exposure << std::endl;
 				break;
 			}
 			case GLFW_KEY_M:

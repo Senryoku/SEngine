@@ -1,5 +1,6 @@
 #include <Application.hpp>
 #include <NoisyTerrain.hpp>
+#include <MathTools.hpp>
 
 #include <glm/gtx/transform.hpp>
 
@@ -132,7 +133,7 @@ public:
 		{
 			_scene.getPointLights().push_back(PointLight{
 				glm::vec4((float) (i % 25) * 10.0f, 3.f, (float) (i / 25) * 10.0f - 5.0f, 1.0f), 	// Position
-				glm::vec4((i % 13) / 13.0, (i % 27) / 27.0, (i % 57) / 57.0, 1.0)		// Color
+				2.0f * glm::vec4((i % 13) / 13.0, (i % 27) / 27.0, (i % 57) / 57.0, 1.0)		// Color
 			});
 		}
 
@@ -141,7 +142,7 @@ public:
 		_scene.getLights().resize(5);
 		
 		_scene.getLights()[0].init();
-		_scene.getLights()[0].setColor(glm::vec4(1.0));
+		_scene.getLights()[0].setColor(glm::vec4(2.0));
 		_scene.getLights()[0].setPosition(glm::vec3(50.0, 50.0, 120.0));
 		_scene.getLights()[0].lookAt(glm::vec3(50.0, 0.0, 50.0));
 		_scene.getLights()[0].updateMatrices();
@@ -196,6 +197,9 @@ public:
 			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);
 		}
 		
+		_scene.getLights()[0].setColor(glm::vec4(5.0f * 
+			triangleWave(TimeManager::getInstance().getRuntime(), 5.0)));
+		
 		/// @todo Fix bug (black dots) when light position == camera position
 		//_scene.getPointLights()[0].position = glm::vec4(_camera.getPosition(), 1.0);
 	}
@@ -205,7 +209,7 @@ public:
 		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
 		ld.setUniform("cameraPosition", _camera.getPosition());
 		ld.use();
-		glDrawArrays(GL_POINTS, 0, 1000);
+		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
 		ld.useNone();
 	}
 };
