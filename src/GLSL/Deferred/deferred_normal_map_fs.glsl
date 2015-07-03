@@ -10,12 +10,16 @@ layout(std140) uniform Camera {
 uniform mat4 ModelMatrix = mat4(1.0);
 
 uniform int useNormalMap = 1;
+uniform int useBumpMap = 0;
 uniform float R = 0.4;
 uniform float F0 = 0.1;
 uniform float k = 0.5;
 
+uniform float BumpScale = 0.1;
+
 uniform layout(binding = 0) sampler2D Texture;
 uniform layout(binding = 1) sampler2D NormalMap;
+uniform layout(binding = 2) sampler2D BumpMap;
 
 in layout(location = 0) vec3 world_position;
 in layout(location = 1) vec3 world_normal;
@@ -54,7 +58,7 @@ mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
     return mat3( T * invmax, B * invmax, N );
 }
 
-vec3 perturb_normal( vec3 N, vec3 V, vec2 texcoord )
+vec3 perturb_normal(vec3 N, vec3 V, vec2 texcoord)
 {
 	vec3 map = normalize(texture(NormalMap, texcoord).xyz);
 	map = map * 2.0 - 1.0;
@@ -64,8 +68,25 @@ vec3 perturb_normal( vec3 N, vec3 V, vec2 texcoord )
 	return normalize(TBN * map);
 }
 
+vec2 parallax(vec2 texCoords, vec3 viewDir)
+{ 
+    float height = texture(BumpMap, texCoords).r;
+	if(useBumpMap == 0 || height == 0.0)
+		return texCoords;
+    vec2 p = viewDir.xy / (viewDir.z * (height * BumpScale));
+    return texCoords - p;    
+} 
+
 void main(void)
 {
+	/*
+	// Parallax Mapping, not tested.
+	vec3 cameraPosition = -vec3(ViewMatrix[3]) * mat3(ViewMatrix);
+	TBN = cotangent_frame(normalize(world_normal), -world_position, texcoord);
+	
+	vec2 tc = parallax(texcoord, TBN * (cameraPosition - world_position));
+	*/
+	
 	vec4 c = texture(Texture, texcoord);
 	if(c.a == 0.0) // Fully transparent, discard the fragment
 		discard;

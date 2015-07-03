@@ -147,12 +147,12 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 			//std::cout << "Material Index: " << LoadedMesh->mMaterialIndex << std::endl;
 			aiMaterial* m = scene->mMaterials[LoadedMesh->mMaterialIndex];
 			
-			aiString DiffuseTexture;
+			aiString Texture;
 			M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("Deferred"));
-			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), DiffuseTexture) == AI_SUCCESS)
+			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), Texture) == AI_SUCCESS)
 			{
 				std::string p = rep;
-				p.append(DiffuseTexture.C_Str());
+				p.append(Texture.C_Str());
 				std::replace(p.begin(), p.end(), '\\', '/');
 				//std::cout << "Loading " << p << std::endl;
 				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
@@ -163,11 +163,11 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 			}
 			
 			M[meshIdx]->getMaterial().setUniform("useNormalMap", 0);
-			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), DiffuseTexture) == AI_SUCCESS
-				|| m->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), DiffuseTexture) == AI_SUCCESS)
+			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), Texture) == AI_SUCCESS
+				|| m->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), Texture) == AI_SUCCESS) // Special case for .obj...
 			{
 				std::string p = rep;
-				p.append(DiffuseTexture.C_Str());
+				p.append(Texture.C_Str());
 				std::replace(p.begin(), p.end(), '\\', '/');
 				//std::cout << "Loading NM " << p << std::endl;
 				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
@@ -179,6 +179,25 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 					M[meshIdx]->getMaterial().setUniform("useNormalMap", 1);
 				}
 			}
+			
+			/*
+			M[meshIdx]->getMaterial().setUniform("useBumpMap", 0);
+			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DISPLACEMENT, 0), Texture) == AI_SUCCESS)
+			{
+				std::string p = rep;
+				p.append(Texture.C_Str());
+				std::replace(p.begin(), p.end(), '\\', '/');
+				std::cout << "Loading BumpMap " << p << std::endl;
+				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
+				if(!t.isValid())
+					t.load(p);
+				if(t.isValid())
+				{
+					M[meshIdx]->getMaterial().setUniform("BumpMap", t);
+					M[meshIdx]->getMaterial().setUniform("useBumpMap", 1);
+				}
+			}
+			*/
 			
 			aiVector3D* n = LoadedMesh->mNormals;
 			aiVector3D** t = LoadedMesh->mTextureCoords;

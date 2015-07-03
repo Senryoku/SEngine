@@ -41,7 +41,7 @@ uniform float Bloom = 1.0;
 
 uniform float Gamma = 2.2;
 uniform float Exposure = 5.0;
-uniform vec3	ambiant = vec3(0.1);
+uniform vec3	ambiant = vec3(0.06);
 
 uniform vec3	cameraPosition;
 
@@ -114,7 +114,8 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
     float NdotL = max(dot(n, lightDirection), 0.000001);
     
     float specular = 0.0;
-    //if(NdotL > 0.0)
+	
+    if(NdotL > 0.0)
     {
         // calculate intermediary values
         vec3 halfVector = normalize(lightDirection + rd);
@@ -168,7 +169,7 @@ void main(void)
 	uvec2 local_pixel = gl_LocalInvocationID.xy;
 	ivec2 image_size = imageSize(ColorMaterial).xy;
 	
-	bool isVisible = pixel.x >= 0 && pixel.y >= 0 && pixel.x < uint(image_size.x) && pixel.y < image_size.y;
+	bool isVisible = pixel.x >= 0 && pixel.y >= 0 && pixel.x < image_size.x && pixel.y < image_size.y;
 	vec4 colmat;
 	vec4 position;
 	
@@ -195,7 +196,7 @@ void main(void)
 		{
 			colmat = imageLoad(ColorMaterial, ivec2(pixel));
 			
-			if(isVisible && colmat.w > 0.0)
+			if(colmat.w > 0.0)
 			{
 				ivec3 scaledp = ivec3(boxfactor * position + 1.0);
 				ivec3 scaledm = ivec3(boxfactor * position - 1.0);
