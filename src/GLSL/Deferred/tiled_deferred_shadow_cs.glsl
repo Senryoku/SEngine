@@ -115,7 +115,7 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
     
     float specular = 0.0;
 	
-    if(NdotL > 0.0)
+    //if(NdotL > 0.0)
     {
         // calculate intermediary values
         vec3 halfVector = normalize(lightDirection + rd);

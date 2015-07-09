@@ -91,8 +91,11 @@ void main(void)
 	if(c.a == 0.0) // Fully transparent, discard the fragment
 		discard;
 		
-	vec3 n = (useNormalMap > 0) ? perturb_normal(normalize(world_normal), world_position, texcoord) : 
-						 normalize(world_normal);
+	vec3 n = (useNormalMap > 0) ? 
+				perturb_normal(normalize(world_normal), world_position, texcoord) : 
+				normalize(world_normal);
+
+	if(!gl_FrontFacing) n = -n;
 
 	worldNormalOut.xy = encode_normal(n);
 	worldNormalOut.z = F0;

@@ -95,7 +95,7 @@ REC_SOURCE(${CMAKE_SOURCE_DIR}/src)
 
 AUX_SOURCE_DIRECTORY(exe/ EXECUTABLES)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++0x -g  -Wall ${CMAKE_CXX_FLAGS}")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++0x -g -Wall ${CMAKE_CXX_FLAGS}")
 
 add_library(Engine STATIC ${SOURCE_FILES})
 

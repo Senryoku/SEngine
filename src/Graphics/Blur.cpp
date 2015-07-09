@@ -1,5 +1,7 @@
 #include <Blur.hpp>
 
+#include <ResourcesManager.hpp>
+
 void blur(const Texture2D& t, size_t resx, size_t resy)
 {
 	assert(resx > 0);
