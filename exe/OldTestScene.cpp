@@ -73,7 +73,8 @@ public:
 		Plane.getMaterial().setUniform("useNormalMap", 1);
 		Plane.getMaterial().setUniform("NormalMap0", GroundNormalMap);
 		Plane.getMaterial().setUniform("NormalMap1", GrassNormalMap);
-		Plane.getMaterial().setUniform("R", 0.8f);
+		Plane.getMaterial().setUniform("k", 0.9f);
+		Plane.getMaterial().setUniform("R", 0.9f);
 		Plane.getMaterial().setUniform("F0", 0.5f);
 
 		_scene.add(MeshInstance(Plane));
@@ -89,6 +90,7 @@ public:
 				for(int j = 0; j < 10; ++j)
 				{
 					auto& m = _scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(10.0 * i, 0.0, 10.0 * j)), glm::vec3(0.04))));
+					m.getMaterial().setUniform("k", 0.8f);
 					m.getMaterial().setUniform("R", (i + 1) * 0.1f);
 					m.getMaterial().setUniform("F0", (j + 1) * 0.1f);
 				}
@@ -123,16 +125,16 @@ public:
 		}
 		
 		const size_t LightCount = 1000;
-		DeferredShadowCS.getProgram().setUniform("lightCount", LightCount);
-		DeferredShadowCS.getProgram().setUniform("lightRadius", 10.0f);
 		DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		for(size_t i = 0; i < LightCount; ++i)
 		{
 			_scene.getPointLights().push_back(PointLight{
-				glm::vec4((float) (i % 25) * 10.0f, 3.f, (float) (i / 25) * 10.0f - 5.0f, 1.0f), 	// Position
-				2.0f * glm::vec4((i % 13) / 13.0, (i % 27) / 27.0, (i % 57) / 57.0, 1.0)		// Color
+				glm::vec3((float) (i % 25) * 10.0f, 3.f, (float) (i / 25) * 10.0f - 5.0f), // Position
+				10.0f, // Range
+				2.0f * glm::vec3((i % 13) / 13.0, (i % 27) / 27.0, (i % 57) / 57.0), // Color
+				0.0f		
 			});
 		}
 
@@ -173,11 +175,7 @@ public:
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		{
 			_scene.getLights()[i].drawShadowMap(_scene.getObjects());
-			blur(_scene.getLights()[i].getShadowMap(), _scene.getLights()[i].getResolution());
-			DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
 		}
-		
-		DeferredShadowCS.getProgram().setUniform("shadowCount", _scene.getLights().size());
 	}
 	
 	virtual void in_loop_update() override
@@ -206,7 +204,7 @@ public:
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override
 	{
 		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
-		ld.setUniform("cameraPosition", _camera.getPosition());
+		ld.setUniform("CameraPosition", _camera.getPosition());
 		ld.use();
 		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
 		ld.useNone();
