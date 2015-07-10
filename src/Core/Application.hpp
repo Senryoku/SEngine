@@ -73,6 +73,8 @@ protected:
 	// Post Process settings
 	float		_exposure = 2.0f;
 	float		_bloom = 1.0f;
+	int			_bloomBlur = 1;
+	int			_bloomDownsampling = 1;
 
 	// Time Management
 	float		_timescale = 0.5;

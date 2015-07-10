@@ -32,7 +32,6 @@ layout(std140, binding = 2) uniform ShadowBlock
 uniform unsigned int LightCount = 75;
 
 uniform unsigned int ShadowCount = 0;
-uniform unsigned int ShadowLevel = 0;
 uniform float	MinVariance = 0.0000001;
 uniform float	ShadowClamp = 0.8;
 
@@ -279,7 +278,7 @@ void main(void)
 					r < 0.25)
 				{
 					float visibility = 1.0; // Trying to use sc or r cause weird glitches Oô
-					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy, ShadowLevel).xy;
+					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
 					float d = sc.z - moments.x;
 					if(d > 0.0)
 					{

@@ -29,7 +29,8 @@ public:
 	};
 	
 	// Public attributes
-	bool			dynamic = false;		///< Tells the application if the shadow map should be redrawn each frame
+	bool			dynamic = false;	///< Tells the application if the shadow map should be redrawn each frame
+	unsigned int	downsampling = 1;	///< Strengh of the shadow map's downsampling
 
 	/**
 	 * Constructor
@@ -184,8 +185,6 @@ public:
 	void drawShadowMap(const std::vector<MeshInstance>& objects) const;
 	
 	// Static
-	
-	static unsigned int Downsampling;	///< Strengh of the shadow map's downsampling
 	
 	/**
 	 * @return Bias matrix (from screen space to texture space)

@@ -197,7 +197,6 @@ void Application::in_loop_render()
 	for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
 	DeferredShadowCS.getProgram().setUniform("ShadowCount", _scene.getLights().size());
-	DeferredShadowCS.getProgram().setUniform("ShadowLevel", Light::Downsampling);
 	DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());
 	
 	DeferredShadowCS.getProgram().setUniform("CameraPosition", _camera.getPosition());
@@ -211,20 +210,22 @@ void Application::in_loop_render()
 	
 	if(_bloom > 0.0)
 	{
+		// Downsampling and blur
 		_offscreenRender.getColor(1).generateMipmaps();
-		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, 1);
-		for(int i = 0; i < 1; ++i)
-			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y, 1);
+		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, _bloomDownsampling);
+		for(int i = 0; i < _bloomBlur; ++i)
+			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y, _bloomDownsampling);
 		_offscreenRender.getColor(1).generateMipmaps();
-		_offscreenRender.getColor(0).bind(0);
-		_offscreenRender.getColor(1).bind(1);
 		
 		// Blend
+		_offscreenRender.getColor(0).bind(0);
+		_offscreenRender.getColor(1).bind(1);
 		Program& BloomBlend = ResourcesManager::getInstance().getProgram("BloomBlend");
 		BloomBlend.use();
 		BloomBlend.setUniform("Exposure", _exposure);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
 		BloomBlend.useNone();
+		
 		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, 0);
 	} else {
 		// No post process, just blit.
@@ -330,11 +331,24 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			}
 			case GLFW_KEY_KP_4:
 			{
+				_bloomDownsampling -= 1;
+				if(_bloomDownsampling < 1) _bloomDownsampling = 1;
+				std::cout << "BloomDownsampling: " << _bloom << std::endl;
+				break;
+			}
+			case GLFW_KEY_KP_5:
+			{
+				_bloomDownsampling += 1;
+				std::cout << "BloomDownsampling: " << _bloom << std::endl;
+				break;
+			}
+			case GLFW_KEY_KP_7:
+			{
 				_exposure -= 0.1;
 				std::cout << "Exposure: " << _exposure << std::endl;
 				break;
 			}
-			case GLFW_KEY_KP_5:
+			case GLFW_KEY_KP_8:
 			{
 				_exposure += 0.1;
 				std::cout << "Exposure: " << _exposure << std::endl;
