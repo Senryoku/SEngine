@@ -7,5 +7,5 @@ out vec4 colorOut;
  
 void main()
 {	
-	colorOut = vec4(texture(SkyBox, texcoords).rgb, 1.0);
+	colorOut = vec4(texture(SkyBox, texcoords).rgb, 0.0);
 }

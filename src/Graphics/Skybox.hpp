@@ -20,6 +20,8 @@ public:
 	
 	CubeMap& getCubemap() { return _cubeMap; }
 	
+	operator bool() const { return _cubeMap; }
+	
 private:
 	CubeMap	_cubeMap;
 	

@@ -197,7 +197,7 @@ void main(void)
 	if(isVisible)
 	{
 		position = imageLoad(PositionDepth, ivec2(pixel));
-		isVisible = isVisible && position.w > 0.0 && position.w < 1.0;
+		isVisible = isVisible && position.w >= 0.0 && position.w <= 1.0;
 		if(isVisible)
 		{
 			colmat = imageLoad(ColorMaterial, ivec2(pixel));

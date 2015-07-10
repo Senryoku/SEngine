@@ -3,6 +3,7 @@
 #include <Light.hpp>
 #include <PointLight.hpp>
 #include <MeshInstance.hpp>
+#include <Skybox.hpp>
 
 /**
  * @todo Octree
@@ -50,6 +51,9 @@ public:
 	
 	void draw(const glm::mat4& p, const glm::mat4& v)
 	{
+		if(_skybox)
+			_skybox.draw(p, v);
+		
 		if(_dirtyLights)
 			updateLights();
 		
@@ -69,6 +73,8 @@ public:
 		return _objects.back();
 	}
 	
+	Skybox& getSkybox() { return _skybox; }
+	
 private:
 	std::vector<MeshInstance>	_objects;
 	
@@ -78,4 +84,6 @@ private:
 	bool							_dirtyPointLights = true;
 	std::vector<PointLight>		_pointLights;
 	UniformBuffer					_pointLightBuffer;
+	
+	Skybox							_skybox;
 };

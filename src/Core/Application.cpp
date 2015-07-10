@@ -333,13 +333,13 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			{
 				_bloomDownsampling -= 1;
 				if(_bloomDownsampling < 1) _bloomDownsampling = 1;
-				std::cout << "BloomDownsampling: " << _bloom << std::endl;
+				std::cout << "BloomDownsampling: " << _bloomDownsampling << std::endl;
 				break;
 			}
 			case GLFW_KEY_KP_5:
 			{
 				_bloomDownsampling += 1;
-				std::cout << "BloomDownsampling: " << _bloom << std::endl;
+				std::cout << "BloomDownsampling: " << _bloomDownsampling << std::endl;
 				break;
 			}
 			case GLFW_KEY_KP_7:

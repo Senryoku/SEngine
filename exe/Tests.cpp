@@ -81,6 +81,13 @@ public:
 
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 			_scene.getLights()[i].drawShadowMap(_scene.getObjects());
+		
+		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
+				"in/Textures/skybox/negx.png",
+				"in/Textures/skybox/posy.png",
+				"in/Textures/skybox/negy.png",
+				"in/Textures/skybox/posz.png",
+				"in/Textures/skybox/negz.png"});
 	}
 	
 	virtual void in_loop_update() override
