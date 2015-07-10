@@ -4,12 +4,11 @@
  * How data is laid down :
  * ColorMaterial.xyz	=> Color
  * ColorMaterial.w	=> if > 0 : Non transparent
- *							abs(w) = Roughness (R)
  * PositionDepth.xyz	=> World Position
  * PositionDepth.w	=> Depth
  * Normal.xy			=> Compressed Normal
  * Normal.z			=> Fresnel Reflectance (F0)
- * Normal.w			=> Diffuse Reflection (k)
+ * Normal.w			=> Roughness (R)
 **************/
 
 struct LightStruct
@@ -106,7 +105,7 @@ vec3 decode_normal(vec2 enc)
  * F0 : Fresnel reflectance
  * k : diffuse reflection
 **/
-vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, float F0, float k)
+vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, float F0)
 { 
     vec3 lightDirection = normalize(lp - p);
 
@@ -140,9 +139,16 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
         fresnel *= (1.0 - F0);
         fresnel += F0;
         
-        float specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14159);
+		// Standard Cook-Torrance also has NdotL in the denominator, 
+		// but we can skip it has specular should be multiplied by NdotL after.
+        float specular = (fresnel * geoAtt * roughness) / (NdotV * 3.14159);
 		vec3 diffuse = NdotL * c;
-		return lc * (diffuse * k + specular * (1.0 - k));
+		
+		// Full diffuse and specular reflection
+		//return lc * (diffuse + specular);
+		
+		// Aproximate energy conservation
+		return lc * ((1.0 - F0) * diffuse + specular);
     } else {
 		return vec3(0.0);
 	}
@@ -258,7 +264,7 @@ void main(void)
 					ColorOut.rgb += (1.0 - d/sqRad) * (1.0 - d/sqRad) *
 						cookTorrance(position.xyz, normal, V, color,
 							Lights[local_lights[l2]].position.xyz, Lights[local_lights[l2]].color.rgb,
-							abs(colmat.a), data.z, data.w);
+							data.w, data.z);
 			}
 			
 			// Shadow casting Spot Lights
@@ -282,7 +288,7 @@ void main(void)
 					}
 					ColorOut.rgb += visibility * cookTorrance(position.xyz, normal, V, color, 
 										Shadows[shadow].position.xyz, Shadows[shadow].color.rgb, 
-										abs(colmat.a), data.z, data.w);
+										data.w, data.z);
 				}
 			}
 		}

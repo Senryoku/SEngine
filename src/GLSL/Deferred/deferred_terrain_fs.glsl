@@ -12,7 +12,6 @@ uniform mat4 ModelMatrix = mat4(1.0);
 uniform int useNormalMap = 1;
 uniform float R = 0.4;
 uniform float F0 = 0.1;
-uniform float k = 0.5;
 
 uniform layout(binding = 0) sampler2D Texture0;
 uniform layout(binding = 1) sampler2D Texture1;
@@ -86,12 +85,12 @@ void main(void)
 						 normalize(world_normal);
 	worldNormalOut.xy = encode_normal(n);
 	worldNormalOut.z = F0;
-	worldNormalOut.w = k;
+	worldNormalOut.w = R;
 	
 	worldPositionOut.xyz = world_position;
 	worldPositionOut.w = gl_FragCoord.z;
 	
 	float t = mix_tex(world_position.y, 2.0);
 	colorMatOut.rgb = mix(texture(Texture0, texcoord).rgb, texture(Texture1, texcoord).rgb, t);
-	colorMatOut.w = R;
+	colorMatOut.w = 1.0;
 }

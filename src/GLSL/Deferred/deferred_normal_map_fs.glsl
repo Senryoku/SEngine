@@ -13,7 +13,6 @@ uniform int useNormalMap = 1;
 uniform int useBumpMap = 0;
 uniform float R = 0.4;
 uniform float F0 = 0.1;
-uniform float k = 0.5;
 
 uniform float BumpScale = 0.1;
 
@@ -99,11 +98,11 @@ void main(void)
 
 	worldNormalOut.xy = encode_normal(n);
 	worldNormalOut.z = F0;
-	worldNormalOut.w = k;
+	worldNormalOut.w = R;
 	
 	worldPositionOut.xyz = world_position;
 	worldPositionOut.w = gl_FragCoord.z;
 	
 	colorMatOut.rgb = c.rgb;
-	colorMatOut.w = R;
+	colorMatOut.w = 1.0;
 }

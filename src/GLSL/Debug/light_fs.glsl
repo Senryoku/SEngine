@@ -22,7 +22,6 @@ out layout(location = 2) vec4 worldNormalOut;
 
 uniform float R = 0.0;
 uniform float F0 = 0.1;
-uniform float k = 0.5;
 
 vec2 encode_normal(vec3 n)
 {
@@ -64,7 +63,7 @@ void main()
 		discard;
 	}
 	// Can't emit light for now :(
-	colorMaterialOut = vec4(color, R);
+	colorMaterialOut = vec4(color, 0.0);
 	worldPositionOut = vec4(p, gl_FragDepth);
-	worldNormalOut = vec4(encode_normal(n), F0, k);
+	worldNormalOut = vec4(encode_normal(n), 1.0, 1.0);
 }

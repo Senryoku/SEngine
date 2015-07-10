@@ -39,30 +39,29 @@ public:
 		for(auto part : TestMesh)
 		{
 			part->createVAO();
-			part->getMaterial().setUniform("k", 0.8f);
 			part->getMaterial().setUniform("R", 0.8f);
-			part->getMaterial().setUniform("F0", 0.9f);
+			part->getMaterial().setUniform("F0", 0.2f);
 			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(2.0))));
 		}
 
 		_scene.getPointLights().push_back(PointLight{
 			glm::vec3(10.0, 10.0, -10.0), 	// Position
 			10.0f,
-			glm::vec3(4.0), // Color
+			glm::vec3(2.0), // Color
 			0.0f
 		});
 
 		_scene.getPointLights().push_back(PointLight{
 			glm::vec3(10.0, 10.0, 0.0), 	// Position
 			15.0f,
-			glm::vec3(4.0), // Color
+			glm::vec3(2.0), // Color
 			0.0f
 		});
 
 		_scene.getPointLights().push_back(PointLight{
 			glm::vec3(10.0, 10.0, 10.0), 	// Position
 			20.0f,
-			glm::vec3(4.0), // Color
+			glm::vec3(2.0), // Color
 			0.0f
 		});
 		
