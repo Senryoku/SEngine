@@ -101,7 +101,7 @@ void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 	
 	getShadowMap().generateMipmaps();
 	/// @todo Add some way to configure the blur
-	blur(getShadowMap(), getResolution() / downsampling, getResolution() / downsampling, downsampling);
+	blur(getShadowMap(), getResolution(), getResolution(), downsampling);
 	getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
 	getShadowMap().generateMipmaps();
 }

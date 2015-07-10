@@ -8,6 +8,9 @@ void blur(const Texture2D& t, size_t resx, size_t resy, unsigned int level)
 	if(resy == 0)
 		resy = resx;
 	
+	resx /= std::pow(2.0, level);
+	resy /= std::pow(2.0, level);
+	
 	ComputeShader& GaussianBlurH = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurH");
 	if(!GaussianBlurH)
 	{
