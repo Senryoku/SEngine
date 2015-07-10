@@ -73,7 +73,6 @@ public:
 		Plane.getMaterial().setUniform("useNormalMap", 1);
 		Plane.getMaterial().setUniform("NormalMap0", GroundNormalMap);
 		Plane.getMaterial().setUniform("NormalMap1", GrassNormalMap);
-		Plane.getMaterial().setUniform("k", 0.9f);
 		Plane.getMaterial().setUniform("R", 0.9f);
 		Plane.getMaterial().setUniform("F0", 0.5f);
 
@@ -90,7 +89,6 @@ public:
 				for(int j = 0; j < 10; ++j)
 				{
 					auto& m = _scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(10.0 * i, 0.0, 10.0 * j)), glm::vec3(0.04))));
-					m.getMaterial().setUniform("k", 0.8f);
 					m.getMaterial().setUniform("R", (i + 1) * 0.1f);
 					m.getMaterial().setUniform("F0", (j + 1) * 0.1f);
 				}
