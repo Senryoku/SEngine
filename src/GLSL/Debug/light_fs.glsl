@@ -8,7 +8,7 @@ layout(std140) uniform Camera
 	mat4 ProjectionMatrix;
 };
 
-uniform vec3 cameraPosition;
+uniform vec3 CameraPosition;
 
 in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 color;
@@ -56,7 +56,7 @@ bool traceSphere(vec3 ro, vec3 rd, vec3 ce, float r, out vec3 p, out vec3 n)
 void main()
 {
 	vec3 p, n;
-	if(traceSphere(cameraPosition, normalize(world_position - cameraPosition), position, particle_size * 0.5, p, n))
+	if(traceSphere(CameraPosition, normalize(world_position - CameraPosition), position, particle_size * 0.5, p, n))
 	{
 		vec4 tmp = ProjectionMatrix * ViewMatrix * vec4(p, 1.0);
 		gl_FragDepth = ((gl_DepthRange.diff * tmp.z / tmp.w) + gl_DepthRange.near + gl_DepthRange.far) / 2.0;

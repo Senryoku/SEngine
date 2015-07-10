@@ -101,9 +101,11 @@ add_library(Engine STATIC ${SOURCE_FILES})
 
 foreach(Exe ${EXECUTABLES})
 	get_filename_component(Target ${Exe} NAME_WE [CACHE])
-	add_executable(${Target} ${Exe})
-	TARGET_LINK_LIBRARIES(${Target} Engine ${SenOGL_LIBRARY} assimp.dll glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
-	MESSAGE(STATUS "Adding rule for ${Target}.")
+	if(NOT TARGET ${Target})
+		add_executable(${Target} ${Exe})
+		target_link_libraries(${Target} Engine ${SenOGL_LIBRARY} assimp.dll glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
+		MESSAGE(STATUS "Adding rule for ${Target}.")
+	endif(NOT TARGET ${Target})
 endforeach(Exe)
 
 add_custom_target(run

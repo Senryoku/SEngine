@@ -4,6 +4,7 @@
 #include <glm/gtx/transform.hpp> // glm::translate
 
 #include <MathTools.hpp>
+#include <Blur.hpp>
 #include <ResourcesManager.hpp>
 
 ///////////////////////////////////////////////////////////////////
@@ -95,9 +96,10 @@ void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 
 	unbind();
 	
-	getShadowMap().bind();
-	glGenerateMipmap(GL_TEXTURE_2D);
-	getShadowMap().unbind();
+	/// @todo Add some way to configure the blur
+	blur(getShadowMap(), getResolution());
+	
+	getShadowMap().generateMipmaps();
 }
 	
 void Light::initPrograms()

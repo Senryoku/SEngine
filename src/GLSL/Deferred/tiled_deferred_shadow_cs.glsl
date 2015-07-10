@@ -30,20 +30,19 @@ layout(std140, binding = 2) uniform ShadowBlock
 	mat4 		depthMVP;
 } Shadows[8];
 
-uniform unsigned int lightCount = 75;
-uniform float lightRadius = 100.0;
+uniform unsigned int LightCount = 75;
 
-uniform unsigned int shadowCount = 0;
-uniform float MinVariance = 0.0000001;
-uniform float ShadowClamp = 0.8;
+uniform unsigned int ShadowCount = 0;
+uniform float	MinVariance = 0.0000001;
+uniform float	ShadowClamp = 0.8;
 
-uniform float Bloom = 1.0;
+uniform float	Bloom = 1.0;
 
-uniform float Gamma = 2.2;
-uniform float Exposure = 5.0;
-uniform vec3	ambiant = vec3(0.06);
+uniform float	Gamma = 2.2;
+uniform float	Exposure = 5.0;
+uniform vec3	Ambiant = vec3(0.06);
 
-uniform vec3	cameraPosition;
+uniform vec3	CameraPosition;
 
 layout(binding = 0, rgba32f) uniform image2D ColorMaterial;
 layout(binding = 1, rgba32f) uniform image2D PositionDepth;
@@ -222,9 +221,9 @@ void main(void)
 		vec3 max_bbox = (vec3(bbmax_x, bbmax_y, bbmax_z) + 1.0) / boxfactor;
 
 		// Test lights
-		for(uint i = gl_LocalInvocationIndex; i < lightCount; i += gl_WorkGroupSize.x * gl_WorkGroupSize.y)
+		for(uint i = gl_LocalInvocationIndex; i < LightCount; i += gl_WorkGroupSize.x * gl_WorkGroupSize.y)
 		{
-			if(sphereAABBIntersect(min_bbox, max_bbox, Lights[i].position.xyz, lightRadius))
+			if(sphereAABBIntersect(min_bbox, max_bbox, Lights[i].position.xyz, Lights[i].position.w))
 				add_light(int(i));
 		}
 	}
@@ -236,7 +235,7 @@ void main(void)
 	if(isVisible)
 	{
 		vec3 color = colmat.xyz;
-		vec4 ColorOut = vec4(ambiant * color, 1.0);
+		vec4 ColorOut = vec4(Ambiant * color, 1.0);
 		if(colmat.w <= 0.0)
 		{
 			ColorOut = vec4(color, 1.0);
@@ -244,13 +243,14 @@ void main(void)
 			vec4 data = imageLoad(Normal, ivec2(pixel));
 			vec3 normal = normalize(decode_normal(data.xy));
 		
-			vec3 V = normalize(cameraPosition - position.xyz);
+			vec3 V = normalize(CameraPosition - position.xyz);
 			
-			float sqRad = lightRadius * lightRadius;
 			
 			// Simple Point Lights
 			for(int l2 = 0; l2 < local_lights_count; ++l2)
 			{
+				float sqRad = Lights[local_lights[l2]].position.w;
+				sqRad *= sqRad;
 				float d = dot(position.xyz - Lights[local_lights[l2]].position.xyz,
 							position.xyz - Lights[local_lights[l2]].position.xyz);
 				if(d < sqRad)
@@ -261,7 +261,7 @@ void main(void)
 			}
 			
 			// Shadow casting Spot Lights
-			for(int shadow = 0; shadow < shadowCount; ++shadow)
+			for(int shadow = 0; shadow < ShadowCount; ++shadow)
 			{
 				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
 				sc /= sc.w;

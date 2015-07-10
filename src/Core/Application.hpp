@@ -43,6 +43,12 @@ public:
 	Scene& getScene() { return _scene; }
 	
 protected:
+	struct GPUViewProjection
+	{
+		glm::mat4	view;
+		glm::mat4	projection;
+	};
+	
 	// Window settings
 	GLFWwindow*	_window;
 	int				_width = 1366;
@@ -56,24 +62,31 @@ protected:
 	glm::vec3 	_resolution;
 	glm::mat4 	_projection;
 	glm::vec4 	_mouse = glm::vec4(0.0);
+	
+	GPUViewProjection	_gpuCameraData;
+	UniformBuffer		_camera_buffer;
 
 	bool 		_controlCamera = true;
 	double 	_mouse_x = 0.0, 
 				_mouse_y = 0.0;
-				
+	
+	// Post Process settings
 	float		_exposure = 2.0f;
 	float		_bloom = 1.0f;
 
-	UniformBuffer _camera_buffer;
-
-	// Time
+	// Time Management
 	float		_timescale = 0.5;
 	float 		_time = 0.f;
 	float		_frameTime;
 	float		_frameRate;
 	bool		_paused = false;
 	
-	// Rendering
+	/**
+	 * G-Buffer:
+	 *  Color0 : Color (xyz) and R (w)
+	 *  Color1 : Position (xyz) and Depth (w)
+	 *  Color2 : Normal (xy), F0 (z) and k (w)
+	**/
 	Framebuffer<Texture2D, 3>	_offscreenRender;
 	
 	Scene							_scene;
@@ -87,9 +100,13 @@ protected:
 	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
 	
+	// Static
+	
+	// Singleton
 	static Application* s_instance;
 	static Application& getInstance() { return *s_instance; }
 	
+	// Static callbacks (C-like callbacks)
 	static void s_error_callback(int error, const char* description)
 	{ getInstance().error_callback(error, description); }
 	

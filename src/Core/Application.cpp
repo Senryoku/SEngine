@@ -7,13 +7,6 @@
 
 Application* Application::s_instance = nullptr;
 
-// TEMP
-struct CameraStruct
-{
-	glm::mat4	view;
-	glm::mat4	projection;
-};
-
 Application::Application() :
 	_resolution(_width, _height, 0.0)
 {
@@ -102,9 +95,18 @@ void Application::run_init()
 	DeferredShadowCS.loadFromFile("src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl");
 	DeferredShadowCS.compile();
 	
+	DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
+		
 	loadProgram("BloomBlend",
 				load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
 				load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl"));
+	
+	auto& Deferred = loadProgram("Deferred",
+		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
+		load<FragmentShader>("src/GLSL/Deferred/deferred_normal_map_fs.glsl")
+	);
+	
+	Deferred.bindUniformBlock("Camera", _camera_buffer); 
 }
 
 void Application::in_loop_update()
@@ -153,12 +155,13 @@ void Application::in_loop_fps_camera()
 			_camera.look(glm::vec2(_mouse_x - mx, my - _mouse_y));
 	}
 	_camera.updateView();
-	CameraStruct CamS = {_camera.getMatrix(), _projection};
-	_camera_buffer.data(&CamS, sizeof(CameraStruct), Buffer::Usage::DynamicDraw);
+	_gpuCameraData = {_camera.getMatrix(), _projection};
+	_camera_buffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
 }
 
 void Application::in_loop_render()
 {
+	// Fill G-Buffer
 	_offscreenRender.bind();
 	_offscreenRender.clear();
 	
@@ -168,6 +171,7 @@ void Application::in_loop_render()
 
 	_offscreenRender.unbind();
 	
+	// Light pass (Compute Shader)
 	glViewport(0, 0, _width, _height);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -178,14 +182,24 @@ void Application::in_loop_render()
 	
 	size_t lc = 0;
 	for(const auto& l : _scene.getLights())
+	{
+		if(l.dynamic) // Updates shadow maps if needed
+			l.drawShadowMap(_scene.getObjects());
 		l.getShadowMap().bind(lc++ + 3);
+	}
 	
 	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.getProgram().setUniform("ColorMaterial", (int) 0);
 	DeferredShadowCS.getProgram().setUniform("PositionDepth", (int) 1);
 	DeferredShadowCS.getProgram().setUniform("Normal", (int) 2);	
 	
-	DeferredShadowCS.getProgram().setUniform("cameraPosition", _camera.getPosition());
+	/// @todo Move this to getLights, or something like that ?
+	for(size_t i = 0; i < _scene.getLights().size(); ++i)
+		DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
+	DeferredShadowCS.getProgram().setUniform("ShadowCount", _scene.getLights().size());
+	DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());
+	
+	DeferredShadowCS.getProgram().setUniform("CameraPosition", _camera.getPosition());
 	DeferredShadowCS.getProgram().setUniform("Exposure", _exposure);
 	DeferredShadowCS.getProgram().setUniform("Bloom", _bloom);
 
@@ -324,8 +338,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			case GLFW_KEY_M:
 			{
 				std::cout << "Debug: Dumping shadow map... ";
-				_scene.getLights()[0].getShadowMap().dump("0.png");
-				_scene.getLights()[4].getShadowMap().dump("test.png");
+				_scene.getLights()[0].getShadowMap().dump("ShadowMap0.png");
 				std::cout << "Ok." << std::endl;
 				break;
 			}

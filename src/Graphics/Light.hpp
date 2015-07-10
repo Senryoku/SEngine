@@ -27,6 +27,9 @@ public:
 		glm::vec4	color;
 		glm::mat4	depthMVP;
 	};
+	
+	// Public attributes
+	bool	dynamic = false;		///< Tells the application if the shadow map should be redrawn each frame
 
 	/**
 	 * Constructor

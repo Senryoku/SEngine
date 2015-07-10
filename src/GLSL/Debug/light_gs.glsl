@@ -11,10 +11,10 @@ layout(std140) uniform Camera
 };
 
 uniform mat4 ModelMatrix = mat4(1.0);
-uniform vec3 cameraPosition;
+uniform vec3 CameraPosition;
 
-uniform float particle_size = 0.25;
-uniform vec3 cameraRight = vec3(0.0, 0.0, 0.0);
+uniform float ParticleSize = 0.25;
+uniform vec3 CameraRight = vec3(0.0, 0.0, 0.0);
 
 in layout(location = 0) vec3 in_position[];
 in layout(location = 1) vec3 in_color[];
@@ -28,17 +28,17 @@ out layout(location = 4) vec2 texcoord;
 void main()
 {
 	mat4 VP = ProjectionMatrix * ViewMatrix;
-	vec3 n = normalize(cameraPosition - in_position[0].xyz);
+	vec3 n = normalize(CameraPosition - in_position[0].xyz);
 	vec3 up, right;
-	if(cameraRight == vec3(0.0))
+	if(CameraRight == vec3(0.0))
 	{
 		up = vec3(0.0, 1.0, 0.0);
-		right = 0.5 * particle_size * normalize(cross(up, n));
-		up = 0.5 * particle_size * normalize(cross(right, n));
+		right = 0.5 * ParticleSize * normalize(cross(up, n));
+		up = 0.5 * ParticleSize * normalize(cross(right, n));
 	} else {
-		right = cameraRight;
-		up = 0.5 * particle_size * normalize(cross(right, n));
-		right *= 0.5 * particle_size;
+		right = CameraRight;
+		up = 0.5 * ParticleSize * normalize(cross(right, n));
+		right *= 0.5 * ParticleSize;
 	}
 	
 	// Stupidly expending the billboard to ease raytracing, must simpler than figuring out the real exact size.

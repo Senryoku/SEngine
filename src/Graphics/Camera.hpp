@@ -6,7 +6,6 @@
 class Camera
 {
 public:
-	
 	Camera(glm::vec3 position = BasePosition,
 		   glm::vec3 direction = BaseDirection,
 		   glm::vec3 up = BaseUp,
