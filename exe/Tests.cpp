@@ -43,7 +43,7 @@ public:
 			part->getMaterial().setUniform("F0", 0.2f);
 			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(2.0))));
 		}
-
+		
 		_scene.getPointLights().push_back(PointLight{
 			glm::vec3(10.0, 10.0, -10.0), 	// Position
 			10.0f,
@@ -76,6 +76,8 @@ public:
 		_scene.getLights()[0].setPosition(glm::vec3(25.0, 50.0, 25.0));
 		_scene.getLights()[0].lookAt(glm::vec3(0.0, 0.0, 0.0));
 		_scene.getLights()[0].updateMatrices();
+		
+		_scene.getLights()[0].dynamic = true;
 
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 			_scene.getLights()[i].drawShadowMap(_scene.getObjects());
@@ -83,6 +85,9 @@ public:
 	
 	virtual void in_loop_update() override
 	{
+		auto t = TimeManager::getInstance().getRuntime();
+		_scene.getLights()[0].setPosition(glm::vec3(10.0 * cos(t), 50.0, 10.0 * sin(t)));
+		_scene.getLights()[0].lookAt(glm::vec3(0.0, 0.0, 0.0));
 	}
 	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override

@@ -29,7 +29,7 @@ public:
 	};
 	
 	// Public attributes
-	bool	dynamic = false;		///< Tells the application if the shadow map should be redrawn each frame
+	bool			dynamic = false;		///< Tells the application if the shadow map should be redrawn each frame
 
 	/**
 	 * Constructor
@@ -185,6 +185,8 @@ public:
 	
 	// Static
 	
+	static unsigned int Downsampling;	///< Strengh of the shadow map's downsampling
+	
 	/**
 	 * @return Bias matrix (from screen space to texture space)
 	**/
@@ -207,7 +209,7 @@ protected:
 	glm::vec3			_direction = glm::vec3(0.f, 0.f, 1.f);	///< Light's direction in World Space
 	float				_range = 1000.0; 							///< Light's range, mainly used for the Shadow Mapping settings
 
-	unsigned int		_shadowMapResolution = 4096;	///< Resolution of the shadow map (depth map)
+	unsigned int		_shadowMapResolution;			///< Resolution of the shadow map (depth map)
 	ShadowBuffer		_shadowMapFramebuffer;		///< Framebuffer used to draw the shadow map
 	glm::mat4			_view;							///< View matrix used to draw the shadow map
 	glm::mat4			_projection;					///< Projection matrix used to draw the shadow map

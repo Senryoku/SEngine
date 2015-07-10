@@ -2,7 +2,7 @@
 
 #include <ResourcesManager.hpp>
 
-void blur(const Texture2D& t, size_t resx, size_t resy)
+void blur(const Texture2D& t, size_t resx, size_t resy, unsigned int level)
 {
 	assert(resx > 0);
 	if(resy == 0)
@@ -21,13 +21,11 @@ void blur(const Texture2D& t, size_t resx, size_t resy)
 		GaussianBlurV.compile();
 	}
 	
-	t.bindImage(0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	t.bindImage(0, level, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	GaussianBlurH.getProgram().setUniform("Texture", (int) 0);
 	GaussianBlurH.compute(resx / GaussianBlurH.getWorkgroupSize().x + 1, resy, 1);
 	GaussianBlurH.memoryBarrier();
 	GaussianBlurV.getProgram().setUniform("Texture", (int) 0);
 	GaussianBlurV.compute(resx, resy / GaussianBlurV.getWorkgroupSize().y + 1, 1);
 	GaussianBlurV.memoryBarrier();
-	
-	t.generateMipmaps();
 }

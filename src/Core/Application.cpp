@@ -171,6 +171,10 @@ void Application::in_loop_render()
 
 	_offscreenRender.unbind();
 	
+	for(const auto& l : _scene.getLights())
+		if(l.dynamic) // Updates shadow maps if needed
+			l.drawShadowMap(_scene.getObjects());
+	
 	// Light pass (Compute Shader)
 	glViewport(0, 0, _width, _height);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -182,11 +186,7 @@ void Application::in_loop_render()
 	
 	size_t lc = 0;
 	for(const auto& l : _scene.getLights())
-	{
-		if(l.dynamic) // Updates shadow maps if needed
-			l.drawShadowMap(_scene.getObjects());
 		l.getShadowMap().bind(lc++ + 3);
-	}
 	
 	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.getProgram().setUniform("ColorMaterial", (int) 0);
@@ -197,6 +197,7 @@ void Application::in_loop_render()
 	for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
 	DeferredShadowCS.getProgram().setUniform("ShadowCount", _scene.getLights().size());
+	DeferredShadowCS.getProgram().setUniform("ShadowLevel", Light::Downsampling);
 	DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());
 	
 	DeferredShadowCS.getProgram().setUniform("CameraPosition", _camera.getPosition());
@@ -210,8 +211,11 @@ void Application::in_loop_render()
 	
 	if(_bloom > 0.0)
 	{
+		_offscreenRender.getColor(1).generateMipmaps();
+		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, 1);
 		for(int i = 0; i < 1; ++i)
-			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y);
+			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y, 1);
+		_offscreenRender.getColor(1).generateMipmaps();
 		_offscreenRender.getColor(0).bind(0);
 		_offscreenRender.getColor(1).bind(1);
 		
@@ -221,6 +225,7 @@ void Application::in_loop_render()
 		BloomBlend.setUniform("Exposure", _exposure);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
 		BloomBlend.useNone();
+		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, 0);
 	} else {
 		// No post process, just blit.
 		_offscreenRender.bind(FramebufferTarget::Read);

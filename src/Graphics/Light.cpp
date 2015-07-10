@@ -18,6 +18,8 @@ const glm::mat4 Light::s_depthBiasMVP
 	0.5, 0.5, 0.5, 1.0
 );
 
+unsigned int Light::Downsampling = 1;
+
 Program* 			Light::s_depthProgram = nullptr;
 VertexShader*		Light::s_depthVS = nullptr;
 FragmentShader*	Light::s_depthFS = nullptr;
@@ -44,6 +46,7 @@ void Light::init()
 	_shadowMapFramebuffer.getColor().set(Texture::Parameter::MagFilter, GL_LINEAR);
 	_shadowMapFramebuffer.getColor().unbind();
 	_shadowMapFramebuffer.init();
+	
 	_gpuBuffer.init();
 }
 
@@ -84,6 +87,8 @@ void Light::unbind() const
 
 void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 {
+	getShadowMap().set(Texture::Parameter::BaseLevel, 0);
+	
 	bind();
 	getShadowMap().bind();
 	
@@ -93,13 +98,15 @@ void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 			getShadowMapProgram().setUniform("ModelMatrix", b.getModelMatrix());
 			b.getMesh().draw();
 		}
-
+		
 	unbind();
+	
+	if(Downsampling < 1) Downsampling = 1;
 	
 	getShadowMap().generateMipmaps();
 	/// @todo Add some way to configure the blur
-	blur(getShadowMap(), getResolution());
-	// Useless ?
+	blur(getShadowMap(), getResolution() / Downsampling, getResolution() / Downsampling, Downsampling);
+	getShadowMap().set(Texture::Parameter::BaseLevel, Downsampling);
 	getShadowMap().generateMipmaps();
 }
 	
