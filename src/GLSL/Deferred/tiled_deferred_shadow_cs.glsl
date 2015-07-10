@@ -110,12 +110,11 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
 { 
     vec3 lightDirection = normalize(lp - p);
 
-    float NdotL = max(dot(n, lightDirection), 0.000001);
-    
-    float specular = 0.0;
-	
-    //if(NdotL > 0.0)
+    float NdotL = dot(n, lightDirection);
+    	
+    if(NdotL > 0.0)
     {
+		NdotL = max(NdotL, 0.000001);
         // calculate intermediary values
         vec3 halfVector = normalize(lightDirection + rd);
         const float NdotH = max(dot(n, halfVector), 0.000001); 
@@ -141,10 +140,12 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
         fresnel *= (1.0 - F0);
         fresnel += F0;
         
-        specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14);
-    }
-	
-    return NdotL * lc * (c * k + specular * (1.0 - k));
+        float specular = (fresnel * geoAtt * roughness) / (NdotV * NdotL * 3.14159);
+		vec3 diffuse = NdotL * c;
+		return lc * (diffuse * k + specular * (1.0 - k));
+    } else {
+		return vec3(0.0);
+	}
 }
 
 // Reinhard Tone Mapping

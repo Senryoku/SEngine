@@ -212,7 +212,6 @@ void Application::in_loop_render()
 	{
 		for(int i = 0; i < 1; ++i)
 			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y);
-		//_offscreenRender.getColor(1).generateMipmaps();
 		_offscreenRender.getColor(0).bind(0);
 		_offscreenRender.getColor(1).bind(1);
 		
@@ -221,6 +220,7 @@ void Application::in_loop_render()
 		BloomBlend.use();
 		BloomBlend.setUniform("Exposure", _exposure);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
+		BloomBlend.useNone();
 	} else {
 		// No post process, just blit.
 		_offscreenRender.bind(FramebufferTarget::Read);
