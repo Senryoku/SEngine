@@ -36,6 +36,8 @@ public:
 	
 	virtual void in_loop_render();
 	
+	virtual void gui_render() {}
+	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) {};
 	
 	template<typename T>

@@ -232,6 +232,8 @@ void Application::in_loop_render()
 		_offscreenRender.bind(FramebufferTarget::Read);
 		glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
+	
+	gui_render();
 }
 
 void Application::run()
@@ -290,10 +292,16 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 	_offscreenRender = Framebuffer<Texture2D, 3>(_width, _height);
 	_offscreenRender.getColor(0).setPixelType(Texture::PixelType::Float);
 	_offscreenRender.getColor(0).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(0).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(0).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
 	_offscreenRender.getColor(1).setPixelType(Texture::PixelType::Float);
 	_offscreenRender.getColor(1).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(1).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(1).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
 	_offscreenRender.getColor(2).setPixelType(Texture::PixelType::Float);
 	_offscreenRender.getColor(2).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(2).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(2).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
 	_offscreenRender.init();
 	
 	std::cout << "Reshaped to " << width << "*" << height  << " (" << ((GLfloat) _width)/_height << ")" << std::endl;
