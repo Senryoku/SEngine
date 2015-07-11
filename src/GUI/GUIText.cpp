@@ -1,9 +1,9 @@
-#include <Text.hpp>
+#include <GUIText.hpp>
 
 #include <fstream>
 #include <sstream>
 
-std::unique_ptr<Font>		Text::s_defaultFont = nullptr;
+std::unique_ptr<Font>		GUIText::s_defaultFont = nullptr;
 
 Font::Font(const std::string& path)
 {
@@ -88,40 +88,40 @@ void Font::load(const std::string& path)
 		Tex->load(path + std::string(".png"));
 }
 
-Text::Text() :
+GUIText::GUIText() :
 	_vao(),
 	_vertex_buffer(Buffer::Target::VertexAttributes),
 	_index_buffer(Buffer::Target::VertexIndices)
 {
 	if(!s_defaultFont)
-		s_defaultFont.reset(new Font("in/Fonts/default"));
+		s_defaultFont.reset(new Font("in/Fonts/default_unicode"));
 	_font = &*s_defaultFont;
 }
 
-Text::~Text()
+GUIText::~GUIText()
 {
 }
 
-Text::Text(const std::string& str) :
+GUIText::GUIText(const std::string& str) :
 	_text(str),
 	_vao(),
 	_vertex_buffer(Buffer::Target::VertexAttributes),
 	_index_buffer(Buffer::Target::VertexIndices)
 {
 	if(!s_defaultFont)
-		s_defaultFont.reset(new Font("in/Fonts/default"));
+		s_defaultFont.reset(new Font("in/Fonts/default_unicode"));
 	_font = &*s_defaultFont;
 
 	init();
 }
 
-void Text::setText(const std::string& str)
+void GUIText::setText(const std::string& str)
 {
 	_text = str;
 	update();
 }
 
-void Text::init()
+void GUIText::init()
 {
 	//std::cout << "Initializing text... ";
 	_vao.init();
@@ -144,17 +144,21 @@ void Text::init()
 	update();
 }
 
-void Text::update()
+void GUIText::update()
 {
 	//std::cout << "Updating text... ";
 	_vertices.clear();
 	_vertices.reserve(_text.size() * 4);
 	_triangles.clear();
 	_triangles.reserve(_text.size() * 3 * 2);
-	glm::vec2 position = _position;
+	glm::vec2 position = glm::vec2(0.0);
 
+	_aabb.min = position;
+	
 	for(auto& c : _text)
 	{
+		if(c == '\0') continue;
+		
 		auto g = getGlyph(c);
 		size_t idx = _vertices.size();
 		
@@ -187,22 +191,24 @@ void Text::update()
 		_triangles.push_back(idx + 3);
 		_triangles.push_back(idx);
 		
+		_aabb.max = glm::max(_aabb.max, p + g.dim * _fontSize);
+		
 		position.x += g.advance * _fontSize;
 	}
 	
 	_vertex_buffer.bind();
-	_vertex_buffer.data(_vertices.data(), sizeof(VertexAttributes) * _vertices.size(), Buffer::Usage::StaticDraw);
+	_vertex_buffer.data(_vertices.data(), sizeof(VertexAttributes) * _vertices.size(), Buffer::Usage::DynamicDraw);
 	_index_buffer.bind();
-	_index_buffer.data(_triangles.data(), sizeof(size_t) * _triangles.size(), Buffer::Usage::StaticDraw);
+	_index_buffer.data(_triangles.data(), sizeof(size_t) * _triangles.size(), Buffer::Usage::DynamicDraw);
 	//std::cout << "Done." << std::endl;
 }
 
-const Font::Glyph& Text::getGlyph(char c) const
+const Font::Glyph& GUIText::getGlyph(char c) const
 {
 	return _font->Glyphs[static_cast<size_t>(c)];
 }
 
-void Text::draw() const
+void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position) const
 {
 	assert(_vao);
 	
@@ -215,6 +221,8 @@ void Text::draw() const
 		);
 	}
 	P.use();
+	P.setUniform("Resolution", resolution);
+	P.setUniform("Position", _position + position);
 	
 	_font->Tex->bind();
 	_vao.bind();

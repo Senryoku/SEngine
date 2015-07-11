@@ -4,7 +4,7 @@
 #include <Application.hpp>
 #include <NoisyTerrain.hpp>
 #include <MathTools.hpp>
-#include <Text.hpp>
+#include <GUIText.hpp>
 
 #include <glm/gtx/transform.hpp>
 
@@ -12,6 +12,7 @@ template <typename T>
 std::string to_string(const T a_value, const int n = 6)
 {
     std::ostringstream out;
+	out << std::fixed;
     out << std::setprecision(n) << a_value;
     return out.str();
 }
@@ -137,9 +138,11 @@ public:
 				"in/Textures/skybox/negy.png",
 				"in/Textures/skybox/posz.png",
 				"in/Textures/skybox/negz.png"});
-				
-		_text.reset(new Text("Ok"));
+		
+		auto w = _gui.add(new GUIWindow());
+		_text = w->add(new GUIText("Ok"));
 		_text->setFontSize(16.0);
+		_text->setPosition(glm::vec2{25.0});
 	}
 	
 	virtual void in_loop_update() override
@@ -156,8 +159,8 @@ public:
 		_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
 		_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
 		
-		_text->setText(to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 2) + "ms - " + 
-						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 3) + " FPS");
+		_text->setText(to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
+						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS");
 	}
 	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override
@@ -170,19 +173,7 @@ public:
 		ld.useNone();
 	}
 	
-	virtual void gui_render() override
-	{
-		glDisable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		
-		_text->draw();
-		
-		glDisable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
-	}
-	
-	std::unique_ptr<Text>	_text;
+	GUIText*	_text;
 };
 
 int main(int argc, char* argv[])

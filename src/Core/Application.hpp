@@ -4,6 +4,7 @@
 
 #include <GLFW/glfw3.h>
 
+#include <GUISystem.hpp>
 #include <TimeManager.hpp>
 #include <ResourcesManager.hpp>
 #include <Scene.hpp>
@@ -36,7 +37,7 @@ public:
 	
 	virtual void in_loop_render();
 	
-	virtual void gui_render() {}
+	virtual void gui_render();
 	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) {};
 	
@@ -66,6 +67,8 @@ protected:
 	int				_height = 720;
 	bool 			_fullscreen = false;
 	bool 			_msaa = false;
+	
+	GUISystem		_gui;
 
 	// MainCamera
 	Camera		_camera;
@@ -107,11 +110,13 @@ protected:
 	bool	_debug = true;
 
 	// Callbacks (GLFW)
-	void error_callback(int error, const char* description);
-	void resize_callback(GLFWwindow* window, int width, int height);
-	void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-	void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
+	virtual void error_callback(int error, const char* description);
+	virtual void resize_callback(GLFWwindow* window, int width, int height);
+	virtual void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+	virtual void char_callback(GLFWwindow* window, unsigned int codepoint);
+	virtual void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+	virtual void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
+	virtual void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 	
 	// Static
 	
@@ -129,9 +134,15 @@ protected:
 	static void s_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 	{ getInstance().key_callback(window, key, scancode, action, mods); }
 	
+	static void s_char_callback(GLFWwindow* window, unsigned int codepoint)
+	{ getInstance().char_callback(window, codepoint); }
+	
 	static void s_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 	{ getInstance().mouse_button_callback(window, button, action, mods); }
 	
 	static void s_mouse_position_callback(GLFWwindow* window, double xpos, double ypos)
 	{ getInstance().mouse_position_callback(window, xpos, ypos); }
+	
+	static void s_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+	{ getInstance().scroll_callback(window, xoffset, yoffset); }
 };

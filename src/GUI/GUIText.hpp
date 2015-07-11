@@ -8,6 +8,7 @@
 #include <Buffer.hpp>
 #include <VertexArray.hpp>
 #include <ResourcesManager.hpp>
+#include <GUIClickable.hpp>
 
 class Font
 {
@@ -31,12 +32,15 @@ public:
 	void load(const std::string& path);
 };
 
-class Text
+/**
+ * Handles the rendering of distance field fonts.
+**/
+class GUIText : public GUIClickable
 {
 public:
-	Text();
-	Text(const std::string& str);
-	~Text();
+	GUIText();
+	GUIText(const std::string& str);
+	virtual ~GUIText();
 	
 	void setText(const std::string& str);
 	void setFontSize(float s) { _fontSize = s; update(); }
@@ -45,13 +49,11 @@ public:
 	
 	void update();
 	
-	void draw() const;
-	
+	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) const override;
 	
 private:
 	std::string		_text;
-
-	glm::vec2			_position = glm::vec2(25.0);
+	
 	Font*				_font;
 	float				_fontSize = 16.0;
 	

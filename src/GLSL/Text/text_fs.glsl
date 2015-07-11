@@ -2,7 +2,7 @@
 
 uniform layout(binding = 0) sampler2D Font;
 
-uniform float	Threshold = 0.99f;
+uniform float	Threshold = 0.90f;
 uniform float	OutlineThreshold = 0.10f;
 uniform vec3	Color = vec3(1.0);
 

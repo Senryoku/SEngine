@@ -70,6 +70,7 @@ void Application::init(const std::string& windowName)
 	// Callback setting
 	glfwSetErrorCallback(s_error_callback);
 	glfwSetKeyCallback(_window, s_key_callback);
+	glfwSetCharCallback(_window, s_char_callback);
 	glfwSetMouseButtonCallback(_window, s_mouse_button_callback);
 	glfwSetCursorPosCallback(_window, s_mouse_position_callback);
 	glfwSetWindowSizeCallback(_window, s_resize_callback);
@@ -236,6 +237,18 @@ void Application::in_loop_render()
 	gui_render();
 }
 
+void Application::gui_render()
+{
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	_gui.draw(glm::vec2(_resolution));
+	
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+}
+
 void Application::run()
 {
 	run_init();
@@ -273,6 +286,8 @@ void Application::screen(const std::string& path) const
 	delete[] pixels;
 }
 
+// GLFW Callbacks
+
 void Application::error_callback(int error, const char* description)
 {
 	std::cerr << "GLFW Error (" << error << "): " << description << std::endl;
@@ -309,7 +324,7 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 
 void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
 {
-	if(action == GLFW_PRESS)
+	if(action == GLFW_PRESS && !_gui.handleKey(key, scancode, action, mods))
 	{
 		switch(key)
 		{
@@ -465,31 +480,45 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 	}
 }
 
+void Application::char_callback(GLFWwindow* window, unsigned int codepoint)
+{
+	//std::cout << "Received:" << codepoint << std::endl;
+	_gui.handleTextInput(codepoint);
+}
+
 void Application::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods)
 {	
 	float z = _mouse.z;
 	float w = _mouse.w;
-	if(button == GLFW_MOUSE_BUTTON_1)
+		
+	if(!_gui.handleClick({_mouse.x, _resolution.y - _mouse.y}, button))
 	{
-		if(action == GLFW_PRESS)
+		if(button == GLFW_MOUSE_BUTTON_1)
 		{
-			z = 1.0;
-		} else {
-			z = 0.0;
-		}
-	} else if(button == GLFW_MOUSE_BUTTON_2) {
-		if(action == GLFW_PRESS)
-		{
-			w = 1.0;
-		} else {
-			w = 0.0;
+			if(action == GLFW_PRESS)
+			{
+				z = 1.0;
+			} else {
+				z = 0.0;
+			}
+		} else if(button == GLFW_MOUSE_BUTTON_2) {
+			if(action == GLFW_PRESS)
+			{
+				w = 1.0;
+			} else {
+				w = 0.0;
+			}
 		}
 	}
-	
+		
 	_mouse = glm::vec4(_mouse.x, _mouse.y, z, w);
 }
 
 void Application::mouse_position_callback(GLFWwindow* _window, double xpos, double ypos)
 {
 	_mouse = glm::vec4(xpos, ypos, _mouse.z, _mouse.w);
+}
+
+void Application::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
 }

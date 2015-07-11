@@ -51,6 +51,8 @@ template<typename Vector>
 class AABB;
 inline bool intersect(const AABB<glm::vec2>& rhs, const AABB<glm::vec2>& lhs);
 inline bool intersect(const AABB<glm::vec3>& rhs, const AABB<glm::vec3>& lhs);
+inline bool contains(const AABB<glm::vec2>& rhs, const glm::vec2& lhs);
+inline bool contains(const AABB<glm::vec3>& rhs, const glm::vec3& lhs);
 
 /**
  * Aligned Axis Bounding Box
@@ -79,20 +81,85 @@ public:
 		return ::intersect(*this, other);
 	}
 	
+	inline bool contains(const Vector& v) const
+	{
+		return ::contains(*this, v);
+	}
+	
+	inline AABB<Vector>& operator+=(const Vector& rhs)
+	{
+		min += rhs;
+		max += rhs;
+		return *this;
+	}
+	
+	inline AABB<Vector>& operator+=(const AABB<Vector>& rhs)
+	{
+		min = glm::min(min, rhs.min);
+		max = glm::max(max, rhs.max);
+		return *this;
+	}
+	
+	inline AABB<Vector>& operator*=(float factor)
+	{
+		Vector tmp = 0.5f * (max + min);
+		min = tmp + (min - tmp) * factor;
+		max = tmp + (max - tmp) * factor;
+		return *this;
+	}
+	
+	inline AABB<Vector>& operator*=(const Vector& factors)
+	{
+		Vector tmp = 0.5f * (max + min);
+		min = tmp + (min - tmp) * factors;
+		max = tmp + (max - tmp) * factors;
+		return *this;
+	}
+
 	// Attributes
 	Vector	min;
 	Vector	max;
 private:
 };
 
-inline bool intersect(const AABB<glm::vec2>& rhs, const AABB<glm::vec2>& lhs)
+inline bool intersect(const AABB<glm::vec2>& lhs, const AABB<glm::vec2>& rhs)
 {
-	return !(rhs.min.x > lhs.max.x || rhs.min.y > lhs.max.y ||
-			 rhs.max.x < lhs.min.x || rhs.max.y < lhs.min.y);
+	return !(lhs.min.x > rhs.max.x || lhs.min.y > rhs.max.y ||
+			 lhs.max.x < rhs.min.x || lhs.max.y < rhs.min.y);
 }
 
-inline bool intersect(const AABB<glm::vec3>& rhs, const AABB<glm::vec3>& lhs)
+inline bool intersect(const AABB<glm::vec3>& lhs, const AABB<glm::vec3>& rhs)
 {
-	return !(rhs.min.x > lhs.max.x || rhs.min.y > lhs.max.y || rhs.min.z > lhs.max.z ||
-			 rhs.max.x < lhs.min.x || rhs.min.y > lhs.max.y || rhs.max.z < lhs.min.z );
+	return !(lhs.min.x > rhs.max.x || lhs.min.y > rhs.max.y || lhs.min.z > rhs.max.z ||
+			 lhs.max.x < rhs.min.x || lhs.min.y > rhs.max.y || lhs.max.z < rhs.min.z );
+}
+
+inline bool contains(const AABB<glm::vec2>& lhs, const glm::vec2& rhs)
+{
+	return !(lhs.min.x > rhs.x || lhs.min.y > rhs.y ||
+			 lhs.max.x < rhs.x || lhs.max.y < rhs.y);
+}
+
+inline bool contains(const AABB<glm::vec3>& lhs, const glm::vec3& rhs)
+{
+	return !(lhs.min.x > rhs.x || lhs.min.y > rhs.y || lhs.min.z > rhs.z ||
+			 lhs.max.x < rhs.x || lhs.min.y > rhs.y || lhs.max.z < rhs.z );
+}
+
+template<typename Vector>
+inline AABB<Vector> operator+(const AABB<Vector>& lhs, const Vector& rhs)
+{
+	return AABB<Vector>(lhs.min + rhs, lhs.max + rhs);
+}
+
+template<typename Vector>
+inline AABB<Vector> operator-(const AABB<Vector>& lhs, const Vector& rhs)
+{
+	return AABB<Vector>(lhs.min - rhs, lhs.max - rhs);
+}
+
+template<typename Vector>
+inline AABB<Vector> operator+(const AABB<Vector>& lhs, const AABB<Vector>& rhs)
+{
+	return AABB<Vector>(glm::min(lhs.min, rhs.min), glm::max(lhs.max, rhs.max));
 }
