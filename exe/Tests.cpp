@@ -140,9 +140,10 @@ public:
 				"in/Textures/skybox/negz.png"});
 		
 		auto w = _gui.add(new GUIWindow());
+		w->setPosition(glm::vec2{25.0});
 		_text = w->add(new GUIText("Ok"));
 		_text->setFontSize(16.0);
-		_text->setPosition(glm::vec2{25.0});
+		w->add(new GUIText("GUI Test"));
 	}
 	
 	virtual void in_loop_update() override

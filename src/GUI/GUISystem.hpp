@@ -36,19 +36,20 @@ public:
 		
 		if(_activeWindow != nullptr)
 		{
-			if(_activeWindow->getAABB().contains(coords))
+			if(!_activeWindow->getAABB().contains(_activeWindow->p2c(coords)))
 			{
-				return _activeWindow->onClick(coords, button);
-			} else {
 				std::cout << "Lost Focus." << std::endl;
 				_activeWindow->setActive(false);
 				_activeWindow = nullptr;
+				return false;
+			} else {
+				return _activeWindow->handleClick(coords, button);
 			}
 		}
 		
 		for(auto p : _windows)
 		{
-			if(p->getAABB().contains(coords))
+			if(p->handleClick(coords, button))
 			{
 				std::cout << "Clicked on a window !" << std::endl;
 				_activeWindow = p;

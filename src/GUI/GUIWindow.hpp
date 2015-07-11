@@ -20,20 +20,30 @@ public:
 	template<typename Element>
 	Element* add(Element* e)
 	{
+		if(!_elements.empty())
+			e->setPosition(glm::vec2(0.0, 
+					_elements.back()->getPosition().y + 
+					_elements.back()->getAABB().max.y + _padding));
 		_elements.push_back(e);
-		_aabb += e->getAABB();
+		_aabb += e->c2p(e->getAABB());
 		return e;
 	}
 	
-	bool onClick(const glm::vec2& coords, int button) override
+	virtual bool onClick(const glm::vec2& coords, int button) override
 	{
-		updateAABB();
+		updateAABB(); /// @todo (TEMP) Move elsewhere
+
+		if(_active)
+		{		
+			for(auto p : _elements)
+				if(p->handleClick(coords, button))
+					return true;
+			return false;
+		} else {
+			_active = true;
+		}
 		
-		for(auto p : _elements)
-			if(p->handleClick(coords, button))
-				return true;
-		
-		return false;
+		return true;
 	}
 	
 	void setActive(bool b = true)
@@ -48,6 +58,9 @@ public:
 		
 		for(auto p : _elements)
 			_aabb += p->c2p(p->getAABB());
+		
+		_aabb.min -= _padding;
+		_aabb.max += _padding;
 	}
 
 	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) const override
@@ -79,4 +92,6 @@ private:
 	std::vector<GUIClickable*>	_elements;
 	
 	bool							_active = false;
+	
+	float	_padding = 5.0;
 };

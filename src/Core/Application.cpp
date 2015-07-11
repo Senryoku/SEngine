@@ -490,8 +490,8 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 {	
 	float z = _mouse.z;
 	float w = _mouse.w;
-		
-	if(!_gui.handleClick({_mouse.x, _resolution.y - _mouse.y}, button))
+
+	if(action == GLFW_PRESS || !_gui.handleClick({_mouse.x, _resolution.y - _mouse.y}, button))
 	{
 		if(button == GLFW_MOUSE_BUTTON_1)
 		{
