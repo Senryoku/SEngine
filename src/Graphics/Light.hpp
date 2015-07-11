@@ -105,7 +105,13 @@ public:
 	 * Modifies the range of the light source
 	 * @param r New range
 	**/
-	inline void setRange(float r) { _range = r; }
+	void setRange(float r);
+	
+	/**
+	 * Modifies the opening angle of the light source
+	 * @param a New angle (rad)
+	**/
+	void setAngle(float a);
 	
 	/**
 	 * Returns the view matrix for this Light. 
@@ -206,6 +212,7 @@ protected:
 	
 	glm::vec3			_position = glm::vec3(0.f);				///< Light's position in World Space
 	glm::vec3			_direction = glm::vec3(0.f, 0.f, 1.f);	///< Light's direction in World Space
+	float				_angle = 0.7853975;						///< Light's opening angle (rad)
 	float				_range = 1000.0; 							///< Light's range, mainly used for the Shadow Mapping settings
 
 	unsigned int		_shadowMapResolution;			///< Resolution of the shadow map (depth map)

@@ -37,6 +37,15 @@ public:
 	virtual void in_loop_render();
 	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) {};
+	
+	template<typename T>
+	T rand()
+	{
+		static std::random_device rd;
+		static std::mt19937 gen(rd());
+		static std::uniform_real_distribution<T> uniform_dist(0, 1);
+		return uniform_dist(gen);
+	}
 
 	void screen(const std::string& path) const;
 	

@@ -309,6 +309,8 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			{
 				std::cout << "Debug: Toggle debug flag." << std::endl;
 				_debug = !_debug;
+				
+				std::cout << _camera.getPosition().x << "\t" << _camera.getPosition().y << "\t" << _camera.getPosition().z << std::endl;
 				break;
 			}
 			case GLFW_KEY_KP_1:
@@ -331,8 +333,8 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			}
 			case GLFW_KEY_KP_4:
 			{
-				_bloomDownsampling -= 1;
-				if(_bloomDownsampling < 1) _bloomDownsampling = 1;
+				if(_bloomDownsampling > 0)
+					_bloomDownsampling -= 1;
 				std::cout << "BloomDownsampling: " << _bloomDownsampling << std::endl;
 				break;
 			}

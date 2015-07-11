@@ -29,10 +29,22 @@ VertexShader*		Light::s_depthInstanceVS = nullptr;
 Light::Light(unsigned int shadowMapResolution) :
 	_shadowMapResolution(shadowMapResolution),
 	_shadowMapFramebuffer(_shadowMapResolution),
-	_projection(glm::perspective(static_cast<float>(pi())/4.f, 1.0f, 2.0f, _range))
+	_projection(glm::perspective(_angle, 1.0f, 2.0f, _range))
 {
 }
-		
+
+void Light::setRange(float r)
+{
+	_range = r; 
+	_projection = glm::perspective(_angle, 1.0f, 2.0f, _range);
+}
+
+void Light::setAngle(float a)
+{
+	_angle = a; 
+	_projection = glm::perspective(_angle, 1.0f, 2.0f, _range);
+}
+
 void Light::init()
 {
 	initPrograms();
