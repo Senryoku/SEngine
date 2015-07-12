@@ -18,6 +18,8 @@ public:
 	
 	GUIWindow* add(GUIWindow* w)
 	{
+		w->getAABB() = {{0.0, 0.0}, {10.0, 10.0}};
+		w->setPosition({10.0 + 20.0 * _windows.size(), 10.0});
 		_windows.push_back(w);
 		return w;
 	}
@@ -40,8 +42,9 @@ public:
 			{
 				std::cout << "Lost Focus." << std::endl;
 				_activeWindow->setActive(false);
+				_activeWindow->getAABB() = {{0.0, 0.0}, {10.0, 10.0}};
+				_activeWindow->setPosition({10.0 + 20.0 * getIndex(_activeWindow), 10.0});
 				_activeWindow = nullptr;
-				return false;
 			} else {
 				return _activeWindow->handleClick(coords, button);
 			}
@@ -54,6 +57,7 @@ public:
 				std::cout << "Clicked on a window !" << std::endl;
 				_activeWindow = p;
 				_activeWindow->setActive();
+				_activeWindow->setPosition({25.0, 35.0});
 				break;
 			}
 		}
@@ -73,4 +77,9 @@ private:
 	std::vector<GUIWindow*>	_windows;
 	
 	GUIWindow*					_activeWindow = nullptr;
+	
+	size_t getIndex(GUIWindow* w) const
+	{
+		return std::distance(_windows.begin(), std::find(_windows.begin(), _windows.end(), w));
+	}
 };

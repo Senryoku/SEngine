@@ -5,6 +5,8 @@
 #include <NoisyTerrain.hpp>
 #include <MathTools.hpp>
 #include <GUIText.hpp>
+#include <GUIButton.hpp>
+#include <GUICheckbox.hpp>
 
 #include <glm/gtx/transform.hpp>
 
@@ -140,28 +142,37 @@ public:
 				"in/Textures/skybox/negz.png"});
 		
 		auto w = _gui.add(new GUIWindow());
-		w->setPosition(glm::vec2{25.0});
-		_text = w->add(new GUIText("Ok"));
-		_text->setFontSize(16.0);
-		w->add(new GUIText("GUI Test"));
+		w->add(new GUIText([&]() -> std::string {
+			return to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
+						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS";
+		}));
+		w->add(new GUIText("=================="));
+		w->add(new GUIText("Stats"));
+		
+		auto w2 = _gui.add(new GUIWindow());
+		w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
+		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { _bloom = -_bloom; return _bloom > 0.0; }));
+		w2->add(new GUICheckbox("Pause", &_paused));
+		w2->add(new GUIText("=================="));
+		w2->add(new GUIText("Controls"));
 	}
 	
 	virtual void in_loop_update() override
 	{
-		_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
-		_scene.getPointLights()[3].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-		
-		_scene.getPointLights()[4].position = glm::vec3(-24.7, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
-		_scene.getPointLights()[4].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-		
-		_scene.getPointLights()[5].position = glm::vec3(-24.7, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
-		_scene.getPointLights()[5].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-		
-		_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
-		_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-		
-		_text->setText(to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
-						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS");
+		if(!_paused)
+		{
+			_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[3].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			
+			_scene.getPointLights()[4].position = glm::vec3(-24.7, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[4].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			
+			_scene.getPointLights()[5].position = glm::vec3(-24.7, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[5].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			
+			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+		}
 	}
 	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override
@@ -173,8 +184,6 @@ public:
 		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
 		ld.useNone();
 	}
-	
-	GUIText*	_text;
 };
 
 int main(int argc, char* argv[])

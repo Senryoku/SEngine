@@ -18,6 +18,7 @@ public:
 	
 	inline virtual bool onClick(const glm::vec2& coords, int button) { return false; };
 	
+	AABB<glm::vec2>& getAABB() { return _aabb; }
 	const AABB<glm::vec2>& getAABB() const { return _aabb; }
 	
 protected:

@@ -115,10 +115,27 @@ GUIText::GUIText(const std::string& str) :
 	init();
 }
 
+GUIText::GUIText(const TextFunc& func) :
+	_func(func),
+	_text(func()),
+	_vao(),
+	_vertex_buffer(Buffer::Target::VertexAttributes),
+	_index_buffer(Buffer::Target::VertexIndices)
+{
+	if(!s_defaultFont)
+		s_defaultFont.reset(new Font("in/Fonts/default_unicode"));
+	_font = &*s_defaultFont;
+
+	init();
+}
+
 void GUIText::setText(const std::string& str)
 {
-	_text = str;
-	update();
+	if(str != _text)
+	{
+		_text = str;
+		update();
+	}
 }
 
 void GUIText::init()
@@ -208,9 +225,13 @@ const Font::Glyph& GUIText::getGlyph(char c) const
 	return _font->Glyphs[static_cast<size_t>(c)];
 }
 
-void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position) const
+void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position)
 {
 	assert(_vao);
+	
+	// If we are using a function, check if the text has changed
+	if(_func)
+		setText(_func());
 	
 	Program& P = ResourcesManager::getInstance().getProgram("TextRendering");
 	if(!P)

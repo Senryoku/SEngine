@@ -402,6 +402,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			{
 				if(!_controlCamera)
 				{
+					glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
 					glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 				} else {
 					glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

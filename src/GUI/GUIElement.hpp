@@ -14,7 +14,7 @@ public:
 	 * @param resolution	Screen resolution (pixels)
 	 * @param position	Origin (position of the parent)
 	**/
-	virtual void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) const =0;
+	virtual void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) =0;
 	
 	/// From Parent Space to Child Space
 	inline glm::vec2 p2c(const glm::vec2& v) const { return v - _position; }

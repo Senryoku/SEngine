@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include <functional>
 
 #include <glm/glm.hpp>
 
@@ -38,8 +39,11 @@ public:
 class GUIText : public GUIClickable
 {
 public:
+	using TextFunc = std::function<std::string(void)>;
+
 	GUIText();
 	GUIText(const std::string& str);
+	GUIText(const TextFunc& func);
 	virtual ~GUIText();
 	
 	void setText(const std::string& str);
@@ -49,9 +53,10 @@ public:
 	
 	void update();
 	
-	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) const override;
+	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) override;
 	
 private:
+	TextFunc			_func;
 	std::string		_text;
 	
 	Font*				_font;

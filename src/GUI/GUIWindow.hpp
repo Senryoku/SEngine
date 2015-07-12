@@ -25,7 +25,7 @@ public:
 					_elements.back()->getPosition().y + 
 					_elements.back()->getAABB().max.y + _padding));
 		_elements.push_back(e);
-		_aabb += e->c2p(e->getAABB());
+		//_aabb += e->c2p(e->getAABB());
 		return e;
 	}
 	
@@ -63,7 +63,7 @@ public:
 		_aabb.max += _padding;
 	}
 
-	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) const override
+	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) override
 	{
 		auto& P = ResourcesManager::getInstance().getProgram("GUIRectangle");
 		if(!P)
@@ -80,6 +80,7 @@ public:
 		P.setUniform("Position", position + _position);
 		P.setUniform("Min", _aabb.min);
 		P.setUniform("Max", _aabb.max);
+		P.setUniform("Color", _color);
 		glDrawArrays(GL_POINTS, 0, 1); // Dummy draw call
 		P.useNone();
 		
@@ -93,5 +94,6 @@ private:
 	
 	bool							_active = false;
 	
-	float	_padding = 5.0;
+	float			_padding = 5.0;
+	glm::vec4		_color = glm::vec4(1.0, 1.0, 1.0, 0.1);
 };
