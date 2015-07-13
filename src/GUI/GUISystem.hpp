@@ -24,11 +24,11 @@ public:
 		return w;
 	}
 
-	/**
-	 * Will probably remain useless for a long time.
-	**/
 	bool handleKey(int key, int scancode, int action, int mods)
 	{
+		if(_activeWindow != nullptr)
+			return _activeWindow->handleKey(key, scancode, action, mods);
+		
 		return false;
 	}
 
@@ -65,7 +65,13 @@ public:
 		return false;
 	}
 
-	void handleTextInput(unsigned int unicode) {}
+	bool handleTextInput(unsigned int unicode)
+	{
+		if(_activeWindow != nullptr)
+			return _activeWindow->handleTextInput(unicode);
+		
+		return false;
+	}
 	
 	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) const
 	{

@@ -31,26 +31,10 @@ public:
 	
 	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) override
 	{
-		auto& P = ResourcesManager::getInstance().getProgram("GUIRectangle");
-		if(!P)
-		{
-			P = loadProgram("GUIRectangle",
-					load<VertexShader>("src/GLSL/GUI/rect_vs.glsl"),
-					load<GeometryShader>("src/GLSL/GUI/rect_gs.glsl"),
-					load<FragmentShader>("src/GLSL/GUI/rect_fs.glsl")
-				);
-		}
+		auto p = c2p(position);
+		drawAABB(resolution, p,  glm::vec4(0.0, 0.3, 1.0, 0.25));
 		
-		P.use();
-		P.setUniform("Resolution", resolution);
-		P.setUniform("Position", position + _position);
-		P.setUniform("Min", _aabb.min);
-		P.setUniform("Max", _aabb.max);
-		P.setUniform("Color", glm::vec4(0.0, 0.3, 1.0, 0.25));
-		glDrawArrays(GL_POINTS, 0, 1); // Dummy draw call
-		P.useNone();
-		
-		_text.draw(resolution, position + _position);
+		_text.draw(resolution, p);
 	}
 	
 private:

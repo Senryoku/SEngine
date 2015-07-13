@@ -29,6 +29,24 @@ public:
 		return e;
 	}
 	
+	virtual bool handleKey(int key, int scancode, int action, int mods) override
+	{
+		for(auto p : _elements)
+			if(p->handleKey(key, scancode, action, mods))
+				return true;
+			
+		return false;
+	}
+	
+	virtual bool handleTextInput(unsigned int unicode) override
+	{
+		for(auto p : _elements)
+			if(p->handleTextInput(unicode))
+				return true;
+
+		return false;
+	}
+	
 	virtual bool onClick(const glm::vec2& coords, int button) override
 	{
 		updateAABB(); /// @todo (TEMP) Move elsewhere
@@ -37,18 +55,19 @@ public:
 		{		
 			for(auto p : _elements)
 				if(p->handleClick(coords, button))
+				{
+					if(_activeElement != nullptr)
+						_activeElement->setActive(false);
+					p->setActive(true);
+					_activeElement = p;
 					return true;
+				}
 			return false;
 		} else {
 			_active = true;
 		}
 		
 		return true;
-	}
-	
-	void setActive(bool b = true)
-	{
-		_active = b;
 	}
 	
 	void updateAABB()
@@ -65,34 +84,19 @@ public:
 
 	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) override
 	{
-		auto& P = ResourcesManager::getInstance().getProgram("GUIRectangle");
-		if(!P)
-		{
-			P = loadProgram("GUIRectangle",
-					load<VertexShader>("src/GLSL/GUI/rect_vs.glsl"),
-					load<GeometryShader>("src/GLSL/GUI/rect_gs.glsl"),
-					load<FragmentShader>("src/GLSL/GUI/rect_fs.glsl")
-				);
-		}
+		auto pos = c2p(position);
 		
-		P.use();
-		P.setUniform("Resolution", resolution);
-		P.setUniform("Position", position + _position);
-		P.setUniform("Min", _aabb.min);
-		P.setUniform("Max", _aabb.max);
-		P.setUniform("Color", _color);
-		glDrawArrays(GL_POINTS, 0, 1); // Dummy draw call
-		P.useNone();
+		drawAABB(resolution, pos, _color);
 		
 		if(_active)
 			for(auto p : _elements)
-				p->draw(resolution, _position + position);
+				p->draw(resolution, pos);
 	}
 	
 private:
 	std::vector<GUIClickable*>	_elements;
 	
-	bool							_active = false;
+	GUIClickable*					_activeElement = nullptr;
 	
 	float			_padding = 5.0;
 	glm::vec4		_color = glm::vec4(1.0, 1.0, 1.0, 0.1);

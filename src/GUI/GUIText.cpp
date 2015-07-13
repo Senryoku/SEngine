@@ -171,6 +171,7 @@ void GUIText::update()
 	glm::vec2 position = glm::vec2(0.0);
 
 	_aabb.min = position;
+	_aabb.max = position;
 	
 	for(auto& c : _text)
 	{
@@ -208,9 +209,10 @@ void GUIText::update()
 		_triangles.push_back(idx + 3);
 		_triangles.push_back(idx);
 		
-		_aabb.max = glm::max(_aabb.max, p + g.dim * _fontSize);
+		//_aabb.max = glm::max(_aabb.max, p + g.dim * _fontSize);
 		
 		position.x += g.advance * _fontSize;
+		_aabb.max = glm::max(_aabb.max, {position.x, (p + g.dim * _fontSize).y});
 	}
 	
 	_vertex_buffer.bind();
@@ -222,7 +224,13 @@ void GUIText::update()
 
 const Font::Glyph& GUIText::getGlyph(char c) const
 {
-	return _font->Glyphs[static_cast<size_t>(c)];
+	auto idx = static_cast<size_t>(c);
+	if(idx >= _font->Glyphs.size())
+	{
+		std::cerr << "Error: Glyph " << c << " (" << idx <<  ") not in font." << std::endl;
+		return _font->Glyphs[0];
+	}
+	return _font->Glyphs[idx];
 }
 
 void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position)

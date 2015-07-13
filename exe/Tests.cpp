@@ -7,6 +7,7 @@
 #include <GUIText.hpp>
 #include <GUIButton.hpp>
 #include <GUICheckbox.hpp>
+#include <GUIEdit.hpp>
 
 #include <glm/gtx/transform.hpp>
 
@@ -43,12 +44,14 @@ public:
 		
 		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 
+		static float R = 0.95f;
+		static float F0 = 0.15f;
 		auto TestMesh = Mesh::load("in/3DModels/sponza/sponza.obj");
 		for(auto part : TestMesh)
 		{
 			part->createVAO();
-			part->getMaterial().setUniform("R", 0.95f);
-			part->getMaterial().setUniform("F0", 0.15f);
+			part->getMaterial().setUniform("R", &R);
+			part->getMaterial().setUniform("F0", &F0);
 			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04))));
 		}
 
@@ -151,10 +154,20 @@ public:
 		
 		auto w2 = _gui.add(new GUIWindow());
 		w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
+		/// @todo Come back here when GLFW 3.2 will be released :)
+		//w2->add(new GUICheckbox("Vsync", [&] { static int i = 0; i = (i + 1) % 2; glfwSwapInterval(i); return i == 1; }));
+		//w2->add(new GUICheckbox("Fullscreen", [&] { ... }));
+		w2->add(new GUIEdit<float>("Bloom : ", &_bloom));
 		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { _bloom = -_bloom; return _bloom > 0.0; }));
 		w2->add(new GUICheckbox("Pause", &_paused));
 		w2->add(new GUIText("=================="));
 		w2->add(new GUIText("Controls"));
+		
+		auto w3 = _gui.add(new GUIWindow());
+		w3->add(new GUIEdit<float>("Fresnel Reflectance : ", &F0));
+		w3->add(new GUIEdit<float>("Roughness : ", &R));
+		w3->add(new GUIText("=================="));
+		w3->add(new GUIText("Material Test"));
 	}
 	
 	virtual void in_loop_update() override

@@ -336,24 +336,6 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 				std::cout << _camera.getPosition().x << "\t" << _camera.getPosition().y << "\t" << _camera.getPosition().z << std::endl;
 				break;
 			}
-			case GLFW_KEY_KP_1:
-			{
-				_bloom -= 0.1;
-				std::cout << "Bloom: " << _bloom << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_2:
-			{
-				_bloom += 0.1;
-				std::cout << "Bloom: " << _bloom << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_3:
-			{
-				_bloom = -_bloom;
-				std::cout << "Toggle Bloom (" << _bloom << ")" << std::endl;
-				break;
-			}
 			case GLFW_KEY_KP_4:
 			{
 				if(_bloomDownsampling > 0)
