@@ -104,7 +104,7 @@ void Application::run_init()
 	
 	auto& Deferred = loadProgram("Deferred",
 		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
-		load<FragmentShader>("src/GLSL/Deferred/deferred_normal_map_fs.glsl")
+		load<FragmentShader>("src/GLSL/Deferred/deferred_fs.glsl")
 	);
 	
 	Deferred.bindUniformBlock("Camera", _camera_buffer); 

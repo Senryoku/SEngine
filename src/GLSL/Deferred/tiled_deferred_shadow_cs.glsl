@@ -298,7 +298,7 @@ void main(void)
 		{
 			// Storing thresholded color for Bloom
 			imageStore(PositionDepth, ivec2(pixel), (dot(ColorOut.rgb, vec3(0.2126, 0.7152, 0.0722)) > Bloom) ? ColorOut : vec4(0.0));
-		} else { 
+		} else if(Exposure > 0.0) { 
 			// Tone Mapping
 			ColorOut.rgb = exposureToneMapping(ColorOut.rgb, Exposure);
 

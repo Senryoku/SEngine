@@ -44,6 +44,9 @@ public:
 	const Program& getShadingProgram() const;
 	void setShadingProgram(Program& P);
 	
+	const Program* getShadingProgramPtr() const;
+	void setShadingProgramPtr(const Program* P);
+	
 	////////////////////////////////////////////////////////////////
 	// Special cases for textures
 	
@@ -83,11 +86,25 @@ inline const Program& Material::getShadingProgram() const
 	return *_shadingProgram;
 }
 
+inline const Program* Material::getShadingProgramPtr() const
+{
+	assert(_shadingProgram != nullptr);
+	return _shadingProgram;
+}
+
+
 inline void Material::setShadingProgram(Program& P)
 {
 	_shadingProgram = &P;
 	updateLocations();
 }
+
+inline void Material::setShadingProgramPtr(const Program* P)
+{
+	_shadingProgram = P;
+	updateLocations();
+}
+
 inline void Material::setUniform(const std::string& name, const Texture3D& value)
 {
 	setUniform(name, static_cast<const Texture&>(value));

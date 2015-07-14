@@ -19,6 +19,7 @@ public:
 		_pointLightBuffer.bind(1);
 	}
 	
+	std::vector<MeshInstance>& getObjects()  { return _objects; }
 	const std::vector<MeshInstance>& getObjects() const { return _objects; }
 	
 	const std::vector<Light>& getLights() const { return _lights; }

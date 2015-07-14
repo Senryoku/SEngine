@@ -9,12 +9,6 @@ layout(binding = 1) uniform sampler2D BloomFrame;
 uniform float Gamma = 2.2;
 uniform float Exposure = 3.0;
 
-// Reinhard Tone Mapping
-vec3 reinhard(vec3 c)
-{
-	return c / (c + vec3(1.0));
-}
-
 vec3 exposureToneMapping(vec3 c, float e)
 {
 	return vec3(1.0) - exp(-c * e);
@@ -23,7 +17,7 @@ vec3 exposureToneMapping(vec3 c, float e)
 void main()
 {
 	color = texture(ColorFrame, texcoords) + texture(BloomFrame, texcoords);
-	
+	color.a = 1.0;
 	color.rgb = exposureToneMapping(color.rgb, Exposure);
 	
 	// Gamma correction (Deactivated for now)

@@ -18,7 +18,7 @@ uniform float BumpScale = 0.1;
 
 uniform layout(binding = 0) sampler2D Texture;
 uniform layout(binding = 1) sampler2D NormalMap;
-uniform layout(binding = 2) sampler2D BumpMap;
+uniform layout(binding = 2) samplerCube EnvMap;
 
 in layout(location = 0) vec3 world_position;
 in layout(location = 1) vec3 world_normal;
@@ -66,7 +66,7 @@ vec3 perturb_normal(vec3 N, vec3 V, vec2 texcoord)
 	mat3 TBN = cotangent_frame(N, -V, texcoord);
 	return normalize(TBN * map);
 }
-
+/*
 vec2 parallax(vec2 texCoords, vec3 viewDir)
 { 
     float height = texture(BumpMap, texCoords).r;
@@ -75,7 +75,7 @@ vec2 parallax(vec2 texCoords, vec3 viewDir)
     vec2 p = viewDir.xy / (viewDir.z * (height * BumpScale));
     return texCoords - p;    
 } 
-
+*/
 void main(void)
 {
 	/*
