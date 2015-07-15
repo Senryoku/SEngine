@@ -4,45 +4,40 @@
 #include <glm/glm.hpp>
 
 #include <Frustum.hpp>
-#include <Texture2D.hpp>
+#include <CubeMap.hpp>
 #include <Framebuffer.hpp>
 #include <MeshInstance.hpp>
 #include <Shaders.hpp>
 
 /**
- * Light
- *
- * Describes a spotlight which can cast shadows (Variance Shadow Mapping).
- * @todo Internalize shadow map drawing
- * @todo Re-use frustum
+ * OmnidirectionalLight
 **/
-class Light
+class OmnidirectionalLight
 {
 public:
-	using ShadowBuffer = Framebuffer<Texture2D, 1, Texture2D, true>;
+	using ShadowBuffer = Framebuffer<CubeMap, 1, CubeMap, true>;
 	
 	struct GPUData
 	{
 		glm::vec4	position_range;
 		glm::vec4	color_info;
-		glm::mat4	depthMVP;
 	};
 	
 	// Public attributes
 	bool			dynamic = false;	///< Tells the application if the shadow map should be redrawn each frame
-	unsigned int	downsampling = 1;	///< Strengh of the shadow map's downsampling
+	unsigned int	downsampling = 0;	///< Strengh of the shadow map's downsampling
 
 	/**
 	 * Constructor
 	 *
 	 * @param shadowMapResolution Resolution of the shadow map depth texture.
 	**/
-	Light(unsigned int shadowMapResolution = 2048);
+	OmnidirectionalLight(unsigned int shadowMapResolution = 2048);
 	
 	/**
 	 * Destructor
 	**/
-	~Light() =default;
+	~OmnidirectionalLight() =default;
 
 	/**
 	 * Initialize the shadow mapping attributes (Shaders, Framebuffer...)
@@ -62,11 +57,6 @@ public:
 	inline const glm::vec3& getPosition() const { return _position; }
 	
 	/**
-	 * @return Direction of the light
-	**/
-	inline const glm::vec3& getDirection() const { return _direction; }
-	
-	/**
 	 * @return Range of the light
 	**/
 	inline float getRange() const { return _range; }
@@ -74,7 +64,7 @@ public:
 	/**
 	 * @return Light's data structured for GPU use.
 	**/
-	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),  glm::vec4(glm::vec3(getColor()), 0.0), getBiasedMatrix()}; }
+	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),  glm::vec4(glm::vec3(getColor()), 0.0)}; }
 	
 	inline const UniformBuffer& getGPUBuffer() const { return _gpuBuffer; }
 	
@@ -91,35 +81,10 @@ public:
 	inline void setPosition(const glm::vec3& pos) { _position = pos; updateMatrices(); }
 	
 	/**
-	 * Modifies the direction of the light source
-	 * @param dir New direction
-	**/
-	inline void setDirection(const glm::vec3& dir) { _direction = glm::normalize(dir); updateMatrices(); }
-	
-	/**
-	 * Modifies the direction of the light source to look at the specified point in World Space
-	 * @param at Light's new focus point
-	**/
-	inline void lookAt(const glm::vec3& at) { setDirection(at - _position); }
-	
-	/**
 	 * Modifies the range of the light source
 	 * @param r New range
 	**/
 	void setRange(float r);
-	
-	/**
-	 * Modifies the opening angle of the light source
-	 * @param a New angle (rad)
-	**/
-	void setAngle(float a);
-	
-	/**
-	 * Returns the view matrix for this Light. 
-	 *
-	 * @return World to Light's view space matrix.
-	**/
-	inline const glm::mat4& getViewMatrix() const { return _view; }
 	
 	/**
 	 * Returns the projection matrix for this Light. 
@@ -134,23 +99,6 @@ public:
 	inline void setProjectionMatrix(const glm::mat4& p) { _projection = p; updateMatrices(); }
 	
 	/**
-	 * Returns the transformation matrix (Projection * View) for this Light. 
-	 *
-	 * @return World to Light's screen space matrix.
-	 * @see getBiasedMatrix()
-	**/
-	inline const glm::mat4& getMatrix() const { return _VPMatrix; }
-	
-	/**
-	 * Returns the biased transformation matrix (Projection * View) for this Light.
-	 * (Biased meaning "in [0, 1] range", i.e. texture friendly :])
-	 *
-	 * @return biased World to Light's view space matrix.
-	 * @see getMatrix()
-	**/
-	inline const glm::mat4& getBiasedMatrix() const { return _biasedVPMatrix; }
-	
-	/**
 	 * @return Light's shadow map framme buffer.
 	**/
 	inline const ShadowBuffer& getShadowBuffer() const { return _shadowMapFramebuffer; }
@@ -158,13 +106,10 @@ public:
 	/**
 	 * @return Light's shadow map depth texture.
 	**/
-	inline const Texture2D& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
+	inline const CubeMap& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
 	
 	inline const size_t& getResolution() const { return _shadowMapResolution; }
 	
-	/**
-	 * Warning!
-	**/
 	inline void setResolution(size_t r)
 	{
 		_shadowMapResolution = r;
@@ -182,13 +127,7 @@ public:
 	 * @todo Find a better name...
 	**/
 	void bind() const;
-	
-	/**
-	 * Setup the context to draw to this light' shadow map, assuming instanced draw calls.
-	 * @todo Find a better name... (Even more urgent.)
-	**/
-	void bindInstanced() const;
-	
+
 	/**
 	 * Restores the default framebuffer.
 	 * @todo Find a better name...
@@ -201,11 +140,6 @@ public:
 	void drawShadowMap(const std::vector<MeshInstance>& objects) const;
 	
 	// Static
-	
-	/**
-	 * @return Bias matrix (from screen space to texture space)
-	**/
-	inline static const glm::mat4& getBiasMatrix();
 	
 	/**
 	 * @return Program used to draw the shadow map.
@@ -221,46 +155,26 @@ protected:
 	glm::vec3			_color = glm::vec3(1.f);				///< Light's color
 	
 	glm::vec3			_position = glm::vec3(0.f);				///< Light's position in World Space
-	glm::vec3			_direction = glm::vec3(0.f, 0.f, 1.f);	///< Light's direction in World Space
-	float				_angle = 0.7853975;						///< Light's opening angle (rad)
 	float				_range = 1000.0; 							///< Light's range, mainly used for the Shadow Mapping settings
 
 	unsigned int		_shadowMapResolution;			///< Resolution of the shadow map (depth map)
 	ShadowBuffer		_shadowMapFramebuffer;		///< Framebuffer used to draw the shadow map
-	glm::mat4			_view;							///< View matrix used to draw the shadow map
 	glm::mat4			_projection;					///< Projection matrix used to draw the shadow map
-	glm::mat4			_VPMatrix;						///< ViewProjection matrix used to draw the shadow map
-	glm::mat4			_biasedVPMatrix;				///< Biased ViewProjection matrix used to compute the shadows projected on the scene
 	UniformBuffer		_gpuBuffer;					///< Buffer used for shadow mapping
 	
-	// Static
-	static const glm::mat4	s_depthBiasMVP;	///< Used to compute the biased ViewProjection matrix
-	
+	// Static	
 	static Program* 			s_depthProgram;	///< Program used to draw the shadow map
     static VertexShader*		s_depthVS;			///< VertexShader used to draw the shadow map
+    static GeometryShader*	s_depthGS;			///< GeometryShader used to draw the shadow map
     static FragmentShader*	s_depthFS;			///< FragmentShader used to draw the shadow map
-	
-	static Program* 		s_depthInstanceProgram;	///< Program used to draw the shadow map for instanced Draw Calls
-    static VertexShader*	s_depthInstanceVS;		///< VertexShader used to draw the shadow map for instanced Draw Calls
 	
 	static void initPrograms();
 };
 
 // Inlined functions
 
-inline const glm::mat4& Light::getBiasMatrix()
-{
-	return s_depthBiasMVP;
-}
-
-inline const Program& Light::getShadowMapProgram()
+inline const Program& OmnidirectionalLight::getShadowMapProgram()
 {
 	assert(s_depthProgram != nullptr);
 	return *s_depthProgram;
-}
-
-inline const Program& Light::getShadowMapInstanceProgram()
-{
-	assert(s_depthInstanceProgram != nullptr);
-	return *s_depthInstanceProgram;
 }

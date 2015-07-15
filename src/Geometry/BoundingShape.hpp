@@ -4,6 +4,8 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp> // glm::value_ptr
 
+#include <MathTools.hpp> // glm::value_ptr
+
 /**
  * Base class for all kinds of Bounding Shapes
 **/
@@ -162,4 +164,16 @@ template<typename Vector>
 inline AABB<Vector> operator+(const AABB<Vector>& lhs, const AABB<Vector>& rhs)
 {
 	return AABB<Vector>(glm::min(lhs.min, rhs.min), glm::max(lhs.max, rhs.max));
+}
+
+inline bool intersect(const AABB<glm::vec3>& rhs, const BoundingSphere& lhs)
+{
+	float dist_squared = lhs.radius * lhs.radius;
+	if (lhs.center.x < rhs.min.x) dist_squared -= sqr(lhs.center.x - rhs.min.x);
+	else if (lhs.center.x > rhs.max.x) dist_squared -= sqr(lhs.center.x - rhs.max.x);
+	if (lhs.center.y < rhs.min.y) dist_squared -= sqr(lhs.center.y - rhs.min.y);
+	else if (lhs.center.y > rhs.max.y) dist_squared -= sqr(lhs.center.y - rhs.max.y);
+	if (lhs.center.z < rhs.min.z) dist_squared -= sqr(lhs.center.z - rhs.min.z);
+	else if (lhs.center.z > rhs.max.z) dist_squared -= sqr(lhs.center.z - rhs.max.z);
+	return dist_squared > 0;
 }

@@ -26,6 +26,13 @@ public:
 	
 	bool isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const;
 	
+	AABB<glm::vec3> getAABB() const
+	{
+		const BoundingBox& bbox = _mesh->getBoundingBox();
+		return AABB<glm::vec3>(glm::vec3(_modelMatrix * glm::vec4(bbox.min, 1.0)),
+								glm::vec3(_modelMatrix * glm::vec4(bbox.max, 1.0)));
+	}
+	
 private:
 	const Mesh*		_mesh = nullptr;	
 	Material			_material;

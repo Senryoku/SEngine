@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Light.hpp>
+#include <OmnidirectionalLight.hpp>
 #include <PointLight.hpp>
 #include <MeshInstance.hpp>
 #include <Skybox.hpp>
@@ -25,6 +26,7 @@ public:
 	const std::vector<Light>& getLights() const { return _lights; }
 	
 	std::vector<Light>& getLights() { _dirtyLights = true; return _lights; }
+	std::vector<OmnidirectionalLight>& getOmniLights() { _dirtyLights = true; return _omniLights; }
 	
 	std::vector<PointLight>& getPointLights()
 	{
@@ -46,6 +48,11 @@ public:
 		{
 			_lights[i].getGPUBuffer().bind(i + 2);
 			_lights[i].updateMatrices();
+		}
+		for(size_t i = 0; i < _omniLights.size(); ++i)
+		{
+			_omniLights[i].getGPUBuffer().bind(i + 12);
+			_omniLights[i].updateMatrices();
 		}
 		_dirtyLights = false;
 	}
@@ -79,8 +86,9 @@ public:
 private:
 	std::vector<MeshInstance>	_objects;
 	
-	bool							_dirtyLights = true;
-	std::vector<Light>			_lights;
+	bool									_dirtyLights = true;
+	std::vector<Light>					_lights;
+	std::vector<OmnidirectionalLight>	_omniLights;
 	
 	bool							_dirtyPointLights = true;
 	std::vector<PointLight>		_pointLights;

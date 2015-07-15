@@ -24,14 +24,21 @@ layout(std140, binding = 1) uniform LightBlock
 
 layout(std140, binding = 2) uniform ShadowBlock
 {
-	vec4		position;
+	vec4		position_range;
 	vec4		color;
 	mat4 		depthMVP;
-} Shadows[8];
+} Shadows[10];
+
+layout(std140, binding = 12) uniform CubeShadowBlock
+{
+	vec4		position_range;
+	vec4		color;
+} CubeShadows[2];
 
 uniform unsigned int LightCount = 75;
 
 uniform unsigned int ShadowCount = 0;
+uniform unsigned int CubeShadowCount = 0;
 uniform float	MinVariance = 0.0000001;
 uniform float	ShadowClamp = 0.8;
 
@@ -41,13 +48,37 @@ uniform float	Gamma = 2.2;
 uniform float	Exposure = 5.0;
 uniform vec3	Ambiant = vec3(0.06);
 
+uniform int	AOSamples = 8;
+uniform float	AOThreshold = 1.0f;
+uniform float	AORadius = 10.0f;
+
 uniform vec3	CameraPosition;
 
 layout(binding = 0, rgba32f) uniform image2D ColorMaterial;
-layout(binding = 1, rgba32f) uniform image2D PositionDepth;
-layout(binding = 2, rgba32f) uniform readonly image2D Normal;
+layout(binding = 1, rgba32f) uniform readonly image2D PositionDepth;
+layout(binding = 2, rgba32f) uniform image2D Normal;
 
-layout(binding = 3) uniform sampler2D ShadowMaps[8];
+layout(binding = 3) uniform sampler2D ShadowMaps[10];
+layout(binding = 13) uniform samplerCube CubeShadowMaps[2];
+
+const vec2 poisson16[] = vec2[](
+	vec2(-0.94201624, -0.39906216),
+	vec2(0.94558609, -0.76890725),
+	vec2(-0.094184101, -0.92938870),
+	vec2(0.34495938, 0.29387760),
+	vec2(-0.91588581, 0.45771432),
+	vec2(-0.81544232, -0.87912464),
+	vec2(-0.38277543, 0.27676845),
+	vec2(0.97484398, 0.75648379),
+	vec2(0.44323325, -0.97511554),
+	vec2(0.53742981, -0.47373420),
+	vec2(-0.26496911, -0.41893023),
+	vec2(0.79197514, 0.19090188),
+	vec2(-0.24188840, 0.99706507),
+	vec2(-0.81409955, 0.91437590),
+	vec2(0.19984126, 0.78641367),
+	vec2(0.14383161, -0.14100790)
+);
 
 // Bounding Box
 shared int bbmin_x;
@@ -153,11 +184,30 @@ vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, fl
 		return vec3(0.0);
 	}
 }
-
-// Reinhard Tone Mapping
-vec3 reinhard(vec3 c)
+   
+float ambiantOcclusion(vec3 p, vec3 n, uvec2 pix)
 {
-	return c / (c + vec3(1.0));
+	if(AOSamples <= 0) return 1.0;
+	
+	float ao = 0;
+	
+    for (int i = 0; i < AOSamples; ++i)
+    {
+		// Get Sample
+        ivec2 samplePixel = ivec2(pix + (poisson16[i] * (AORadius)));
+        vec3 samplePos = imageLoad(PositionDepth, samplePixel).xyz;
+        vec3 sampleDir = normalize(samplePos - p);
+
+		// Compute relevant values
+        float NdotS = max(dot(n, sampleDir), 0);
+        float VPdistSP = distance(p, samplePos);
+
+        float a = 1.0 - smoothstep(AOThreshold, AOThreshold * 2, VPdistSP);
+        float b = NdotS;
+
+        ao += (a * b);
+    }
+	return 1.0 - ao / AOSamples;
 }
 
 vec3 exposureToneMapping(vec3 c, float e)
@@ -252,6 +302,7 @@ void main(void)
 		
 			vec3 V = normalize(CameraPosition - position.xyz);
 			
+			ColorOut *= ambiantOcclusion(position.xyz, normal, pixel);
 			
 			// Simple Point Lights
 			for(int l2 = 0; l2 < local_lights_count; ++l2)
@@ -272,7 +323,9 @@ void main(void)
 			{
 				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
 				sc /= sc.w;
-				float r = (sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5);
+				float r = 0.0;
+				if(Shadows[shadow].color.w == 0.0) // SpotLight
+					r = (sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5);
 				if((sc.x >= 0 && sc.x <= 1.f) &&
 					(sc.y >= 0 && sc.y <= 1.f) && 
 					r < 0.25)
@@ -286,8 +339,34 @@ void main(void)
 						variance = max(variance, MinVariance);
 						visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
 					}
-					ColorOut.rgb += visibility * cookTorrance(position.xyz, normal, V, color, 
-										Shadows[shadow].position.xyz, Shadows[shadow].color.rgb, 
+					float att = max(0.0, (1.0 - square(length(Shadows[shadow].position_range.xyz - position.xyz)/Shadows[shadow].position_range.w)));
+					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
+										Shadows[shadow].position_range.xyz, Shadows[shadow].color.rgb, 
+										data.w, data.z);
+				}
+			}
+			
+			// Shadow casting Omnidirectional lights
+			for(int shadow = 0; shadow < CubeShadowCount; ++shadow)
+			{
+				float dist = distance(position.xyz, CubeShadows[shadow].position_range.xyz);
+				if(dist < CubeShadows[shadow].position_range.w)
+				{
+					vec3 direction = normalize(position.xyz - CubeShadows[shadow].position_range.xyz);
+					
+					float visibility = 1.0;
+					vec2 moments = texture(CubeShadowMaps[shadow], direction).xy;
+					
+					float d = dist - moments.x;
+					if(d > 0.0)
+					{
+						float variance = moments.y - (moments.x * moments.x);
+						variance = max(variance, MinVariance);
+						visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
+					}
+					float att = max(0.0, (1.0 - square(dist/CubeShadows[shadow].position_range.w)));
+					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
+										CubeShadows[shadow].position_range.xyz, CubeShadows[shadow].color.rgb, 
 										data.w, data.z);
 				}
 			}
@@ -297,7 +376,7 @@ void main(void)
 		if(Bloom > 0.0) 
 		{
 			// Storing thresholded color for Bloom
-			imageStore(PositionDepth, ivec2(pixel), (dot(ColorOut.rgb, vec3(0.2126, 0.7152, 0.0722)) > Bloom) ? ColorOut : vec4(0.0));
+			imageStore(Normal, ivec2(pixel), (dot(ColorOut.rgb, vec3(0.2126, 0.7152, 0.0722)) > Bloom) ? ColorOut : vec4(0.0));
 		} else if(Exposure > 0.0) { 
 			// Tone Mapping
 			ColorOut.rgb = exposureToneMapping(ColorOut.rgb, Exposure);

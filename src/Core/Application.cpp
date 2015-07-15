@@ -74,6 +74,7 @@ void Application::init(const std::string& windowName)
 	glfwSetMouseButtonCallback(_window, s_mouse_button_callback);
 	glfwSetCursorPosCallback(_window, s_mouse_position_callback);
 	glfwSetWindowSizeCallback(_window, s_resize_callback);
+	glfwSetDropCallback(_window, s_drop_callback);
 	
 	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
@@ -176,18 +177,26 @@ void Application::in_loop_render()
 		if(l.dynamic) // Updates shadow maps if needed
 			l.drawShadowMap(_scene.getObjects());
 	
+	for(const auto& l : _scene.getOmniLights())
+		if(l.dynamic) // Updates shadow maps if needed
+			l.drawShadowMap(_scene.getObjects());
+	
 	// Light pass (Compute Shader)
 	glViewport(0, 0, _width, _height);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	_offscreenRender.getColor(0).bindImage(0, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	_offscreenRender.getColor(1).bindImage(1, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	_offscreenRender.getColor(2).bindImage(2, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	_offscreenRender.getColor(1).bindImage(1, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	_offscreenRender.getColor(2).bindImage(2, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	
 	size_t lc = 0;
 	for(const auto& l : _scene.getLights())
 		l.getShadowMap().bind(lc++ + 3);
+	
+	lc = 0;
+	for(const auto& l : _scene.getOmniLights())
+		l.getShadowMap().bind(lc++ + 13);
 	
 	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.getProgram().setUniform("ColorMaterial", (int) 0);
@@ -197,12 +206,20 @@ void Application::in_loop_render()
 	/// @todo Move this to getLights, or something like that ?
 	for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
+	for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
+		DeferredShadowCS.getProgram().setUniform(std::string("CubeShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 13);
 	DeferredShadowCS.getProgram().setUniform("ShadowCount", _scene.getLights().size());
+	DeferredShadowCS.getProgram().setUniform("CubeShadowCount", _scene.getOmniLights().size());
 	DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());
 	
 	DeferredShadowCS.getProgram().setUniform("CameraPosition", _camera.getPosition());
 	DeferredShadowCS.getProgram().setUniform("Exposure", _exposure);
 	DeferredShadowCS.getProgram().setUniform("Bloom", _bloom);
+	DeferredShadowCS.getProgram().setUniform("Ambiant", _ambiant);
+	DeferredShadowCS.getProgram().setUniform("MinVariance", _minVariance);
+	DeferredShadowCS.getProgram().setUniform("AOSamples", _aoSamples);
+	DeferredShadowCS.getProgram().setUniform("AOThreshold", _aoThreshold);
+	DeferredShadowCS.getProgram().setUniform("AORadius", _aoRadius);
 
 	DeferredShadowCS.compute(_resolution.x / DeferredShadowCS.getWorkgroupSize().x + 1, _resolution.y / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
 	DeferredShadowCS.memoryBarrier();
@@ -212,22 +229,22 @@ void Application::in_loop_render()
 	if(_bloom > 0.0)
 	{
 		// Downsampling and blur
-		_offscreenRender.getColor(1).generateMipmaps();
-		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, _bloomDownsampling);
+		_offscreenRender.getColor(2).generateMipmaps();
+		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, _bloomDownsampling);
 		for(int i = 0; i < _bloomBlur; ++i)
-			blur(_offscreenRender.getColor(1), _resolution.x, _resolution.y, _bloomDownsampling);
-		_offscreenRender.getColor(1).generateMipmaps();
+			blur(_offscreenRender.getColor(2), _resolution.x, _resolution.y, _bloomDownsampling);
+		_offscreenRender.getColor(2).generateMipmaps();
 		
 		// Blend
 		_offscreenRender.getColor(0).bind(0);
-		_offscreenRender.getColor(1).bind(1);
+		_offscreenRender.getColor(2).bind(1);
 		Program& BloomBlend = ResourcesManager::getInstance().getProgram("BloomBlend");
 		BloomBlend.use();
 		BloomBlend.setUniform("Exposure", _exposure);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
 		BloomBlend.useNone();
 		
-		_offscreenRender.getColor(1).set(Texture::Parameter::BaseLevel, 0);
+		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, 0);
 	} else {
 		// No post process, just blit.
 		_offscreenRender.bind(FramebufferTarget::Read);
@@ -504,4 +521,10 @@ void Application::mouse_position_callback(GLFWwindow* _window, double xpos, doub
 
 void Application::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+}
+
+void Application::drop_callback(GLFWwindow* window, int count, const char ** paths)
+{
+	for(int i = 0; i < count; ++i)
+		std::cout << "Dropped: " << paths[i] << std::endl;
 }

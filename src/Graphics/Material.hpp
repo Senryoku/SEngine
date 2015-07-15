@@ -74,7 +74,7 @@ public:
 private:
 	const Program*	_shadingProgram = nullptr;
 	
-	std::vector<std::unique_ptr<GenericUniform>>		_uniforms;
+	std::vector<std::unique_ptr<GenericUniform>>	_uniforms;
 	GLuint 												_textureCount = 0;
 	
 	GLint getLocation(const std::string& name) const;

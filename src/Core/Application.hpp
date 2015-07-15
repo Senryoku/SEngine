@@ -81,14 +81,20 @@ protected:
 	UniformBuffer		_camera_buffer;
 
 	bool 		_controlCamera = true;
-	double 	_mouse_x = 0.0, 
+	double 		_mouse_x = 0.0, 
 				_mouse_y = 0.0;
 	
 	// Post Process settings
 	float		_exposure = 2.0f;
-	float		_bloom = 1.0f;
+	float		_bloom = 1.2f;
 	int			_bloomBlur = 1;
 	int			_bloomDownsampling = 1;
+	glm::vec3	_ambiant = glm::vec3(0.06);
+	
+	float		_minVariance = 0.0000001f;
+	int			_aoSamples = 8;
+	float		_aoThreshold = 1.0f;
+	float		_aoRadius = 10.0f;
 
 	// Time Management
 	float		_timescale = 0.5;
@@ -99,9 +105,9 @@ protected:
 	
 	/**
 	 * G-Buffer:
-	 *  Color0 : Color (xyz) and R (w)
-	 *  Color1 : Position (xyz) and Depth (w)
-	 *  Color2 : Normal (xy), F0 (z) and k (w)
+	 *  Color0 : Color (xyz) and MaterialInfo (w)
+	 *  Color1 : World Position (xyz) and Depth (w)
+	 *  Color2 : Encoded Normal (xy), F0 (z) and R (w)
 	**/
 	Framebuffer<Texture2D, 3>	_offscreenRender;
 	
@@ -117,6 +123,7 @@ protected:
 	virtual void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 	virtual void mouse_position_callback(GLFWwindow* window, double xpos, double ypos);
 	virtual void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+	virtual void drop_callback(GLFWwindow* window, int count, const char ** paths);
 	
 	// Static
 	
@@ -145,4 +152,7 @@ protected:
 	
 	static void s_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	{ getInstance().scroll_callback(window, xoffset, yoffset); }
+	
+	static void s_drop_callback(GLFWwindow* window, int count, const char ** paths)
+	{ getInstance().drop_callback(window, count, paths); }
 };
