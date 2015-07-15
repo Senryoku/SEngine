@@ -64,7 +64,11 @@ void Light::init()
 
 void Light::updateMatrices()
 {
-	_view = glm::lookAt(_position, _position + _direction, glm::vec3(0, 1, 0));
+	glm::vec3 la = glm::normalize(_position + _direction);
+	glm::vec3 up{0, 1, 0};
+	if(la == up)
+		up = {0, 0, 1};
+	_view = glm::lookAt(_position, la, up);
 	_VPMatrix = _projection * _view;
 	_biasedVPMatrix = s_depthBiasMVP * _VPMatrix;
 	
