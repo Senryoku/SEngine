@@ -109,11 +109,9 @@ protected:
 	 *  Color1 : World Position (xyz) and Depth (w)
 	 *  Color2 : Encoded Normal (xy), F0 (z) and R (w)
 	**/
-	Framebuffer<Texture2D, 3>	_offscreenRender;
+	Framebuffer<Texture2D, 3>		_offscreenRender;
 	
 	Scene							_scene;
-	
-	bool	_debug = true;
 
 	// Callbacks (GLFW)
 	virtual void error_callback(int error, const char* description);

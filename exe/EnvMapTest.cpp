@@ -118,7 +118,7 @@ public:
 		_scene.getLights().resize(2);
 		
 		_scene.getLights()[0].init();
-		_scene.getLights()[0].setColor(glm::vec4(2.0));
+		_scene.getLights()[0].setColor(glm::vec3(2.0));
 		_scene.getLights()[0].setPosition(glm::vec3(45.0, 85.0, -20.0));
 		_scene.getLights()[0].lookAt(glm::vec3(0.0, 0.0, 0.0));
 		_scene.getLights()[0].setRange(150.0f);
@@ -126,7 +126,7 @@ public:
 		_scene.getLights()[0].updateMatrices();
 		
 		_scene.getLights()[1].init();
-		_scene.getLights()[1].setColor(glm::vec4(1.5));
+		_scene.getLights()[1].setColor(glm::vec3(1.5));
 		_scene.getLights()[1].setPosition(glm::vec3(45.0, 12.0, -18.0));
 		_scene.getLights()[1].lookAt(glm::vec3(45.0, 0.0, -18.1));
 		_scene.getLights()[1].setRange(20.0f);

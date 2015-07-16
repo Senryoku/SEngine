@@ -173,13 +173,16 @@ void Application::in_loop_render()
 
 	_offscreenRender.unbind();
 	
-	for(const auto& l : _scene.getLights())
-		if(l.dynamic) // Updates shadow maps if needed
-			l.drawShadowMap(_scene.getObjects());
-	
-	for(const auto& l : _scene.getOmniLights())
-		if(l.dynamic) // Updates shadow maps if needed
-			l.drawShadowMap(_scene.getObjects());
+	if(!_paused)
+	{
+		for(const auto& l : _scene.getLights())
+			if(l.dynamic) // Updates shadow maps if needed
+				l.drawShadowMap(_scene.getObjects());
+		
+		for(const auto& l : _scene.getOmniLights())
+			if(l.dynamic) // Updates shadow maps if needed
+				l.drawShadowMap(_scene.getObjects());
+	}
 	
 	// Light pass (Compute Shader)
 	glViewport(0, 0, _width, _height);
@@ -346,10 +349,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 		switch(key)
 		{
 			case GLFW_KEY_N:
-			{
-				std::cout << "Debug: Toggle debug flag." << std::endl;
-				_debug = !_debug;
-				
+			{				
 				std::cout << _camera.getPosition().x << "\t" << _camera.getPosition().y << "\t" << _camera.getPosition().z << std::endl;
 				break;
 			}
@@ -364,25 +364,6 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			{
 				_bloomDownsampling += 1;
 				std::cout << "BloomDownsampling: " << _bloomDownsampling << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_7:
-			{
-				_exposure -= 0.1;
-				std::cout << "Exposure: " << _exposure << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_8:
-			{
-				_exposure += 0.1;
-				std::cout << "Exposure: " << _exposure << std::endl;
-				break;
-			}
-			case GLFW_KEY_M:
-			{
-				std::cout << "Debug: Dumping shadow map... ";
-				_scene.getLights()[0].getShadowMap().dump("ShadowMap0.png");
-				std::cout << "Ok." << std::endl;
 				break;
 			}
 			case GLFW_KEY_ESCAPE:

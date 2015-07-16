@@ -3,10 +3,9 @@
 #include <vector>
 
 #include <ResourcesManager.hpp>
-#include <GUIClickable.hpp>
 #include <GUIElement.hpp>
 
-class GUIWindow : public GUIClickable
+class GUIWindow : public GUIElement
 {
 public:
 	GUIWindow() =default;
@@ -21,9 +20,11 @@ public:
 	Element* add(Element* e)
 	{
 		if(!_elements.empty())
-			e->setPosition(glm::vec2(0.0, 
-					_elements.back()->getPosition().y + 
-					_elements.back()->getAABB().max.y + _padding));
+			e->Position = glm::vec2(0.0, 
+					_elements.back()->Position.y + 
+					_elements.back()->getAABB().max.y +
+					-e->getAABB().min.y +
+					_padding);
 		_elements.push_back(e);
 		//_aabb += e->c2p(e->getAABB());
 		return e;
@@ -93,10 +94,12 @@ public:
 				p->draw(resolution, pos);
 	}
 	
-private:
-	std::vector<GUIClickable*>	_elements;
+	float getPadding() const { return _padding; }
 	
-	GUIClickable*					_activeElement = nullptr;
+private:
+	std::vector<GUIElement*>	_elements;
+	
+	GUIElement*				_activeElement = nullptr;
 	
 	float			_padding = 5.0;
 	glm::vec4		_color = glm::vec4(1.0, 1.0, 1.0, 0.1);

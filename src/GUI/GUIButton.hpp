@@ -2,10 +2,10 @@
 
 #include <functional>
 
-#include <GUIClickable.hpp>
+#include <GUIElement.hpp>
 #include <GUIText.hpp>
 
-class GUIButton : public GUIClickable
+class GUIButton : public GUIElement
 {
 public:
 	using ClickFunc = std::function<void(void)>;

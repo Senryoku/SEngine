@@ -1,15 +1,23 @@
 #pragma once
 
+#include <functional>
+#include <vector>
+
 #include <Clock.hpp>
 
 #include <Singleton.hpp>
 
 class TimeManager : public Singleton<TimeManager>
 {
-	public:
+public:
 	using Real = double;
 	using TimePoint = Clock::time_point;
 	using Seconds = std::chrono::duration<Real>;
+	
+	/**
+	 * Parameters: Runtime, DeltaTime
+	**/
+	using Callback = std::function<void(Real, Real)>;
 	
 	/** @brief Default Constructor
 	 *  
@@ -48,21 +56,22 @@ class TimeManager : public Singleton<TimeManager>
 	
 	inline Real getRuntime() const { return _runtime; }
 	
-	inline Real& getRuntimeRef() { return _floatRunTime; }
+	inline void subscribe(const Callback& c) { _callbacks.push_back(c); }
 	
-	private:
+private:
 	static constexpr Real s_minTimeFrame = 1.f/10000.f;
 	static constexpr Real s_maxTimeFrame = 1.f/1.f;
 	
 	Real		_runtime = 0.f;
-	Real		_floatRunTime;
 	
 	Real		_timerate; 				///< TimeRate
 	
-	Real		_cachedRealDeltaTime;	///< Last 'real' frame time in seconds (floating-point) 
-	Real		_cachedDeltaTime;		///< Last in-game frame time in seconds (floating-point)
+	Real		_cachedRealDeltaTime;		///< Last 'real' frame time in seconds (floating-point) 
+	Real		_cachedDeltaTime;			///< Last in-game frame time in seconds (floating-point)
 	
-	TimePoint	_lastUpdate;			///< TimePoint of the last call to update()
+	TimePoint	_lastUpdate;				///< TimePoint of the last call to update()
+	
+	std::vector<Callback>	_callbacks;	///< Functions to call on update.
 	
 	inline TimePoint now() const
 	{ return Clock::now(); }

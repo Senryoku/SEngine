@@ -2,10 +2,10 @@
 
 #include <functional>
 
-#include <GUIClickable.hpp>
+#include <GUIElement.hpp>
 #include <GUIText.hpp>
 
-class GUICheckbox : public GUIClickable
+class GUICheckbox : public GUIElement
 {
 public:
 	using ToggleFunc = std::function<bool(void)>;

@@ -141,31 +141,31 @@ public:
 		_scene.getLights().resize(5);
 		
 		_scene.getLights()[0].init();
-		_scene.getLights()[0].setColor(glm::vec4(2.0));
+		_scene.getLights()[0].setColor(glm::vec3(2.0));
 		_scene.getLights()[0].setPosition(glm::vec3(50.0, 50.0, 120.0));
 		_scene.getLights()[0].lookAt(glm::vec3(50.0, 0.0, 50.0));
 		_scene.getLights()[0].updateMatrices();
 		
 		_scene.getLights()[1].init();
-		_scene.getLights()[1].setColor(glm::vec4(0.9, 0.6, 0.6, 1.0));
+		_scene.getLights()[1].setColor(glm::vec3(0.9, 0.6, 0.6));
 		_scene.getLights()[1].setPosition(glm::vec3(120.0, 50.0, 50.0));
 		_scene.getLights()[1].lookAt(glm::vec3(50.0, 0.0, 50.0));
 		_scene.getLights()[1].updateMatrices();
 		
 		_scene.getLights()[2].init();
-		_scene.getLights()[2].setColor(glm::vec4(1.0));
+		_scene.getLights()[2].setColor(glm::vec3(1.0));
 		_scene.getLights()[2].setPosition(glm::vec3(30.0, 50.0, 140.0));
 		_scene.getLights()[2].lookAt(glm::vec3(30.0, 0.0, 150.0));
 		_scene.getLights()[2].updateMatrices();
 		
 		_scene.getLights()[3].init();
-		_scene.getLights()[3].setColor(glm::vec4(1.0));
+		_scene.getLights()[3].setColor(glm::vec3(1.0));
 		_scene.getLights()[3].setPosition(glm::vec3(140.0, 75.0, 30.0));
 		_scene.getLights()[3].lookAt(glm::vec3(150.0, 0.0, 30.0));
 		_scene.getLights()[3].updateMatrices();
 		
 		_scene.getLights()[4].init();
-		_scene.getLights()[4].setColor(glm::vec4(1.0));
+		_scene.getLights()[4].setColor(glm::vec3(1.0));
 		_scene.getLights()[4].setPosition(glm::vec3(170.0, 150.0, 170.0));
 		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
 		_scene.getLights()[4].updateMatrices();
@@ -192,7 +192,7 @@ public:
 			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);
 		}
 		
-		_scene.getLights()[0].setColor(glm::vec4(5.0f * 
+		_scene.getLights()[0].setColor(glm::vec3(5.0f * 
 			triangleWave(TimeManager::getInstance().getRuntime(), 5.0)));
 		
 		/// @todo Fix bug (black dots) when light position == camera position

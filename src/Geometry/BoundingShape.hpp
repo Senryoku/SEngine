@@ -4,7 +4,7 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp> // glm::value_ptr
 
-#include <MathTools.hpp> // glm::value_ptr
+#include <MathTools.hpp>
 
 /**
  * Base class for all kinds of Bounding Shapes

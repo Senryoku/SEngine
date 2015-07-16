@@ -24,7 +24,9 @@ void TimeManager::update()
         _cachedRealDeltaTime = s_maxTimeFrame;
     }
 	
-	_cachedDeltaTime = getTimerate()*getRealDeltaTime();
+	_cachedDeltaTime = getTimerate() * getRealDeltaTime();
 	_runtime += _cachedDeltaTime;
-	_floatRunTime = static_cast<float>(_runtime);
+	
+	for(auto& f : _callbacks)
+		f(_runtime, _cachedRealDeltaTime);
 }

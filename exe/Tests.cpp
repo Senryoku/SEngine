@@ -8,6 +8,8 @@
 #include <GUIButton.hpp>
 #include <GUICheckbox.hpp>
 #include <GUIEdit.hpp>
+#include <GUIGraph.hpp>
+#include <GUISeparator.hpp>
 
 #include <glm/gtx/transform.hpp>
 
@@ -162,11 +164,15 @@ public:
 				"in/Textures/skybox/negz.png"});
 		
 		auto w = _gui.add(new GUIWindow());
+		/*
 		w->add(new GUIText([&]() -> std::string {
 			return to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
 						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS";
 		}));
-		w->add(new GUIText("=================="));
+		*/
+		w->add(new GUIGraph<float>("Frame Time: ", [&]() -> float { return 1000.f * TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 20.0, 5.0));
+		w->add(new GUIGraph<float>("FPS: ", [&]() -> float { return 1.0f/TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 500.0, 5.0));
+		w->add(new GUISeparator(w));
 		w->add(new GUIText("Stats"));
 		
 		auto w2 = _gui.add(new GUIWindow());
@@ -179,15 +185,16 @@ public:
 		w2->add(new GUIEdit<int>("AOSamples : ", &_aoSamples));
 		w2->add(new GUIEdit<float>("MinVariance : ", &_minVariance));
 		w2->add(new GUIEdit<float>("Bloom : ", &_bloom));
+		w2->add(new GUIEdit<float>("Exposure : ", &_exposure));
 		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { _bloom = -_bloom; return _bloom > 0.0; }));
 		w2->add(new GUICheckbox("Pause", &_paused));
-		w2->add(new GUIText("=================="));
+		w2->add(new GUISeparator(w2));
 		w2->add(new GUIText("Controls"));
 		
 		auto w3 = _gui.add(new GUIWindow());
 		w3->add(new GUIEdit<float>("Fresnel Reflectance : ", &F0));
 		w3->add(new GUIEdit<float>("Roughness : ", &R));
-		w3->add(new GUIText("=================="));
+		w3->add(new GUISeparator(w3));
 		w3->add(new GUIText("Material Test"));
 		
 		auto w4 = _gui.add(new GUIWindow());
@@ -197,7 +204,7 @@ public:
 		w4->add(new GUIEdit<float>("Ambiant Color B: ", &_ambiant.b));
 		w4->add(new GUIEdit<float>("Ambiant Color G: ", &_ambiant.g));
 		w4->add(new GUIEdit<float>("Ambiant Color R: ", &_ambiant.r));
-		w4->add(new GUIText("=================="));
+		w4->add(new GUISeparator(w4));
 		w4->add(new GUIText("Lights Test"));
 	}
 	
@@ -216,9 +223,9 @@ public:
 			
 			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
 			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-		}
 		
-		_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
+			_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
+		}
 	}
 	
 	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override

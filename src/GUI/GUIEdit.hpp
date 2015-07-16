@@ -2,11 +2,11 @@
 
 #include <sstream>
 
-#include <GUIClickable.hpp>
+#include <GUIElement.hpp>
 #include <GUIText.hpp>
 
-template<typename T>
-class GUIEdit : public GUIClickable
+template<typename T = float>
+class GUIEdit : public GUIElement
 {
 public:
 	GUIEdit(const std::string& label, T* value) :
@@ -15,13 +15,13 @@ public:
 		_textLabel(label),
 		_textValue(_strValue)
 	{
-		_textValue.setPosition({_textLabel.getAABB().max.x, 0.0});
+		_textValue.Position = {_textLabel.getAABB().max.x, 0.0};
 		updateAABB();
 	}
 	
 	void updateAABB()
 	{
-		_aabb = _textLabel.getAABB() + (_textValue.getAABB() + _textValue.getPosition());
+		_aabb = _textLabel.getAABB() + (_textValue.getAABB() + _textValue.Position);
 		_aabb.min -= glm::vec2{4.0};
 		_aabb.max += glm::vec2{4.0};
 	}

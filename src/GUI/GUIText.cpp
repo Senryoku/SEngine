@@ -237,6 +237,8 @@ void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position)
 {
 	assert(_vao);
 	
+	auto p = c2p(position);
+	
 	// If we are using a function, check if the text has changed
 	if(_func)
 		setText(_func());
@@ -251,7 +253,7 @@ void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position)
 	}
 	P.use();
 	P.setUniform("Resolution", resolution);
-	P.setUniform("Position", _position + position);
+	P.setUniform("Position", p);
 	
 	_font->Tex->bind();
 	_vao.bind();

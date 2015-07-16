@@ -9,7 +9,7 @@
 #include <Buffer.hpp>
 #include <VertexArray.hpp>
 #include <ResourcesManager.hpp>
-#include <GUIClickable.hpp>
+#include <GUIElement.hpp>
 
 class Font
 {
@@ -36,7 +36,7 @@ public:
 /**
  * Handles the rendering of distance field fonts.
 **/
-class GUIText : public GUIClickable
+class GUIText : public GUIElement
 {
 public:
 	using TextFunc = std::function<std::string(void)>;
@@ -76,6 +76,8 @@ private:
 	std::vector<size_t>				_triangles;
 	
 	const Font::Glyph& getGlyph(char c) const;
+	
+	// Static
 	
 	static std::unique_ptr<Font>		s_defaultFont;
 };
