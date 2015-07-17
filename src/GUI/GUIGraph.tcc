@@ -30,8 +30,8 @@ template<typename T>
 void GUIGraph<T>::updateAABB()
 {
 	_aabb = _textLabel.getAABB() + (_textValue.getAABB() + _textValue.Position);
-	_aabb.min -= glm::vec2{4.0, 00.0};
-	_aabb.max += glm::vec2{4.0, 40.0};
+	_aabb.min -= glm::vec2{0.0, 00.0};
+	_aabb.max += glm::vec2{0.0, 50.0};
 	_aabb.max.x = glm::max(_aabb.max.x, 250.0f);
 }
 
@@ -88,8 +88,10 @@ template<typename T>
 void GUIGraph<T>::init()
 {
 	_textLabel.setFontSize(16.0);
+	_textLabel.Position = {4.0f, 4.0f};
 	_textValue.setFontSize(16.0);
-	_textValue.Position = {_textLabel.getAABB().max.x, 0.0};
+	_textValue.Position = glm::vec2{_textLabel.getAABB().max.x, 0.0} + 
+							glm::vec2{4.0f, 4.0f};
 	updateAABB();
 	
 	// Subscribe to time updates
