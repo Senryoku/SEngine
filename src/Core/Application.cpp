@@ -97,16 +97,6 @@ void Application::run_init()
 
 void Application::update()
 {
-	TimeManager::getInstance().update();
-	_frameTime = TimeManager::getInstance().getRealDeltaTime();
-	_frameRate = TimeManager::getInstance().getInstantFrameRate();
-	if(!_paused)
-	{
-		_time += _timescale * _frameTime;
-		_frameTime *= _timescale;
-		if(_frameTime > 1.0/60.0) _frameTime = 1.0/60.0; // In case the _window is moved
-	} else _frameTime = 0.0;
-
 	glfwSetWindowTitle(_window, std::string("NamelessEngine2 - ")
 									.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
 									.append("ms - FPS: ")
@@ -142,6 +132,25 @@ void Application::update()
 	_camera.updateView();
 	_gpuCameraData = {_camera.getMatrix(), _projection};
 	_camera_buffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
+	_camera_buffer.unbind();
+	
+	/// Shadow map update
+	if(!_paused)
+	{
+		for(auto l : _scene.getLights())
+			if(l->Dynamic) // Updates shadow maps if needed
+			{
+				l->updateMatrices();
+				l->drawShadowMap(_scene.getObjects());
+			}
+		
+		for(auto& l : _scene.getOmniLights())
+			if(l.dynamic) // Updates shadow maps if needed
+			{
+				l.updateMatrices();
+				l.drawShadowMap(_scene.getObjects());
+			}
+	}
 }
 
 void Application::renderGUI()
@@ -163,7 +172,18 @@ void Application::run()
 	resize_callback(_window, _width, _height);
 	
 	while(!glfwWindowShouldClose(_window))
-	{ 
+	{
+		// Time Management
+		TimeManager::getInstance().update();
+		_frameTime = TimeManager::getInstance().getRealDeltaTime();
+		_frameRate = TimeManager::getInstance().getInstantFrameRate();
+		if(!_paused)
+		{
+			_time += _timescale * _frameTime;
+			_frameTime *= _timescale;
+			if(_frameTime > 1.0/60.0) _frameTime = 1.0/60.0; // In case the _window is moved
+		} else _frameTime = 0.0;
+	
 		update();
 		
 		render();

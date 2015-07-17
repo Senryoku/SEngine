@@ -40,19 +40,6 @@ void DeferredRenderer::renderGBuffer()
 
 void DeferredRenderer::renderLightPass()
 {
-	/// Shadow map update
-	// Shouldn't be there, but weird bug if not... Can't understand why =/
-	if(!_paused)
-	{
-		for(const auto& l : _scene.getLights())
-			if(l.dynamic) // Updates shadow maps if needed
-				l.drawShadowMap(_scene.getObjects());
-		
-		for(const auto& l : _scene.getOmniLights())
-			if(l.dynamic) // Updates shadow maps if needed
-				l.drawShadowMap(_scene.getObjects());
-	}
-	
 	// Light pass (Compute Shader)
 	Context::viewport(0, 0, _width, _height);
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -64,7 +51,7 @@ void DeferredRenderer::renderLightPass()
 	
 	size_t lc = 0;
 	for(const auto& l : _scene.getLights())
-		l.getShadowMap().bind(lc++ + 3);
+		l->getShadowMap().bind(lc++ + 3);
 	
 	lc = 0;
 	for(const auto& l : _scene.getOmniLights())
@@ -121,7 +108,8 @@ void DeferredRenderer::renderPostProcess()
 		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, 0);
 	} else {
 		// No post process, just blit.
-		_offscreenRender.bind(FramebufferTarget::Read);
+		//_offscreenRender.bind(FramebufferTarget::Read);
+		_scene.getLights()[0]->getShadowBuffer().bind(FramebufferTarget::Read);
 		glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 }

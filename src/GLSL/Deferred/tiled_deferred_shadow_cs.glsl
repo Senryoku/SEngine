@@ -215,6 +215,18 @@ vec3 exposureToneMapping(vec3 c, float e)
 	return vec3(1.0) - exp(-c * e);
 }
 
+float VSM(float dist, vec2 moments)
+{
+	float d = dist - moments.x;
+	if(d > 0.0)
+	{
+		float variance = moments.y - (moments.x * moments.x);
+		variance = max(variance, MinVariance);
+		return smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
+	}
+	return 1.0;
+}
+
 const int highValue = 2147483646;
 const float boxfactor = 10000.0f; // Minimize the impact of the use of int for bounding boxes
 
@@ -323,26 +335,24 @@ void main(void)
 			{
 				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
 				sc /= sc.w;
-				float r = 0.0;
-				if(Shadows[shadow].color.w == 0.0) // SpotLight
-					r = (sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5);
+				bool spotlight = Shadows[shadow].color.w != 0.0;
+				float r = (!spotlight) ? 0.0 :
+								(sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5); // Spot Light
 				if((sc.x >= 0 && sc.x <= 1.f) &&
 					(sc.y >= 0 && sc.y <= 1.f) && 
 					r < 0.25)
 				{
-					float visibility = 1.0; // Trying to use sc or r cause weird glitches Oô
 					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
-					float d = sc.z - moments.x;
-					if(d > 0.0)
-					{
-						float variance = moments.y - (moments.x * moments.x);
-						variance = max(variance, MinVariance);
-						visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
-					}
-					float att = max(0.0, (1.0 - square(length(Shadows[shadow].position_range.xyz - position.xyz)/Shadows[shadow].position_range.w)));
+					float visibility = VSM(sc.z, moments);
+					
+					float att = (!spotlight) ? 1.0 :
+							max(0.0, (1.0 - square(length(Shadows[shadow].position_range.xyz - position.xyz)/Shadows[shadow].position_range.w)));
+					vec3 light_pos = (!spotlight) ? position.xyz - 10.0 * Shadows[shadow].position_range.xyz:
+											Shadows[shadow].position_range.xyz;
 					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
-										Shadows[shadow].position_range.xyz, Shadows[shadow].color.rgb, 
+										light_pos, Shadows[shadow].color.rgb, 
 										data.w, data.z);
+					//ColorOut.r += light_pos.x;
 				}
 			}
 			
@@ -354,16 +364,9 @@ void main(void)
 				{
 					vec3 direction = normalize(position.xyz - CubeShadows[shadow].position_range.xyz);
 					
-					float visibility = 1.0;
 					vec2 moments = texture(CubeShadowMaps[shadow], direction).xy;
+					float visibility = VSM(dist, moments);
 					
-					float d = dist - moments.x;
-					if(d > 0.0)
-					{
-						float variance = moments.y - (moments.x * moments.x);
-						variance = max(variance, MinVariance);
-						visibility = smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
-					}
 					float att = max(0.0, (1.0 - square(dist/CubeShadows[shadow].position_range.w)));
 					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
 										CubeShadows[shadow].position_range.xyz, CubeShadows[shadow].color.rgb, 

@@ -24,7 +24,7 @@ void Font::load(const std::string& path)
 	auto first = line.find('\"') + 1;
 	auto second = line.find('\"', first);
 	Name = line.substr(first, second - first);
-	std::cout << "Loading " << Name << " from " << path << std::endl;
+	//std::cout << "Loading " << Name << " from " << path << std::endl;
 	
 	size_t pos = 0;
 	
@@ -37,7 +37,6 @@ void Font::load(const std::string& path)
 		std::stringstream ss;
 		ss.str(line.substr(pos)),
 		ss >> size;
-		std::cout << size << std::endl;
 	} else std::cerr << "Warning: Couldn't extract glyph size from font descriptive file." << std::endl;
 	
 	std::getline(file, line);

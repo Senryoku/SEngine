@@ -10,27 +10,17 @@
 #include <Shaders.hpp>
 
 /**
- * Light
- *
- * Describes a spotlight which can cast shadows (Variance Shadow Mapping).
- * @todo Internalize shadow map drawing
- * @todo Re-use frustum
+ * ShadowCastingLight
 **/
+template<typename T>
 class Light
 {
 public:
-	using ShadowBuffer = Framebuffer<Texture2D, 1, Texture2D, true>;
-	
-	struct GPUData
-	{
-		glm::vec4	position_range;
-		glm::vec4	color_info;
-		glm::mat4	depthMVP;
-	};
+	using ShadowBuffer = Framebuffer<T, 1, T, true>;
 	
 	// Public attributes
-	bool			dynamic = false;	///< Tells the application if the shadow map should be redrawn each frame
-	unsigned int	downsampling = 1;	///< Strengh of the shadow map's downsampling
+	bool			Dynamic = false;	///< Tells the application if the shadow map should be redrawn each frame
+	unsigned int	Downsampling = 1;	///< Strengh of the shadow map's downsampling
 
 	/**
 	 * Constructor
@@ -42,40 +32,27 @@ public:
 	/**
 	 * Destructor
 	**/
-	~Light() =default;
+	virtual ~Light() =default;
 
 	/**
 	 * Initialize the shadow mapping attributes (Shaders, Framebuffer...)
 	 * for this light.
 	**/
-	void init();
+	virtual void init() =0;
+	
+	/**
+	 * @return RW Reference to the color of the light
+	**/
+	inline glm::vec3& getColor() { return _color; }
 	
 	/**
 	 * @return Color of the light
 	**/
-	inline glm::vec3& getColor() { return _color; }
 	inline const glm::vec3& getColor() const { return _color; }
 	
 	/**
-	 * @return Position of the light
+	 * @return SpotLight's GPU buffer.
 	**/
-	inline const glm::vec3& getPosition() const { return _position; }
-	
-	/**
-	 * @return Direction of the light
-	**/
-	inline const glm::vec3& getDirection() const { return _direction; }
-	
-	/**
-	 * @return Range of the light
-	**/
-	inline float getRange() const { return _range; }
-	
-	/**
-	 * @return Light's data structured for GPU use.
-	**/
-	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),  glm::vec4(glm::vec3(getColor()), 0.0), getBiasedMatrix()}; }
-	
 	inline const UniformBuffer& getGPUBuffer() const { return _gpuBuffer; }
 	
 	/**
@@ -83,184 +60,96 @@ public:
 	 * @param col New Color
 	**/
 	inline void setColor(const glm::vec3& col) { _color = col; }
-	
-	/**
-	 * Modifies the position of the light source
-	 * @param pos New position
-	**/
-	inline void setPosition(const glm::vec3& pos) { _position = pos; updateMatrices(); }
-	
-	/**
-	 * Modifies the direction of the light source
-	 * @param dir New direction
-	**/
-	inline void setDirection(const glm::vec3& dir) { _direction = glm::normalize(dir); updateMatrices(); }
-	
-	/**
-	 * Modifies the direction of the light source to look at the specified point in World Space
-	 * @param at Light's new focus point
-	**/
-	inline void lookAt(const glm::vec3& at) { setDirection(at - _position); }
-	
-	/**
-	 * Modifies the range of the light source
-	 * @param r New range
-	**/
-	void setRange(float r);
-	
-	/**
-	 * Modifies the opening angle of the light source
-	 * @param a New angle (rad)
-	**/
-	void setAngle(float a);
-	
-	/**
-	 * Returns the view matrix for this Light. 
-	 *
-	 * @return World to Light's view space matrix.
-	**/
-	inline const glm::mat4& getViewMatrix() const { return _view; }
-	
+
 	/**
 	 * Returns the projection matrix for this Light. 
 	 *
 	 * @return Light's projection matrix.
 	**/
 	inline const glm::mat4& getProjectionMatrix() const { return _projection; }
-		
+
 	/**
 	 * Sets the projection matrix for this Light. 
 	**/
 	inline void setProjectionMatrix(const glm::mat4& p) { _projection = p; updateMatrices(); }
-	
+
 	/**
-	 * Returns the transformation matrix (Projection * View) for this Light. 
-	 *
-	 * @return World to Light's screen space matrix.
-	 * @see getBiasedMatrix()
-	**/
-	inline const glm::mat4& getMatrix() const { return _VPMatrix; }
-	
-	/**
-	 * Returns the biased transformation matrix (Projection * View) for this Light.
-	 * (Biased meaning "in [0, 1] range", i.e. texture friendly :])
-	 *
-	 * @return biased World to Light's view space matrix.
-	 * @see getMatrix()
-	**/
-	inline const glm::mat4& getBiasedMatrix() const { return _biasedVPMatrix; }
-	
-	/**
-	 * @return Light's shadow map framme buffer.
+	 * @return Light's shadow map frame buffer.
 	**/
 	inline const ShadowBuffer& getShadowBuffer() const { return _shadowMapFramebuffer; }
 	
 	/**
 	 * @return Light's shadow map depth texture.
 	**/
-	inline const Texture2D& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
+	inline const T& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
 	
 	inline const size_t& getResolution() const { return _shadowMapResolution; }
 	
 	/**
 	 * Warning!
 	**/
-	inline void setResolution(size_t r)
-	{
-		_shadowMapResolution = r;
-		_shadowMapFramebuffer = ShadowBuffer(_shadowMapResolution);
-	}
+	inline void setResolution(size_t r);
 	
 	/**
 	 * Updates Light's internal transformation matrices according to
 	 * its current position/direction/range.
 	**/
-	void updateMatrices();
+	virtual void updateMatrices() =0;
 	
 	/**
 	 * Setup the context to draw to this light' shadow map.
 	 * @todo Find a better name...
 	**/
-	void bind() const;
-	
-	/**
-	 * Setup the context to draw to this light' shadow map, assuming instanced draw calls.
-	 * @todo Find a better name... (Even more urgent.)
-	**/
-	void bindInstanced() const;
+	virtual void bind() const =0;
 	
 	/**
 	 * Restores the default framebuffer.
 	 * @todo Find a better name...
 	**/
-	void unbind() const;
+	virtual void unbind() const =0;
 	
 	/**
 	 * Draws passed objects to this light's shadow map
 	**/
-	void drawShadowMap(const std::vector<MeshInstance>& objects) const;
+	virtual void drawShadowMap(const std::vector<MeshInstance>& objects) const =0;
 	
 	// Static
-	
-	/**
-	 * @return Bias matrix (from screen space to texture space)
-	**/
-	inline static const glm::mat4& getBiasMatrix();
 	
 	/**
 	 * @return Program used to draw the shadow map.
 	**/
 	inline static const Program& getShadowMapProgram();
 	
-	/**
-	 * @return Program used to draw the shadow map for instanced Draw Calls.
-	**/
-	inline static const Program& getShadowMapInstanceProgram();
-	
 protected:
 	glm::vec3			_color = glm::vec3(1.f);				///< Light's color
 	
-	glm::vec3			_position = glm::vec3(0.f);				///< Light's position in World Space
-	glm::vec3			_direction = glm::vec3(0.f, 0.f, 1.f);	///< Light's direction in World Space
-	float				_angle = 0.7853975;						///< Light's opening angle (rad)
-	float				_range = 1000.0; 							///< Light's range, mainly used for the Shadow Mapping settings
-
 	unsigned int		_shadowMapResolution;			///< Resolution of the shadow map (depth map)
 	ShadowBuffer		_shadowMapFramebuffer;		///< Framebuffer used to draw the shadow map
-	glm::mat4			_view;							///< View matrix used to draw the shadow map
 	glm::mat4			_projection;					///< Projection matrix used to draw the shadow map
-	glm::mat4			_VPMatrix;						///< ViewProjection matrix used to draw the shadow map
-	glm::mat4			_biasedVPMatrix;				///< Biased ViewProjection matrix used to compute the shadows projected on the scene
 	UniformBuffer		_gpuBuffer;					///< Buffer used for shadow mapping
 	
-	// Static
-	static const glm::mat4	s_depthBiasMVP;	///< Used to compute the biased ViewProjection matrix
+	virtual void initPrograms() =0;
 	
+	// Static
 	static Program* 			s_depthProgram;	///< Program used to draw the shadow map
     static VertexShader*		s_depthVS;			///< VertexShader used to draw the shadow map
     static FragmentShader*	s_depthFS;			///< FragmentShader used to draw the shadow map
-	
-	static Program* 		s_depthInstanceProgram;	///< Program used to draw the shadow map for instanced Draw Calls
-    static VertexShader*	s_depthInstanceVS;		///< VertexShader used to draw the shadow map for instanced Draw Calls
-	
-	static void initPrograms();
 };
 
 // Inlined functions
 
-inline const glm::mat4& Light::getBiasMatrix()
-{
-	return s_depthBiasMVP;
-}
-
-inline const Program& Light::getShadowMapProgram()
+template<typename T>
+inline const Program& Light<T>::getShadowMapProgram()
 {
 	assert(s_depthProgram != nullptr);
 	return *s_depthProgram;
 }
 
-inline const Program& Light::getShadowMapInstanceProgram()
+template<typename T>
+inline void Light<T>::setResolution(size_t r)
 {
-	assert(s_depthInstanceProgram != nullptr);
-	return *s_depthInstanceProgram;
+	_shadowMapResolution = r;
+	_shadowMapFramebuffer = ShadowBuffer(_shadowMapResolution);
 }
+
+#include <Light.tcc>

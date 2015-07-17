@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Light.hpp>
+#include <DirectionalLight.hpp>
 #include <OmnidirectionalLight.hpp>
 #include <PointLight.hpp>
 #include <MeshInstance.hpp>
@@ -14,6 +14,12 @@ class Scene
 public:
 	Scene() =default;
 	
+	~Scene()
+	{
+		for(auto p : _lights)
+			delete p;
+	}
+	
 	void init()
 	{
 		_pointLightBuffer.init();
@@ -23,10 +29,17 @@ public:
 	std::vector<MeshInstance>& getObjects()  { return _objects; }
 	const std::vector<MeshInstance>& getObjects() const { return _objects; }
 	
-	const std::vector<Light>& getLights() const { return _lights; }
+	const std::vector<DirectionalLight*>& getLights() const { return _lights; }
 	
-	std::vector<Light>& getLights() { _dirtyLights = true; return _lights; }
+	std::vector<DirectionalLight*>& getLights() { _dirtyLights = true; return _lights; }
 	std::vector<OmnidirectionalLight>& getOmniLights() { _dirtyLights = true; return _omniLights; }
+	
+	template<typename T>
+	inline T* add(T* dl)
+	{
+		getLights().push_back(dl);
+		return dl;
+	}
 	
 	std::vector<PointLight>& getPointLights()
 	{
@@ -46,13 +59,19 @@ public:
 	{
 		for(size_t i = 0; i < _lights.size(); ++i)
 		{
-			_lights[i].getGPUBuffer().bind(i + 2);
-			_lights[i].updateMatrices();
+			if(_dirtyLights)
+			{
+				_lights[i]->getGPUBuffer().bind(i + 2);
+				_lights[i]->updateMatrices();
+			}
 		}
 		for(size_t i = 0; i < _omniLights.size(); ++i)
 		{
-			_omniLights[i].getGPUBuffer().bind(i + 12);
-			_omniLights[i].updateMatrices();
+			if(_dirtyLights)
+			{
+				_omniLights[i].getGPUBuffer().bind(i + 12);
+				_omniLights[i].updateMatrices();
+			}
 		}
 		_dirtyLights = false;
 	}
@@ -62,8 +81,7 @@ public:
 		if(_skybox)
 			_skybox.draw(p, v);
 		
-		if(_dirtyLights)
-			updateLights();
+		updateLights();
 		
 		if(_dirtyPointLights)
 			updatePointLightBuffer();
@@ -87,7 +105,7 @@ private:
 	std::vector<MeshInstance>	_objects;
 	
 	bool									_dirtyLights = true;
-	std::vector<Light>					_lights;
+	std::vector<DirectionalLight*>		_lights;
 	std::vector<OmnidirectionalLight>	_omniLights;
 	
 	bool							_dirtyPointLights = true;

@@ -1,6 +1,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include <SpotLight.hpp>
+#include <OrthographicLight.hpp>
 #include <DeferredRenderer.hpp>
 
 #include <MathTools.hpp>
@@ -116,32 +118,39 @@ public:
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		// Shadow casting lights ---------------------------------------------------
-
-		_scene.getLights().resize(3 + 6);
+		OrthographicLight* o = _scene.add(new OrthographicLight(_camera));
+		o->init();
+		o->Dynamic = true;
+		o->setColor(glm::vec3(2.0));
+		o->setDirection(glm::normalize(glm::vec3{0.1, -1.0, 0.1}));
+		o->updateMatrices();
+		/*
+		SpotLight* s = _scene.add(new SpotLight());
+		s->init();
+		s->setColor(glm::vec3(2.0));
+		s->setPosition(glm::vec3(45.0, 85.0, -20.0));
+		s->lookAt(glm::vec3(0.0, 0.0, 0.0));
+		s->setRange(150.0f);
+		s->setAngle(3.14159f * 0.5f);
+		s->updateMatrices();
 		
-		_scene.getLights()[0].init();
-		_scene.getLights()[0].setColor(glm::vec3(2.0));
-		_scene.getLights()[0].setPosition(glm::vec3(45.0, 85.0, -20.0));
-		_scene.getLights()[0].lookAt(glm::vec3(0.0, 0.0, 0.0));
-		_scene.getLights()[0].setRange(150.0f);
-		_scene.getLights()[0].setAngle(3.14159f * 0.5f);
-		_scene.getLights()[0].updateMatrices();
+		s = _scene.add(new SpotLight());
+		s->init();
+		s->setColor(glm::vec3(1.5));
+		s->setPosition(glm::vec3(45.0, 12.0, -18.0));
+		s->lookAt(glm::vec3(45.0, 0.0, -18.0));
+		s->setRange(20.0f);
+		s->setAngle(3.14159f * 0.5f);
+		s->updateMatrices();
 		
-		_scene.getLights()[1].init();
-		_scene.getLights()[1].setColor(glm::vec3(1.5));
-		_scene.getLights()[1].setPosition(glm::vec3(45.0, 12.0, -18.0));
-		_scene.getLights()[1].lookAt(glm::vec3(45.0, 0.0, -18.0));
-		_scene.getLights()[1].setRange(20.0f);
-		_scene.getLights()[1].setAngle(3.14159f * 0.5f);
-		_scene.getLights()[1].updateMatrices();
-		
-		_scene.getLights()[2].init();
-		_scene.getLights()[2].setColor(glm::vec3(1.5));
-		_scene.getLights()[2].setPosition(glm::vec3(0.0, 20.0, 00.0));
-		_scene.getLights()[2].lookAt(glm::vec3(0.0, 0.0, 0.0));
-		_scene.getLights()[2].setRange(50.0f);
-		_scene.getLights()[2].setAngle(3.14159f * 0.5f);
-		_scene.getLights()[2].updateMatrices();
+		s = _scene.add(new SpotLight());
+		s->init();
+		s->setColor(glm::vec3(1.5));
+		s->setPosition(glm::vec3(0.0, 20.0, 00.0));
+		s->lookAt(glm::vec3(0.0, 0.0, 0.0));
+		s->setRange(50.0f);
+		s->setAngle(3.14159f * 0.5f);
+		s->updateMatrices();
 		
 		_scene.getOmniLights().resize(1);
 		_scene.getOmniLights()[0].setResolution(2048);
@@ -149,9 +158,9 @@ public:
 		_scene.getOmniLights()[0].init();
 		_scene.getOmniLights()[0].setColor(glm::vec3(1.5));
 		_scene.getOmniLights()[0].setRange(40.0f);
-		
+		*/
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
-			_scene.getLights()[i].drawShadowMap(_scene.getObjects());
+			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
 		
 		for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
 			_scene.getOmniLights()[i].drawShadowMap(_scene.getObjects());
@@ -196,9 +205,12 @@ public:
 		w3->add(new GUIText("Material Test"));
 		
 		auto w4 = _gui.add(new GUIWindow());
-		w4->add(new GUIEdit<float>("L0 Color B: ", &(_scene.getLights()[0].getColor().b)));
-		w4->add(new GUIEdit<float>("L0 Color G: ", &(_scene.getLights()[0].getColor().g)));
-		w4->add(new GUIEdit<float>("L0 Color R: ", &(_scene.getLights()[0].getColor().r)));
+		if(!_scene.getLights().empty())
+		{
+			w4->add(new GUIEdit<float>("L0 Color B: ", &(_scene.getLights()[0]->getColor().b)));
+			w4->add(new GUIEdit<float>("L0 Color G: ", &(_scene.getLights()[0]->getColor().g)));
+			w4->add(new GUIEdit<float>("L0 Color R: ", &(_scene.getLights()[0]->getColor().r)));
+		}
 		w4->add(new GUIEdit<float>("Ambiant Color B: ", &_ambiant.b));
 		w4->add(new GUIEdit<float>("Ambiant Color G: ", &_ambiant.g));
 		w4->add(new GUIEdit<float>("Ambiant Color R: ", &_ambiant.r));
@@ -208,8 +220,6 @@ public:
 	
 	virtual void update() override
 	{
-		DeferredRenderer::update();
-		
 		if(!_paused)
 		{
 			_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
@@ -224,8 +234,11 @@ public:
 			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
 			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
 		
-			_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
+			/*if(!_scene.getOmniLights().empty())
+				_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));*/
 		}
+	
+		DeferredRenderer::update();
 	}
 	
 	virtual void renderGBufferPost() override

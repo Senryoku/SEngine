@@ -1,4 +1,4 @@
-#include <Light.hpp>
+#include <DirectionalLight.hpp>
 
 #include <glm/gtc/matrix_transform.hpp> // glm::lookAt, glm::perspective
 #include <glm/gtx/transform.hpp> // glm::translate
@@ -10,7 +10,7 @@
 ///////////////////////////////////////////////////////////////////
 // Static attributes
 
-const glm::mat4 Light::s_depthBiasMVP
+const glm::mat4 DirectionalLight::s_depthBiasMVP
 (
 	0.5, 0.0, 0.0, 0.0,
 	0.0, 0.5, 0.0, 0.0,
@@ -18,34 +18,14 @@ const glm::mat4 Light::s_depthBiasMVP
 	0.5, 0.5, 0.5, 1.0
 );
 
-Program* 			Light::s_depthProgram = nullptr;
-VertexShader*		Light::s_depthVS = nullptr;
-FragmentShader*	Light::s_depthFS = nullptr;
-Program* 			Light::s_depthInstanceProgram = nullptr;
-VertexShader*		Light::s_depthInstanceVS = nullptr;
-
 ///////////////////////////////////////////////////////////////////
 
-Light::Light(unsigned int shadowMapResolution) :
-	_shadowMapResolution(shadowMapResolution),
-	_shadowMapFramebuffer(_shadowMapResolution),
-	_projection(glm::perspective(_angle, 1.0f, 0.5f, _range))
+DirectionalLight::DirectionalLight(unsigned int shadowMapResolution) :
+	Light<Texture2D>(shadowMapResolution)
 {
 }
 
-void Light::setRange(float r)
-{
-	_range = r; 
-	_projection = glm::perspective(_angle, 1.0f, 0.5f, _range);
-}
-
-void Light::setAngle(float a)
-{
-	_angle = a; 
-	_projection = glm::perspective(_angle, 1.0f, 0.5f, _range);
-}
-
-void Light::init()
+void DirectionalLight::init()
 {
 	initPrograms();
 
@@ -62,20 +42,7 @@ void Light::init()
 	_gpuBuffer.init();
 }
 
-void Light::updateMatrices()
-{
-	glm::vec3 up{0, 1, 0};
-	if(glm::cross(_direction, up) == glm::vec3(0.0))
-		up = {0, 0, 1};
-	_view = glm::lookAt(_position, _position + _direction, up);
-	_VPMatrix = _projection * _view;
-	_biasedVPMatrix = s_depthBiasMVP * _VPMatrix;
-	
-	GPUData tmpStruct = getGPUData();
-	_gpuBuffer.data(&tmpStruct, sizeof(GPUData), Buffer::Usage::DynamicDraw);
-}
-
-void Light::bind() const
+void DirectionalLight::bind() const
 {
 	getShadowBuffer().bind();
 	getShadowBuffer().clear(BufferBit::All);
@@ -84,22 +51,14 @@ void Light::bind() const
 	Context::enable(Capability::CullFace);
 }
 
-void Light::bindInstanced() const
-{
-	getShadowBuffer().bind();
-	getShadowBuffer().clear(BufferBit::All);
-	getShadowMapInstanceProgram().setUniform("DepthVP", getMatrix());
-	getShadowMapInstanceProgram().use();
-}
-
-void Light::unbind() const
+void DirectionalLight::unbind() const
 {
 	Context::disable(Capability::CullFace);
 	Program::useNone();
 	getShadowBuffer().unbind();
 }
 
-void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
+void DirectionalLight::drawShadowMap(const std::vector<MeshInstance>& objects) const
 {
 	getShadowMap().set(Texture::Parameter::BaseLevel, 0);
 	
@@ -117,21 +76,18 @@ void Light::drawShadowMap(const std::vector<MeshInstance>& objects) const
 	
 	getShadowMap().generateMipmaps();
 	/// @todo Add some way to configure the blur
-	blur(getShadowMap(), getResolution(), getResolution(), downsampling);
-	getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
+	blur(getShadowMap(), getResolution(), getResolution(), Downsampling);
+	getShadowMap().set(Texture::Parameter::BaseLevel, Downsampling);
 	getShadowMap().generateMipmaps();
 }
 	
-void Light::initPrograms()
+void DirectionalLight::initPrograms()
 {
 	if(s_depthProgram == nullptr)
 	{
 		s_depthProgram = &ResourcesManager::getInstance().getProgram("Light_Depth");
 		s_depthVS = &ResourcesManager::getInstance().getShader<VertexShader>("Light_DepthVS");
 		s_depthFS = &ResourcesManager::getInstance().getShader<FragmentShader>("Light_DepthFS");
-		
-		s_depthInstanceProgram = &ResourcesManager::getInstance().getProgram("Light_DepthInstance");
-		s_depthInstanceVS = &ResourcesManager::getInstance().getShader<VertexShader>("Light_DepthInstanceVS");
 	}
 	
 	if(s_depthProgram != nullptr && !s_depthProgram->isValid())
@@ -143,11 +99,5 @@ void Light::initPrograms()
 		s_depthProgram->attach(*s_depthVS);
 		s_depthProgram->attach(*s_depthFS);
 		s_depthProgram->link();
-		
-		s_depthInstanceVS->loadFromFile("src/GLSL/depth_instance_vs.glsl");
-		s_depthInstanceVS->compile();
-		s_depthInstanceProgram->attach(*s_depthInstanceVS);
-		s_depthInstanceProgram->attach(*s_depthFS);
-		s_depthInstanceProgram->link();
 	}
 }
