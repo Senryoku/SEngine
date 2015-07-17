@@ -164,14 +164,12 @@ public:
 				"in/Textures/skybox/negz.png"});
 		
 		auto w = _gui.add(new GUIWindow());
-		/*
+		w->add(new GUIGraph<float>("Frame Time: ", [&]() -> float { return 1000.f * TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 20.0, 7.5));
+		w->add(new GUIGraph<float>("FPS: ", [&]() -> float { return 1.0f/TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 450.0, 7.5));
 		w->add(new GUIText([&]() -> std::string {
 			return to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
 						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS";
 		}));
-		*/
-		w->add(new GUIGraph<float>("Frame Time: ", [&]() -> float { return 1000.f * TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 20.0, 5.0));
-		w->add(new GUIGraph<float>("FPS: ", [&]() -> float { return 1.0f/TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 500.0, 5.0));
 		w->add(new GUISeparator(w));
 		w->add(new GUIText("Stats"));
 		

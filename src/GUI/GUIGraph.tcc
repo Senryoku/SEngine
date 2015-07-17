@@ -70,10 +70,10 @@ void GUIGraph<T>::addSample(Sample p)
 		_plotSamples.pop_front();
 	
 	_line.getVertices().clear();
-	float min_t = _plotSamples.front().time;
+	float max_t = _plotSamples.back().time;
 	for(auto& s : _plotSamples)
 	{
-		float t = (s.time - min_t) / _timeWindow;
+		float t = (s.time - (max_t - _timeWindow)) / _timeWindow;
 		float v = (glm::clamp(_min, _max, s.value) - _min) / (_max - _min);
 		_line.getVertices().push_back({
 			t * (_aabb.max.x - _aabb.min.x),
