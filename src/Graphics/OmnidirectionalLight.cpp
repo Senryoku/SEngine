@@ -65,12 +65,12 @@ void OmnidirectionalLight::bind() const
 	getShadowMapProgram().setUniform("Position", _position);
 	getShadowMapProgram().setUniform("Projection", _projection);
 	getShadowMapProgram().use();
-	glEnable(GL_CULL_FACE);
+	Context::enable(Capability::CullFace);
 }
 
 void OmnidirectionalLight::unbind() const
 {
-	glDisable(GL_CULL_FACE);
+	Context::disable(Capability::CullFace);
 	Program::useNone();
 	getShadowBuffer().unbind();
 }

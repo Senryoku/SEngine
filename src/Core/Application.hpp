@@ -29,17 +29,11 @@ public:
 	
 	virtual void run_init();
 	
-	virtual void in_loop_timing();
+	virtual void update();
 	
-	virtual void in_loop_fps_camera();
+	virtual void render() =0;
 	
-	virtual void in_loop_update();
-	
-	virtual void in_loop_render();
-	
-	virtual void gui_render();
-	
-	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) {};
+	virtual void renderGUI();
 	
 	template<typename T>
 	T rand()
@@ -68,6 +62,8 @@ protected:
 	bool 			_fullscreen = false;
 	bool 			_msaa = false;
 	
+	Scene		_scene;
+
 	GUISystem		_gui;
 
 	// MainCamera
@@ -84,18 +80,6 @@ protected:
 	double 		_mouse_x = 0.0, 
 				_mouse_y = 0.0;
 	
-	// Post Process settings
-	float		_exposure = 2.0f;
-	float		_bloom = 1.2f;
-	int			_bloomBlur = 1;
-	int			_bloomDownsampling = 1;
-	glm::vec3	_ambiant = glm::vec3(0.06);
-	
-	float		_minVariance = 0.0000001f;
-	int			_aoSamples = 8;
-	float		_aoThreshold = 1.0f;
-	float		_aoRadius = 10.0f;
-
 	// Time Management
 	float		_timescale = 0.5;
 	float 		_time = 0.f;
@@ -109,9 +93,6 @@ protected:
 	 *  Color1 : World Position (xyz) and Depth (w)
 	 *  Color2 : Encoded Normal (xy), F0 (z) and R (w)
 	**/
-	Framebuffer<Texture2D, 3>		_offscreenRender;
-	
-	Scene							_scene;
 
 	// Callbacks (GLFW)
 	virtual void error_callback(int error, const char* description);

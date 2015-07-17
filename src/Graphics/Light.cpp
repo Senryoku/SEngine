@@ -81,7 +81,7 @@ void Light::bind() const
 	getShadowBuffer().clear(BufferBit::All);
 	getShadowMapProgram().setUniform("DepthVP", getMatrix());
 	getShadowMapProgram().use();
-	glEnable(GL_CULL_FACE);
+	Context::enable(Capability::CullFace);
 }
 
 void Light::bindInstanced() const
@@ -94,7 +94,7 @@ void Light::bindInstanced() const
 
 void Light::unbind() const
 {
-	glDisable(GL_CULL_FACE);
+	Context::disable(Capability::CullFace);
 	Program::useNone();
 	getShadowBuffer().unbind();
 }

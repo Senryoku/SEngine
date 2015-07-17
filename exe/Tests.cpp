@@ -1,8 +1,8 @@
 #include <sstream>
 #include <iomanip>
 
-#include <Application.hpp>
-#include <NoisyTerrain.hpp>
+#include <DeferredRenderer.hpp>
+
 #include <MathTools.hpp>
 #include <GUIText.hpp>
 #include <GUIButton.hpp>
@@ -22,17 +22,17 @@ std::string to_string(const T a_value, const int n = 6)
     return out.str();
 }
 
-class Test : public Application
+class Test : public DeferredRenderer
 {
 public:
 	Test(int argc, char* argv[]) : 
-		Application(argc, argv)
+		DeferredRenderer(argc, argv)
 	{
 	}
 	
 	virtual void run_init() override
 	{
-		Application::run_init();
+		DeferredRenderer::run_init();
 		
 		auto& LightDraw = loadProgram("LightDraw",
 			load<VertexShader>("src/GLSL/Debug/light_vs.glsl"),
@@ -206,8 +206,10 @@ public:
 		w4->add(new GUIText("Lights Test"));
 	}
 	
-	virtual void in_loop_update() override
+	virtual void update() override
 	{
+		DeferredRenderer::update();
+		
 		if(!_paused)
 		{
 			_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
@@ -226,9 +228,9 @@ public:
 		}
 	}
 	
-	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override
+	virtual void renderGBufferPost() override
 	{
-		glDisable(GL_CULL_FACE);
+		Context::disable(Capability::CullFace);
 		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
 		ld.setUniform("CameraPosition", _camera.getPosition());
 		ld.use();
