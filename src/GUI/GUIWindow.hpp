@@ -35,7 +35,7 @@ public:
 		for(auto p : _elements)
 			if(p->handleKey(key, scancode, action, mods))
 				return true;
-			
+
 		return false;
 	}
 	

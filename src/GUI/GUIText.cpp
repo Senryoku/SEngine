@@ -12,25 +12,54 @@ Font::Font(const std::string& path)
 
 void Font::load(const std::string& path)
 {
+	// Load the distance filed texture
+	Tex = &ResourcesManager::getInstance().getTexture<Texture2D>(Name);
+	if(!(*Tex))
+		Tex->load(path + std::string(".png"));
+	
+	// Load the descriptive file for the font
 	std::ifstream file(path + std::string(".txt"));
 	std::string line;
 	std::getline(file, line);
-	Name = line.substr(11, line.size() - 12);
+	auto first = line.find('\"') + 1;
+	auto second = line.find('\"', first);
+	Name = line.substr(first, second - first);
 	std::cout << "Loading " << Name << " from " << path << std::endl;
 	
+	size_t pos = 0;
+	
+	// Search for glyph size
+	size_t size = 221;
+	
+	pos = line.find('=', second + 1) + 1;
+	if(pos != line.size())
+	{
+		std::stringstream ss;
+		ss.str(line.substr(pos)),
+		ss >> size;
+		std::cout << size << std::endl;
+	} else std::cerr << "Warning: Couldn't extract glyph size from font descriptive file." << std::endl;
+	
 	std::getline(file, line);
-	//size_t glyph_count = std::atoi(line.substr(12, line.size() - 2));
+	size_t glyph_count = 256;
+	pos = line.find('=') + 1;
+	if(pos != line.size())
+	{
+		std::stringstream ss;
+		ss.str(line.substr(pos)),
+		ss >> glyph_count;
+	}
 	
 	/// @tod Optimize this shit.
-	float dim = 4096.0; // Shouldn't be hard coded.
-	Glyphs.resize(256);
+	glm::vec2 dim = {static_cast<float>(Tex->getSize().x), 
+					static_cast<float>(Tex->getSize().y)};
+	Glyphs.resize(glyph_count);
 	Glyph tmp;
 	std::stringstream ss;
-	size_t pos = 0;
 	while(std::getline(file, line))
 	{
-		pos = 0;
 		size_t c;
+		pos = 0;
 		pos = line.find('=', pos) + 1;
 		ss.str(line.substr(pos)),
 		ss >> c;
@@ -65,12 +94,12 @@ void Font::load(const std::string& path)
 		
 		tmp.uv_max = tmp.uv_min + tmp.dim;
 		
-		tmp.dim /= 0.1 * dim;
+		tmp.dim /= static_cast<float>(size);
 		tmp.uv_min /= dim;
 		tmp.uv_max /= dim;
-		tmp.offset /= 0.1 * dim;
+		tmp.offset /= static_cast<float>(size);
 		tmp.offset.y -= tmp.dim.y;
-		tmp.advance /= 0.1 * dim;
+		tmp.advance /= static_cast<float>(size);
 		/*
 		std::cout << "Add Glyph " << c << "(" << (char) c << ") : " 
 			<< tmp.dim.x << " " << tmp.dim.y << " ; " 
@@ -82,10 +111,6 @@ void Font::load(const std::string& path)
 		Glyphs[c] = tmp;
 	}
 	file.close();
-	
-	Tex = &ResourcesManager::getInstance().getTexture<Texture2D>(Name);
-	if(!(*Tex))
-		Tex->load(path + std::string(".png"));
 }
 
 GUIText::GUIText() :

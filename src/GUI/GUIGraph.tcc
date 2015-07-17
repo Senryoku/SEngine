@@ -87,8 +87,8 @@ void GUIGraph<T>::addSample(Sample p)
 template<typename T>
 void GUIGraph<T>::init()
 {
-	_textLabel.setFontSize(12.0);
-	_textValue.setFontSize(12.0);
+	_textLabel.setFontSize(16.0);
+	_textValue.setFontSize(16.0);
 	_textValue.Position = {_textLabel.getAABB().max.x, 0.0};
 	updateAABB();
 	

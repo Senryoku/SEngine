@@ -60,7 +60,7 @@ private:
 	std::string		_text;
 	
 	Font*				_font;
-	float				_fontSize = 16.0;
+	float				_fontSize = 18.0;
 	
 	struct VertexAttributes
 	{
