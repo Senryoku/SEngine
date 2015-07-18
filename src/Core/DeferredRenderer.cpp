@@ -108,8 +108,7 @@ void DeferredRenderer::renderPostProcess()
 		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, 0);
 	} else {
 		// No post process, just blit.
-		//_offscreenRender.bind(FramebufferTarget::Read);
-		_scene.getLights()[0]->getShadowBuffer().bind(FramebufferTarget::Read);
+		_offscreenRender.bind(FramebufferTarget::Read);
 		glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 }

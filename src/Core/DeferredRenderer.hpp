@@ -22,9 +22,9 @@ protected:
 	glm::vec3	_ambiant = glm::vec3(0.06);
 	
 	float		_minVariance = 0.0000001f;
-	int			_aoSamples = 8;
+	int			_aoSamples = 16;
 	float		_aoThreshold = 1.0f;
-	float		_aoRadius = 10.0f;
+	float		_aoRadius = 200.0f;
 
 	virtual void render() override;
 	

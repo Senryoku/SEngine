@@ -100,7 +100,7 @@ void Application::update()
 	glfwSetWindowTitle(_window, std::string("NamelessEngine2 - ")
 									.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
 									.append("ms - FPS: ")
-									.append(std::to_string(1.0f/TimeManager::getInstance().getRealDeltaTime()))
+									.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
 								.c_str());
 
 	if(_controlCamera)

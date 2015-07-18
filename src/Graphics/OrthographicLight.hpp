@@ -17,7 +17,18 @@ public:
 		glm::vec4	color_info;
 		glm::mat4	depthMVP;
 	};
-
+	
+	/**
+	 * TEMP!
+	 * Should be automatically computed.
+	 * @todo Remove
+	**/
+	glm::vec3 _position;
+	/// TEMP!
+	/// @todo Remove
+	OrthographicLight(unsigned int shadowMapResolution = 2048) :
+		DirectionalLight(shadowMapResolution) {}
+	
 	/**
 	 * Constructor
 	 *
@@ -46,5 +57,5 @@ public:
 	virtual void updateMatrices() override;
 	
 protected:
-	const Camera*	_camera;
+	const Camera*	_camera = nullptr;
 };

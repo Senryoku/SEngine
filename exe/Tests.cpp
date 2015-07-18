@@ -118,11 +118,12 @@ public:
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		// Shadow casting lights ---------------------------------------------------
-		OrthographicLight* o = _scene.add(new OrthographicLight(_camera));
+		OrthographicLight* o = _scene.add(new OrthographicLight());
 		o->init();
-		o->Dynamic = true;
+		o->Dynamic = false;
 		o->setColor(glm::vec3(2.0));
-		o->setDirection(glm::normalize(glm::vec3{0.1, -1.0, 0.1}));
+		o->setDirection(glm::normalize(glm::vec3{58.8467 - 63.273, 161.167 - 173.158, -34.2005 - -37.1856}));
+		o->_position = glm::vec3{63.273, 173.158, -37.1856};
 		o->updateMatrices();
 		/*
 		SpotLight* s = _scene.add(new SpotLight());
@@ -174,7 +175,7 @@ public:
 		
 		auto w = _gui.add(new GUIWindow());
 		w->add(new GUIGraph<float>("Frame Time: ", [&]() -> float { return 1000.f * TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 20.0, 7.5));
-		w->add(new GUIGraph<float>("FPS: ", [&]() -> float { return 1.0f/TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 450.0, 7.5));
+		w->add(new GUIGraph<float>("FPS: ", [&]() -> float { return TimeManager::getInstance().getInstantFrameRate(); }, 0.0, 450.0, 7.5));
 		w->add(new GUIText([&]() -> std::string {
 			return to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
 						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS";
