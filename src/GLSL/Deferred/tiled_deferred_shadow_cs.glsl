@@ -1,4 +1,11 @@
 #version 430
+#pragma include cook_torrance.glsl
+
+#define SHADOWBLOCKCOUNT			10
+#define CUBESHADOWBLOCKCOUNT		3
+// 2 + SHADOWBLOCKCOUNT
+#define CUBESHADOWBLOCKOFFSET	12
+
 
 /*************
  * How data is laid down :
@@ -27,13 +34,13 @@ layout(std140, binding = 2) uniform ShadowBlock
 	vec4		position_range;
 	vec4		color;
 	mat4 		depthMVP;
-} Shadows[10];
+} Shadows[SHADOWBLOCKCOUNT];
 
-layout(std140, binding = 12) uniform CubeShadowBlock
+layout(std140, binding = CUBESHADOWBLOCKOFFSET) uniform CubeShadowBlock
 {
 	vec4		position_range;
 	vec4		color;
-} CubeShadows[2];
+} CubeShadows[CUBESHADOWBLOCKCOUNT];
 
 uniform unsigned int LightCount = 75;
 
@@ -58,27 +65,8 @@ layout(binding = 0, rgba32f) uniform image2D ColorMaterial;
 layout(binding = 1, rgba32f) uniform readonly image2D PositionDepth;
 layout(binding = 2, rgba32f) uniform image2D Normal;
 
-layout(binding = 3) uniform sampler2D ShadowMaps[10];
-layout(binding = 13) uniform samplerCube CubeShadowMaps[2];
-
-const vec2 poisson16[] = vec2[](
-	vec2(-0.94201624, -0.39906216),
-	vec2(0.94558609, -0.76890725),
-	vec2(-0.094184101, -0.92938870),
-	vec2(0.34495938, 0.29387760),
-	vec2(-0.91588581, 0.45771432),
-	vec2(-0.81544232, -0.87912464),
-	vec2(-0.38277543, 0.27676845),
-	vec2(0.97484398, 0.75648379),
-	vec2(0.44323325, -0.97511554),
-	vec2(0.53742981, -0.47373420),
-	vec2(-0.26496911, -0.41893023),
-	vec2(0.79197514, 0.19090188),
-	vec2(-0.24188840, 0.99706507),
-	vec2(-0.81409955, 0.91437590),
-	vec2(0.19984126, 0.78641367),
-	vec2(0.14383161, -0.14100790)
-);
+layout(binding = 3) uniform sampler2D ShadowMaps[SHADOWBLOCKCOUNT];
+layout(binding = CUBESHADOWBLOCKOFFSET) uniform samplerCube CubeShadowMaps[CUBESHADOWBLOCKCOUNT];
 
 // Bounding Box
 shared int bbmin_x;
@@ -125,76 +113,15 @@ vec3 decode_normal(vec2 enc)
     return nn.xyz * 2 + vec3(0,0,-1);
 }
 
-/**
- * p : position
- * n : normal
- * rd : view vector
- * c : color
- * lp : light postion
- * lc : light color
- * R : roughness
- * F0 : Fresnel reflectance
- * k : diffuse reflection
-**/
-vec3 cookTorrance(vec3 p, vec3 n, vec3 rd, vec3 c, vec3 lp, vec3 lc, float R, float F0)
-{ 
-    vec3 lightDirection = normalize(lp - p);
-
-    float NdotL = dot(n, lightDirection);
-    	
-    if(NdotL > 0.0)
-    {
-		NdotL = max(NdotL, 0.000001);
-        // calculate intermediary values
-        vec3 halfVector = normalize(lightDirection + rd);
-        const float NdotH = max(dot(n, halfVector), 0.000001); 
-        const float NdotV = max(dot(n, rd), 0.000001); // note: this could also be NdotL, which is the same value
-        const float VdotH = max(dot(rd, halfVector), 0.000001);
-        const float mSquared = R * R;
-        
-        // geometric attenuation
-        float NH2 = 2.0 * NdotH;
-        float g1 = (NH2 * NdotV) / VdotH;
-        float g2 = (NH2 * NdotL) / VdotH;
-        float geoAtt = min(1.0, min(g1, g2));
-     
-        // roughness (or: microfacet distribution function)
-        // beckmann distribution function
-        float r1 = 1.0 / ( 4.0 * mSquared * pow(NdotH, 4.0));
-        float r2 = (NdotH * NdotH - 1.0) / (mSquared * NdotH * NdotH);
-        float roughness = r1 * exp(r2);
-        
-        // fresnel
-        // Schlick approximation
-        float fresnel = pow(1.0 - VdotH, 5.0);
-        fresnel *= (1.0 - F0);
-        fresnel += F0;
-        
-		// Standard Cook-Torrance also has NdotL in the denominator, 
-		// but we can skip it has specular should be multiplied by NdotL after.
-        float specular = (fresnel * geoAtt * roughness) / (NdotV * 3.14159);
-		vec3 diffuse = NdotL * c;
-		
-		// Full diffuse and specular reflection
-		//return lc * (diffuse + specular);
-		
-		// Aproximate energy conservation
-		return lc * ((1.0 - F0) * diffuse + specular);
-    } else {
-		return vec3(0.0);
-	}
-}
-   
-float ambiantOcclusion(vec3 p, vec3 n, uvec2 pix)
+#pragma include ../poisson_samples.glsl
+float ambiantOcclusion(vec3 p, vec3 n, uvec2 pix, float depth)
 {
-	if(AOSamples <= 0) return 1.0;
-	
-	float ao = 0;
+	float ao = 0.0;
 	
     for (int i = 0; i < AOSamples; ++i)
     {
 		// Get Sample
-        ivec2 samplePixel = ivec2(pix + (poisson16[i] * (AORadius)));
+        ivec2 samplePixel = ivec2(pix + (poisson16[i] * (AORadius / depth)));
         vec3 samplePos = imageLoad(PositionDepth, samplePixel).xyz;
         vec3 sampleDir = normalize(samplePos - p);
 
@@ -207,7 +134,7 @@ float ambiantOcclusion(vec3 p, vec3 n, uvec2 pix)
 
         ao += (a * b);
     }
-	return 1.0 - ao / AOSamples;
+	return 1.0 - ao / max(AOSamples, 1);
 }
 
 vec3 exposureToneMapping(vec3 c, float e)
@@ -313,8 +240,9 @@ void main(void)
 			vec3 normal = normalize(decode_normal(data.xy));
 		
 			vec3 V = normalize(CameraPosition - position.xyz);
+			float depth = length(CameraPosition - position.xyz);
 			
-			ColorOut *= ambiantOcclusion(position.xyz, normal, pixel);
+			ColorOut *= ambiantOcclusion(position.xyz, normal, pixel, depth);
 			
 			// Simple Point Lights
 			for(int l2 = 0; l2 < local_lights_count; ++l2)
@@ -330,7 +258,7 @@ void main(void)
 							data.w, data.z);
 			}
 			
-			// Shadow casting Spot Lights
+			// Shadow casting Spot and Orthographic Lights
 			for(int shadow = 0; shadow < ShadowCount; ++shadow)
 			{
 				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
@@ -352,7 +280,6 @@ void main(void)
 					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
 										light_pos, Shadows[shadow].color.rgb, 
 										data.w, data.z);
-					//ColorOut.r += light_pos.x;
 				}
 			}
 			
@@ -373,6 +300,7 @@ void main(void)
 										data.w, data.z);
 				}
 			}
+
 		}
 
 		// Delay Tone Mapping and Gamma Correction if using Bloom
@@ -387,7 +315,7 @@ void main(void)
 			// Gamma correction (Deactivated for now)
 			//ColorOut.rgb = pow(ColorOut.rgb, vec3(1.0 / Gamma));
 		}
-		
+
 		imageStore(ColorMaterial, ivec2(pixel), ColorOut);
 	}
 }
