@@ -46,7 +46,7 @@ public:
 	/**
 	 * @return OrthographicLight's data structured for GPU use.
 	**/
-	inline GPUData getGPUData() const { return GPUData{glm::vec4(getDirection(), 1.0), 
+	inline GPUData getGPUData() const { return GPUData{glm::vec4(getDirection(), 0.0), 
 															glm::vec4(glm::vec3(getColor()), 0.0), 
 															getBiasedMatrix()}; }
 

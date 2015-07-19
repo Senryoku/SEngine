@@ -64,7 +64,8 @@ public:
 	/**
 	 * @return Light's data structured for GPU use.
 	**/
-	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),  glm::vec4(glm::vec3(getColor()), 0.0)}; }
+	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),
+															glm::vec4(glm::vec3(getColor()), 1.0)}; }
 	
 	inline const UniformBuffer& getGPUBuffer() const { return _gpuBuffer; }
 	

@@ -42,7 +42,9 @@ public:
 	/**
 	 * @return SpotLight's data structured for GPU use.
 	**/
-	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),  glm::vec4(glm::vec3(getColor()), 0.0), getBiasedMatrix()}; }
+	inline GPUData getGPUData() const { return GPUData{glm::vec4(getPosition(), _range),  
+															glm::vec4(glm::vec3(getColor()), 0.0), 
+															getBiasedMatrix()}; }
 
 	/**
 	 * Modifies the position of the light source

@@ -118,6 +118,7 @@ public:
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		// Shadow casting lights ---------------------------------------------------
+		
 		OrthographicLight* o = _scene.add(new OrthographicLight());
 		o->init();
 		o->Dynamic = false;
@@ -125,17 +126,8 @@ public:
 		o->setDirection(glm::normalize(glm::vec3{58.8467 - 63.273, 161.167 - 173.158, -34.2005 - -37.1856}));
 		o->_position = glm::vec3{63.273, 173.158, -37.1856};
 		o->updateMatrices();
-		/*
-		SpotLight* s = _scene.add(new SpotLight());
-		s->init();
-		s->setColor(glm::vec3(2.0));
-		s->setPosition(glm::vec3(45.0, 85.0, -20.0));
-		s->lookAt(glm::vec3(0.0, 0.0, 0.0));
-		s->setRange(150.0f);
-		s->setAngle(3.14159f * 0.5f);
-		s->updateMatrices();
 		
-		s = _scene.add(new SpotLight());
+		SpotLight* s = _scene.add(new SpotLight());
 		s->init();
 		s->setColor(glm::vec3(1.5));
 		s->setPosition(glm::vec3(45.0, 12.0, -18.0));
@@ -155,11 +147,13 @@ public:
 		
 		_scene.getOmniLights().resize(1);
 		_scene.getOmniLights()[0].setResolution(2048);
-		_scene.getOmniLights()[0].dynamic = true;
+		_scene.getOmniLights()[0].dynamic = true; /// @todo Doesn't work if not dynamic...
 		_scene.getOmniLights()[0].init();
+		_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0, 25.0, -2.0));
 		_scene.getOmniLights()[0].setColor(glm::vec3(1.5));
 		_scene.getOmniLights()[0].setRange(40.0f);
-		*/
+		_scene.getOmniLights()[0].updateMatrices();
+		
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
 		
@@ -235,8 +229,8 @@ public:
 			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
 			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
 		
-			/*if(!_scene.getOmniLights().empty())
-				_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));*/
+			if(!_scene.getOmniLights().empty() && _scene.getOmniLights()[0].dynamic)
+				_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
 		}
 	
 		DeferredRenderer::update();

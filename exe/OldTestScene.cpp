@@ -1,25 +1,22 @@
-#include <Application.hpp>
+#include <SpotLight.hpp>
+#include <DeferredRenderer.hpp>
+
 #include <NoisyTerrain.hpp>
 #include <MathTools.hpp>
 
 #include <glm/gtx/transform.hpp>
 
-class Test : public Application
+class Test : public DeferredRenderer
 {
 public:
 	Test(int argc, char* argv[]) : 
-		Application(argc, argv)
+		DeferredRenderer(argc, argv)
 	{
 	}
 	
 	virtual void run_init() override
 	{
-		Application::run_init();
-		
-		auto& Deferred = loadProgram("Deferred",
-			load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
-			load<FragmentShader>("src/GLSL/Deferred/deferred_normal_map_fs.glsl")
-		);
+		DeferredRenderer::run_init();
 		
 		auto& LightDraw = loadProgram("LightDraw",
 			load<VertexShader>("src/GLSL/Debug/light_vs.glsl"),
@@ -27,20 +24,10 @@ public:
 			load<FragmentShader>("src/GLSL/Debug/light_fs.glsl")
 		);
 
-		ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
-		
-		ComputeShader& GaussianBlur = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlur");
-		GaussianBlur.loadFromFile("src/GLSL/gaussian_blur_h_cs.glsl");
-		GaussianBlur.compile();
-		ComputeShader& GaussianBlurV = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurV");
-		GaussianBlurV.loadFromFile("src/GLSL/gaussian_blur_v_cs.glsl");
-		GaussianBlurV.compile();
-
 		_camera.speed() = 15;
 		_camera.setPosition(glm::vec3(0.0, 15.0, -20.0));
 		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
 		
-		Deferred.bindUniformBlock("Camera", _camera_buffer); 
 		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 
 		Texture2D& GroundTexture = ResourcesManager::getInstance().getTexture<Texture2D>("GroundTexture");
@@ -79,8 +66,6 @@ public:
 		_scene.add(MeshInstance(Plane));
 
 		auto Model = Mesh::load("in/3DModels/dragon/Figurine Dragon N170112.3DS");
-		auto& ModelTexture = ResourcesManager::getInstance().getTexture<Texture2D>("Dragon");
-		ModelTexture.load("in/3DModels/dragon/AS2_concrete_02.jpg");
 		for(auto part : Model)
 		{
 			part->createVAO();
@@ -123,7 +108,6 @@ public:
 		}
 		
 		const size_t LightCount = 1000;
-		DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		for(size_t i = 0; i < LightCount; ++i)
@@ -138,69 +122,75 @@ public:
 
 		// Shadow casting lights ---------------------------------------------------
 
-		_scene.getLights().resize(5);
+		SpotLight* spot = _scene.add(new SpotLight());
+		spot->init();
+		spot->setColor(glm::vec3(2.0));
+		spot->setPosition(glm::vec3(50.0, 50.0, 120.0));
+		spot->lookAt(glm::vec3(50.0, 0.0, 50.0));
+		spot->updateMatrices();
 		
-		_scene.getLights()[0].init();
-		_scene.getLights()[0].setColor(glm::vec3(2.0));
-		_scene.getLights()[0].setPosition(glm::vec3(50.0, 50.0, 120.0));
-		_scene.getLights()[0].lookAt(glm::vec3(50.0, 0.0, 50.0));
-		_scene.getLights()[0].updateMatrices();
+		spot = _scene.add(new SpotLight());
+		spot->init();
+		spot->setColor(glm::vec3(0.9, 0.6, 0.6));
+		spot->setPosition(glm::vec3(120.0, 50.0, 50.0));
+		spot->lookAt(glm::vec3(50.0, 0.0, 50.0));
+		spot->updateMatrices();
 		
-		_scene.getLights()[1].init();
-		_scene.getLights()[1].setColor(glm::vec3(0.9, 0.6, 0.6));
-		_scene.getLights()[1].setPosition(glm::vec3(120.0, 50.0, 50.0));
-		_scene.getLights()[1].lookAt(glm::vec3(50.0, 0.0, 50.0));
-		_scene.getLights()[1].updateMatrices();
+		spot = _scene.add(new SpotLight());
+		spot->init();
+		spot->setColor(glm::vec3(1.0));
+		spot->setPosition(glm::vec3(30.0, 50.0, 140.0));
+		spot->lookAt(glm::vec3(30.0, 0.0, 150.0));
+		spot->updateMatrices();
 		
-		_scene.getLights()[2].init();
-		_scene.getLights()[2].setColor(glm::vec3(1.0));
-		_scene.getLights()[2].setPosition(glm::vec3(30.0, 50.0, 140.0));
-		_scene.getLights()[2].lookAt(glm::vec3(30.0, 0.0, 150.0));
-		_scene.getLights()[2].updateMatrices();
+		spot = _scene.add(new SpotLight());
+		spot->init();
+		spot->setColor(glm::vec3(1.0));
+		spot->setPosition(glm::vec3(140.0, 75.0, 30.0));
+		spot->lookAt(glm::vec3(150.0, 0.0, 30.0));
+		spot->updateMatrices();
 		
-		_scene.getLights()[3].init();
-		_scene.getLights()[3].setColor(glm::vec3(1.0));
-		_scene.getLights()[3].setPosition(glm::vec3(140.0, 75.0, 30.0));
-		_scene.getLights()[3].lookAt(glm::vec3(150.0, 0.0, 30.0));
-		_scene.getLights()[3].updateMatrices();
-		
-		_scene.getLights()[4].init();
-		_scene.getLights()[4].setColor(glm::vec3(1.0));
-		_scene.getLights()[4].setPosition(glm::vec3(170.0, 150.0, 170.0));
-		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
-		_scene.getLights()[4].updateMatrices();
+		spot = _scene.add(new SpotLight());
+		spot->init();
+		spot->setColor(glm::vec3(1.0));
+		spot->setPosition(glm::vec3(170.0, 150.0, 170.0));
+		spot->lookAt(glm::vec3(150.0, 0.0, 150.0));
+		spot->updateMatrices();
 
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 		{
-			_scene.getLights()[i].drawShadowMap(_scene.getObjects());
+			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
 		}
 	}
 	
-	virtual void in_loop_update() override
+	virtual void update() override
 	{
 		/*
-		_scene.getLights()[4].setPosition(glm::vec3(150.0, 150.0, 150.0)
+		spot->setPosition(glm::vec3(150.0, 150.0, 150.0)
 												+ 20.0f * glm::vec3(std::cos(0.1f * TimeManager::getInstance().getRuntime()), 0.0,
 																	std::sin(0.1f * TimeManager::getInstance().getRuntime())));
-		_scene.getLights()[4].lookAt(glm::vec3(150.0, 0.0, 150.0));
-		_scene.getLights()[4].drawShadowMap(_scene.getObjects());
+		spot->lookAt(glm::vec3(150.0, 0.0, 150.0));
+		spot->drawShadowMap(_scene.getObjects());
 		
-		blur(_scene.getLights()[4].getShadowMap(), _scene.getLights()[4].getResolution());
+		blur(spot->getShadowMap(), spot->getResolution());
 		*/
 		for(auto& l :_scene.getPointLights())
 		{
 			l.position.y = 8.0 + 4.0 * std::sin(TimeManager::getInstance().getRuntime() + l.position.x * l.position.z);
 		}
 		
-		_scene.getLights()[0].setColor(glm::vec3(5.0f * 
+		_scene.getLights()[0]->setColor(glm::vec3(5.0f * 
 			triangleWave(TimeManager::getInstance().getRuntime(), 5.0)));
 		
 		/// @todo Fix bug (black dots) when light position == camera position
 		//_scene.getPointLights()[0].position = glm::vec4(_camera.getPosition(), 1.0);
+		
+		DeferredRenderer::update();
 	}
 	
-	virtual void offscreen_render(const glm::mat4& p, const glm::mat4& v) override
+	virtual void renderGBufferPost() override
 	{
+		Context::disable(Capability::CullFace);
 		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
 		ld.setUniform("CameraPosition", _camera.getPosition());
 		ld.use();

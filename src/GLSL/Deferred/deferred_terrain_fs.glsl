@@ -32,29 +32,6 @@ vec2 encode_normal(vec3 n)
     return enc * 0.5 + 0.5;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-// C/P From http://www.geeks3d.com/20130122/normal-mapping-without-precomputed-tangent-space-vectors/
-
-// http://www.thetenthplanet.de/archives/1180
-mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
-{
-    // get edge vectors of the pixel triangle
-    vec3 dp1 = dFdx( p );
-    vec3 dp2 = dFdy( p );
-    vec2 duv1 = dFdx( uv );
-    vec2 duv2 = dFdy( uv );
- 
-    // solve the linear system
-    vec3 dp2perp = cross( dp2, N );
-    vec3 dp1perp = cross( N, dp1 );
-    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
-    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
- 
-    // construct a scale-invariant frame 
-    float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-    return mat3( T * invmax, B * invmax, N );
-}
-
 float mix_tex(float t, float p)
 {
 	// Add some perturbation
@@ -67,23 +44,39 @@ float mix_tex(float t, float p)
 	return (t - (p - 0.5));
 }
 
-vec3 perturb_normal( vec3 N, vec3 V, vec2 texcoord )
+mat3 tangent_space(vec3 n)
+{
+	vec3 N = normalize(n);
+	vec3 T = vec3(N.y, -N.x, 0.0);
+	if(T == vec3(0.0))
+		T =  vec3(N.z, -N.x, 0.0);
+	T = normalize(T);
+	vec3 B = cross(T, N);
+	T = cross(N, B);
+	return mat3(T, B, N);
+}
+
+vec3 perturb_normal(vec3 n, vec2 texcoord)
 {
 	float t = mix_tex(world_position.y, 2.0);
 	
-	vec3 map = mix(texture(NormalMap0, texcoord).xyz, texture(NormalMap1, texcoord).xyz, t);
+	vec3 map = normalize(mix(texture(NormalMap0 , texcoord).xyz,
+						texture(NormalMap1 , texcoord).xyz, t));
 	map = map * 2.0 - 1.0;
     map.z = sqrt(1.0 - dot( map.xy, map.xy ) );
     map.y = -map.y;
-	mat3 TBN = cotangent_frame(N, -V, texcoord);
+	mat3 TBN = tangent_space(n);
 	return normalize(TBN * map);
 }
 
 void main(void)
-{	
-	vec3 n = (useNormalMap > 0) ? perturb_normal(normalize(world_normal), world_position, texcoord) : 
-						 normalize(world_normal);
+{			
+	vec3 n = (useNormalMap > 0) ? 
+				perturb_normal(normalize(world_normal), texcoord) : 
+				normalize(world_normal);
+	
 	worldNormalOut.xy = encode_normal(n);
+	
 	worldNormalOut.z = F0;
 	worldNormalOut.w = R;
 	

@@ -263,7 +263,7 @@ void main(void)
 			{
 				vec4 sc = Shadows[shadow].depthMVP * vec4(position.xyz, 1.0);
 				sc /= sc.w;
-				bool spotlight = Shadows[shadow].color.w != 0.0;
+				bool spotlight = Shadows[shadow].position_range.w > 0.0;
 				float r = (!spotlight) ? 0.0 :
 								(sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5); // Spot Light
 				if((sc.x >= 0 && sc.x <= 1.f) &&
