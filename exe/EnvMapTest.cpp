@@ -181,8 +181,8 @@ public:
 		_cubeCameraBuffer.init();
 		_cubeCameraBuffer.bind(12);
 		Camera CubeCamera;
-		CubeCamera.setPosition(glm::vec3(0.0, 20.0, 0.0));
-		CubeCamera.setDirection(glm::vec3(1.0, 0.0, 0.0));
+		CubeCamera.setPosition(glm::vec3(-10.0, 20.0, 0.0));
+		CubeCamera.setDirection(glm::vec3(0.0, 0.0, 1.0));
 		CubeCamera.updateView();
 		GPUViewProjection CamS = {CubeCamera.getMatrix(), glm::perspective<float>((float) pi() / 2.0f, 1.f, 0.5f, 1000.0f)};
 		_cubeCameraBuffer.data(&CamS, sizeof(GPUViewProjection), Buffer::Usage::StaticDraw);
@@ -237,14 +237,19 @@ public:
 		
 		DeferredRenderer::update();
 		
-		// @todo This is not working : Lightning doesn't seem to be applied...
-		static bool OnlyOnce = false;
-		if(!OnlyOnce)
+		// @todo Needs to be delayed by one frame to work... I don't know why.
+		static int OnlyOnce = 0;
+		OnlyOnce++;
+		if(OnlyOnce == 2)
 		{
 			size_t lc = 0;
 			for(const auto& l : _scene.getLights())
 				l->getShadowMap().bind(lc++ + 3);
-			
+
+			lc = 0;
+			for(const auto& l : _scene.getOmniLights())
+				l.getShadowMap().bind(lc++ + 13);
+
 			ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 			DeferredShadowCS.getProgram().setUniform("ColorMaterial", (int) 0);
 			DeferredShadowCS.getProgram().setUniform("PositionDepth", (int) 1);
@@ -258,7 +263,7 @@ public:
 			DeferredShadowCS.getProgram().setUniform("CubeShadowCount", _scene.getOmniLights().size());
 			DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());
 			
-			DeferredShadowCS.getProgram().setUniform("CameraPosition", glm::vec3{0.0, 20.0, 0.0});
+			DeferredShadowCS.getProgram().setUniform("CameraPosition", glm::vec3{-10.0, 20.0, 0.0});
 			DeferredShadowCS.getProgram().setUniform("Exposure", -1.0f); // Stay in linear for now
 			DeferredShadowCS.getProgram().setUniform("Bloom", -1.0f);
 			
@@ -276,7 +281,6 @@ public:
 				DeferredShadowCS.compute(1024 / DeferredShadowCS.getWorkgroupSize().x + 1, 1024 / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
 			}
 			DeferredShadowCS.memoryBarrier();
-			OnlyOnce = true;
 		}
 	}
 	
