@@ -30,7 +30,7 @@ public:
 
 private:
 	std::string		_name;
-	GLuint			_location;
+	GLuint				_location;
 };
 
 template<typename T>
@@ -49,12 +49,12 @@ public:
 	
 	inline void setValue(const T& val) { _value = val; }
 	
-	virtual inline void bind()
+	virtual inline void bind() override
 	{
 		setUniform(getLocation(), getValue());
 	}
 	
-	virtual inline void bind(GLuint program)
+	virtual inline void bind(GLuint program) override
 	{
 		setUniform(program,  getLocation(), getValue());
 	}
@@ -64,7 +64,7 @@ public:
 		return new Uniform<T>(getName(), getLocation(), getValue());
 	}
 
-private:
+protected:
 	T					_value;
 };
 
@@ -112,5 +112,5 @@ public:
 	
 private:
 	const Texture*		_value;
-	GLuint 			_textureUnit = 0;
+	GLuint 				_textureUnit = 0;
 };

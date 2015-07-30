@@ -54,7 +54,7 @@ void Mesh::createVAO()
 
 	_index_buffer.init();
 	_index_buffer.bind();
-	_index_buffer.data(&_triangles[0], sizeof(size_t)*_triangles.size()*3, Buffer::Usage::StaticDraw);
+	_index_buffer.data(&_triangles[0], sizeof(size_t)*_triangles.size() * 3, Buffer::Usage::StaticDraw);
 	
 	_vao.unbind(); // Unbind first on purpose :)
 	_index_buffer.unbind();
@@ -69,7 +69,7 @@ void Mesh::draw() const
 		return;
 	}
 	_vao.bind();
-	glDrawElements(GL_TRIANGLES, _triangles.size()*3,  GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, _triangles.size() * 3,  GL_UNSIGNED_INT, 0);
 	_vao.unbind();
 }
 
@@ -100,7 +100,9 @@ void Mesh::computeNormals()
 }
 
 ////////////////////// Static /////////////////////////////////////
-	
+
+#include <RiggedMesh.hpp>
+
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
 	//std::cout << "Loading " << path << " using assimp..." << std::endl;
@@ -108,15 +110,15 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 	std::vector<Mesh*> M;
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(path.c_str(), 
-												aiProcess_CalcTangentSpace |
+												//aiProcess_CalcTangentSpace |
 												aiProcess_Triangulate |
 												aiProcess_JoinIdenticalVertices |
 												aiProcess_SortByPType |
 												aiProcess_GenSmoothNormals | 
 												aiProcess_FlipUVs);
-																
+
 	 // If the import failed, report it
-	if( !scene)
+	if(!scene)
 	{
 		std::cerr << importer.GetErrorString() << std::endl;
 		return M;
@@ -142,13 +144,43 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 			}
 			
 			//std::cout << "Loading '" << name << "'." << std::endl;
-			M[meshIdx] = &ResourcesManager::getInstance().getMesh(name);
+			
+			if(LoadedMesh->mNumBones > 0)
+			{
+				RiggedMesh* m = new RiggedMesh();
+				ResourcesManager::getInstance().getMeshPtr(name).reset(m);
+				M[meshIdx] = m;
+				
+				m->getVertexBoneData().resize(LoadedMesh->mNumVertices);
+				
+				for(unsigned int i = 0; i < LoadedMesh->mNumBones; i++)
+				{
+					// Bone name: LoadedMesh->mBones[i]->mName.data
+					// OffsetMatrix: LoadedMesh->mBones[i]->mOffsetMatrix));
+					
+					//TODO: Load bones and nodes... ... .... .............
+
+					for (unsigned int j = 0; j < LoadedMesh->mBones[i]->mNumWeights; j++)
+					{
+						unsigned int VertexID = LoadedMesh->mBones[i]->mWeights[j].mVertexId;
+						float Weight = LoadedMesh->mBones[i]->mWeights[j].mWeight;
+						m->getVertexBoneData()[VertexID].add(i, Weight);
+					}
+				}
+				
+				// TODO: Load animations.
+				
+				M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("DeferredRigged"));
+			} else {
+				M[meshIdx] = &ResourcesManager::getInstance().getMesh(name);
+				M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("Deferred"));
+			}
 			
 			//std::cout << "Material Index: " << LoadedMesh->mMaterialIndex << std::endl;
 			aiMaterial* m = scene->mMaterials[LoadedMesh->mMaterialIndex];
 			
 			aiString Texture;
-			M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("Deferred"));
+			aiColor3D color;
 			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), Texture) == AI_SUCCESS)
 			{
 				std::string p = rep;
@@ -159,10 +191,15 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 				if(!t.isValid())
 					t.load(p);
 				if(t.isValid())
+				{
 					M[meshIdx]->getMaterial().setUniform("Texture", t);
+					M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "texture_color");
+				}
+			} else if(m->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS) {
+				M[meshIdx]->getMaterial().setUniform("Color", glm::vec3(color.r, color.g, color.b));
+				M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "uniform_color");
 			}
 			
-			M[meshIdx]->getMaterial().setUniform("useNormalMap", 0);
 			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), Texture) == AI_SUCCESS
 				|| m->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), Texture) == AI_SUCCESS) // Special case for .obj...
 			{
@@ -176,8 +213,10 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 				if(t.isValid())
 				{
 					M[meshIdx]->getMaterial().setUniform("NormalMap", t);
-					M[meshIdx]->getMaterial().setUniform("useNormalMap", 1);
+					M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "normal_mapping");
 				}
+			} else {
+				M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
 			}
 			
 			/*

@@ -61,6 +61,8 @@ public:
 	template<typename T>
 	inline void setUniform(const std::string& name, const T& value);
 
+	inline void setSubroutine(ShaderType stage, const std::string& uniformName, const std::string& functionName);
+	
 	inline void use() const;
 	
 	inline void useNone() const;
@@ -76,6 +78,23 @@ private:
 	
 	std::vector<std::unique_ptr<GenericUniform>>	_uniforms;
 	GLuint 												_textureCount = 0;
+	
+	class SubroutineState
+	{
+	public:
+		ShaderType								shadertype;
+		std::map<std::string, std::string>	activeSubroutines;
+		std::vector<GLuint>					activeIndices;
+
+		inline void use() const
+		{
+			glUniformSubroutinesuiv(to_underlying(shadertype), activeIndices.size(), activeIndices.data());
+		}
+
+		void update(const Program& p);
+	};
+	
+	std::map<ShaderType, SubroutineState>	_subroutines;
 	
 	GLint getLocation(const std::string& name) const;
 };
@@ -168,10 +187,21 @@ void Material::setUniform(const std::string& name, const T& value)
 	}
 }
 
+inline void Material::setSubroutine(ShaderType stage, const std::string& uniformName, const std::string& functionName)
+{
+	auto& tmp = _subroutines[stage];
+	tmp.shadertype = stage;
+	tmp.activeSubroutines[uniformName] = functionName;
+	tmp.update(*_shadingProgram);
+}
+	
 inline void Material::use() const
 {
 	if(_shadingProgram != nullptr)
 		_shadingProgram->use();
+	
+	for(const auto& s : _subroutines)
+		s.second.use();
 		
 	bind();
 }

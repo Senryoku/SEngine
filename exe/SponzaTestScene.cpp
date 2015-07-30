@@ -52,40 +52,109 @@ public:
 
 		static float R = 0.95f;
 		static float F0 = 0.15f;
-		auto TestMesh = Mesh::load("in/3DModels/Test2/Test2.obj");
+		auto TestMesh = Mesh::load("in/3DModels/sponza/sponza.obj");
 		for(auto part : TestMesh)
 		{
 			part->createVAO();
 			part->getMaterial().setUniform("R", &R);
 			part->getMaterial().setUniform("F0", &F0);
-			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(1.0))));
+			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04))));
 		}
 
-		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
+		_scene.getPointLights().push_back(PointLight{
+			glm::vec3(42.8, 7.1, -1.5), 	// Position
+			10.0f,
+			glm::vec3(2.0), // Color
+			0.0f
+		});
 
 		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(40.0, 4.0, 7.0), 	// Position
-			10.0f,
-			2.0f * glm::vec3(1.0), // Color
+			glm::vec3(42.0, 23.1, 16.1), 	// Position
+			15.0f,
+			glm::vec3(2.0), // Color
+			0.0f
+		});
+
+		_scene.getPointLights().push_back(PointLight{
+			glm::vec3(-50.0, 22.8, -18.6), 	// Position
+			20.0f,
+			glm::vec3(2.0), // Color
 			0.0f
 		});
 		
 		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(60.0, 4.0, 7.0), 	// Position
-			10.0f,
-			2.0f * glm::vec3(1.0), // Color
+			glm::vec3(19.5, 5.4, 5.8), 	// Position
+			5.0f,
+			glm::vec3(0.8, 0.1, 0.2), // Color
 			0.0f
 		});
 		
+		_scene.getPointLights().push_back(PointLight{
+			glm::vec3(-24.7, 5.4, 5.8), 	// Position
+			5.0f,
+			glm::vec3(0.8, 0.1, 0.2), // Color
+			0.0f
+		});
+		
+		_scene.getPointLights().push_back(PointLight{
+			glm::vec3(-24.7, 5.4, -8.7), 	// Position
+			5.0f,
+			glm::vec3(0.8, 0.1, 0.2), // Color
+			0.0f
+		});
+		
+		_scene.getPointLights().push_back(PointLight{
+			glm::vec3(19.5, 5.4, -8.7), 	// Position
+			5.0f,
+			glm::vec3(0.8, 0.1, 0.2), // Color
+			0.0f
+		});
+		
+		_scene.getPointLights().push_back(PointLight{
+			glm::vec3(-47.0, 4.5, -1.5), 	// Position
+			20.0f,
+			glm::vec3(1.8), // Color
+			0.0f
+		});
+		
+		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
+
 		// Shadow casting lights ---------------------------------------------------
 		
 		OrthographicLight* o = _scene.add(new OrthographicLight());
 		o->init();
 		o->Dynamic = false;
-		o->setColor(glm::vec3(1.0));
-		o->setDirection(glm::normalize(glm::vec3{51.7092 - 51.7547, 102.003 - 120.723, 16.4967 - 27.4534}));
-		o->_position = glm::vec3{51.7547, 120.723, 27.4534};
+		o->setColor(glm::vec3(2.0));
+		o->setDirection(glm::normalize(glm::vec3{58.8467 - 63.273, 161.167 - 173.158, -34.2005 - -37.1856}));
+		o->_position = glm::vec3{63.273, 173.158, -37.1856};
 		o->updateMatrices();
+		
+		SpotLight* s = _scene.add(new SpotLight());
+		s->init();
+		s->setColor(glm::vec3(1.5));
+		s->setPosition(glm::vec3(45.0, 12.0, -18.0));
+		s->lookAt(glm::vec3(45.0, 0.0, -18.0));
+		s->setRange(20.0f);
+		s->setAngle(3.14159f * 0.5f);
+		s->updateMatrices();
+		
+		s = _scene.add(new SpotLight());
+		s->init();
+		s->setColor(glm::vec3(1.5));
+		s->setPosition(glm::vec3(0.0, 20.0, 00.0));
+		s->lookAt(glm::vec3(0.0, 0.0, 0.0));
+		s->setRange(50.0f);
+		s->setAngle(3.14159f * 0.5f);
+		s->updateMatrices();
+		
+		_scene.getOmniLights().resize(1);
+		_scene.getOmniLights()[0].setResolution(2048);
+		_scene.getOmniLights()[0].dynamic = true; /// @todo Doesn't work if not dynamic...
+		_scene.getOmniLights()[0].init();
+		_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0, 25.0, -2.0));
+		_scene.getOmniLights()[0].setColor(glm::vec3(1.5));
+		_scene.getOmniLights()[0].setRange(40.0f);
+		_scene.getOmniLights()[0].updateMatrices();
 		
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
@@ -117,21 +186,17 @@ public:
 		w->add(new GUIText("Stats"));
 		
 		auto w2 = _gui.add(new GUIWindow());
-		//w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
+		w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
 		/// @todo Come back here when GLFW 3.2 will be released :)
 		//w2->add(new GUICheckbox("Vsync", [&] { static int i = 0; i = (i + 1) % 2; glfwSwapInterval(i); return i == 1; }));
 		//w2->add(new GUICheckbox("Fullscreen", [&] { ... }));
 		w2->add(new GUIEdit<float>("AORadius : ", &_aoRadius));
 		w2->add(new GUIEdit<float>("AOThresold : ", &_aoThreshold));
 		w2->add(new GUIEdit<int>("AOSamples : ", &_aoSamples));
-		w2->add(new GUISeparator(w2));
-		w2->add(new GUIEdit<int>("BloomDownsampling : ", &_bloomDownsampling));
-		w2->add(new GUIEdit<int>("BloomBlur : ", &_bloomBlur));
-		w2->add(new GUIEdit<float>("Bloom : ", &_bloom));
-		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { _bloom = -_bloom; return _bloom > 0.0; }));
-		w2->add(new GUISeparator(w2));
-		w2->add(new GUIEdit<float>("Exposure : ", &_exposure));
 		w2->add(new GUIEdit<float>("MinVariance : ", &_minVariance));
+		w2->add(new GUIEdit<float>("Bloom : ", &_bloom));
+		w2->add(new GUIEdit<float>("Exposure : ", &_exposure));
+		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { _bloom = -_bloom; return _bloom > 0.0; }));
 		w2->add(new GUICheckbox("Pause", &_paused));
 		w2->add(new GUISeparator(w2));
 		w2->add(new GUIText("Controls"));
@@ -159,6 +224,24 @@ public:
 	virtual void update() override
 	{
 		_updateTiming.begin(Query::Target::TimeElapsed);
+		if(!_paused)
+		{
+			_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[3].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			
+			_scene.getPointLights()[4].position = glm::vec3(-24.7, 5.4, 5.8) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[4].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			
+			_scene.getPointLights()[5].position = glm::vec3(-24.7, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[5].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			
+			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
+			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+		
+			if(!_scene.getOmniLights().empty() && _scene.getOmniLights()[0].dynamic)
+				_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
+		}
+	
 		DeferredRenderer::update();
 		_updateTiming.end();
 	}

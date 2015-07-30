@@ -9,8 +9,8 @@ layout(std140) uniform Camera {
 
 uniform mat4 ModelMatrix = mat4(1.0);
 
-uniform int useNormalMap = 1;
-uniform int useBumpMap = 0;
+uniform vec3 Color = vec3(1.0);
+
 uniform float R = 0.4;
 uniform float F0 = 0.1;
 
@@ -19,6 +19,12 @@ uniform float BumpScale = 0.1;
 uniform layout(binding = 0) sampler2D Texture;
 uniform layout(binding = 1) sampler2D NormalMap;
 uniform layout(binding = 2) samplerCube EnvMap;
+
+subroutine vec4 color();
+subroutine uniform color colorFunction;
+
+subroutine vec3 normal();
+subroutine uniform normal normalFunction;
 
 in layout(location = 0) vec3 world_position;
 in layout(location = 1) vec3 world_normal;
@@ -46,15 +52,35 @@ mat3 tangent_space(vec3 n)
 	return mat3(T, B, N);
 }
 
-vec3 perturb_normal(vec3 n, vec2 texcoord)
+subroutine(color)
+vec4 uniform_color()
+{
+	return vec4(Color, 1.0);
+}
+
+subroutine(color)
+vec4 texture_color()
+{
+	return texture(Texture, texcoord);
+}
+
+subroutine(normal)
+vec3 basic_normal()
+{
+	return normalize(world_normal);
+}
+
+subroutine(normal)
+vec3 normal_mapping()
 {
 	vec3 map = normalize(texture(NormalMap, texcoord).xyz);
 	map = map * 2.0 - 1.0;
     map.z = sqrt(1.0 - dot( map.xy, map.xy ) );
     map.y = -map.y;
-	mat3 TBN = tangent_space(n);
+	mat3 TBN = tangent_space(normalize(world_normal));
 	return normalize(TBN * map);
 }
+
 /*
 vec2 parallax(vec2 texCoords, vec3 viewDir)
 { 
@@ -65,6 +91,7 @@ vec2 parallax(vec2 texCoords, vec3 viewDir)
     return texCoords - p;    
 } 
 */
+
 void main(void)
 {
 	/*
@@ -75,13 +102,11 @@ void main(void)
 	vec2 tc = parallax(texcoord, TBN * (cameraPosition - world_position));
 	*/
 	
-	vec4 c = texture(Texture, texcoord);
+	vec4 c = colorFunction();
 	if(c.a == 0.0) // Fully transparent, discard the fragment
 		discard;
 		
-	vec3 n = (useNormalMap > 0) ? 
-				perturb_normal(normalize(world_normal), texcoord) : 
-				normalize(world_normal);
+	vec3 n = normalFunction();
 
 	if(!gl_FrontFacing) n = -n;
 

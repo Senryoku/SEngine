@@ -1,7 +1,5 @@
 #version 430 core
 
-#define Samples9
-
 layout(std140) uniform Camera {
 	mat4 ViewMatrix;
 	mat4 ProjectionMatrix;

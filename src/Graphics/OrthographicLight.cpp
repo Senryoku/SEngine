@@ -51,7 +51,7 @@ void OrthographicLight::updateMatrices()
 			max = glm::max(max, glm::dot(v, _direction));
 		}
 		min_forward = min * _direction;
-		float bound_forward = max - min;
+		//float bound_forward = max - min;
 		
 		min = 100000.0;
 		max = -100000.0;

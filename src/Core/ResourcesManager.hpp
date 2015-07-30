@@ -33,6 +33,7 @@ public:
 	bool isMesh(const std::string& name) const;
 	
 	Mesh& getMesh(const std::string& name);
+	std::unique_ptr<Mesh>& getMeshPtr(const std::string& name) { return _meshes[name]; }
 
 private:
 	std::map<std::string, std::unique_ptr<Texture>>	_textures;
