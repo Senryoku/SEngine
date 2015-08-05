@@ -1,10 +1,30 @@
+#include <sstream>
+#include <iomanip>
+
 #include <SpotLight.hpp>
 #include <DeferredRenderer.hpp>
 
+#include <Query.hpp>
+
 #include <NoisyTerrain.hpp>
 #include <MathTools.hpp>
+#include <GUIText.hpp>
+#include <GUIButton.hpp>
+#include <GUICheckbox.hpp>
+#include <GUIEdit.hpp>
+#include <GUIGraph.hpp>
+#include <GUISeparator.hpp>
 
 #include <glm/gtx/transform.hpp>
+
+template <typename T>
+std::string to_string(const T a_value, const int n = 6)
+{
+    std::ostringstream out;
+	out << std::fixed;
+    out << std::setprecision(n) << a_value;
+    return out.str();
+}
 
 class Test : public DeferredRenderer
 {
@@ -161,6 +181,42 @@ public:
 		{
 			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
 		}
+		
+		auto w = _gui.add(new GUIWindow());
+		w->add(new GUIGraph<float>("GUIPass (ms): ", [&]() -> float { return _GUITiming.get<GLuint64>() / 1000000.0; }, 0.0, 3.0, 7.5));
+		w->add(new GUIGraph<float>("PostProcessPass (ms): ", [&]() -> float { return _postProcessTiming.get<GLuint64>() / 1000000.0; }, 0.0, 3.0, 7.5));
+		w->add(new GUIGraph<float>("LightPass (ms): ", [&]() -> float { return _lightPassTiming.get<GLuint64>() / 1000000.0; }, 0.0, 3.0, 7.5));
+		w->add(new GUIGraph<float>("GBufferPass (ms): ", [&]() -> float { return _GBufferPassTiming.get<GLuint64>() / 1000000.0; }, 0.0, 3.0, 7.5));
+		w->add(new GUIGraph<float>("Update (ms): ", [&]() -> float { return _updateTiming.get<GLuint64>() / 1000000.0; }, 0.0, 15.0, 7.5));
+		w->add(new GUISeparator(w));
+		w->add(new GUIGraph<float>("Frame Time (ms): ", [&]() -> float { return 1000.f * TimeManager::getInstance().getRealDeltaTime(); }, 0.0, 20.0, 7.5));
+		w->add(new GUIGraph<float>("FPS: ", [&]() -> float { return TimeManager::getInstance().getInstantFrameRate(); }, 0.0, 450.0, 7.5));
+		w->add(new GUIText([&]() -> std::string {
+			return to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
+						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS";
+		}));
+		w->add(new GUISeparator(w));
+		w->add(new GUIText("Stats"));
+		
+		auto w2 = _gui.add(new GUIWindow());
+		//w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
+		/// @todo Come back here when GLFW 3.2 will be released :)
+		//w2->add(new GUICheckbox("Vsync", [&] { static int i = 0; i = (i + 1) % 2; glfwSwapInterval(i); return i == 1; }));
+		//w2->add(new GUICheckbox("Fullscreen", [&] { ... }));
+		w2->add(new GUIEdit<float>("AORadius : ", &_aoRadius));
+		w2->add(new GUIEdit<float>("AOThresold : ", &_aoThreshold));
+		w2->add(new GUIEdit<int>("AOSamples : ", &_aoSamples));
+		w2->add(new GUISeparator(w2));
+		w2->add(new GUIEdit<int>("BloomDownsampling : ", &_bloomDownsampling));
+		w2->add(new GUIEdit<int>("BloomBlur : ", &_bloomBlur));
+		w2->add(new GUIEdit<float>("Bloom : ", &_bloom));
+		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { _bloom = -_bloom; return _bloom > 0.0; }));
+		w2->add(new GUISeparator(w2));
+		w2->add(new GUIEdit<float>("Exposure : ", &_exposure));
+		w2->add(new GUIEdit<float>("MinVariance : ", &_minVariance));
+		w2->add(new GUICheckbox("Pause", &_paused));
+		w2->add(new GUISeparator(w2));
+		w2->add(new GUIText("Controls"));
 	}
 	
 	virtual void update() override
@@ -197,6 +253,32 @@ public:
 		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
 		ld.useNone();
 	}
+	
+	virtual void render() override
+	{
+		_GBufferPassTiming.begin(Query::Target::TimeElapsed);
+		renderGBuffer();
+		_GBufferPassTiming.end();
+		
+		_lightPassTiming.begin(Query::Target::TimeElapsed);
+		renderLightPass();
+		_lightPassTiming.end();
+		
+		_postProcessTiming.begin(Query::Target::TimeElapsed);
+		renderPostProcess();
+		_postProcessTiming.end();
+		
+		_GUITiming.begin(Query::Target::TimeElapsed);
+		renderGUI();
+		_GUITiming.end();
+	}
+	
+protected:
+	Query	_updateTiming;
+	Query	_GBufferPassTiming;
+	Query	_lightPassTiming;
+	Query	_postProcessTiming;
+	Query	_GUITiming;
 };
 
 int main(int argc, char* argv[])

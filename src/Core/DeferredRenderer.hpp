@@ -17,8 +17,8 @@ protected:
 	// Post Process settings
 	float		_exposure = 2.0f;
 	float		_bloom = 1.2f;
-	int			_bloomBlur = 1;
-	int			_bloomDownsampling = 1;
+	int			_bloomBlur = 2;
+	int			_bloomDownsampling = 3;
 	glm::vec3	_ambiant = glm::vec3(0.06);
 	
 	float		_minVariance = 0.0000001f;

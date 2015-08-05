@@ -109,7 +109,7 @@ public:
 	**/
 	inline const CubeMap& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
 	
-	inline const size_t& getResolution() const { return _shadowMapResolution; }
+	inline size_t getResolution() const { return _shadowMapResolution; }
 	
 	inline void setResolution(size_t r)
 	{

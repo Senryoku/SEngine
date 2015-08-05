@@ -335,6 +335,25 @@ void Application::char_callback(GLFWwindow* window, unsigned int codepoint)
 	_gui.handleTextInput(codepoint);
 }
 
+Ray Application::getMouseRay() const
+{
+	auto o = glm::inverse(_projection) * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), 0.0, 1.0);
+	o /= o.w;
+	o = glm::inverse(_camera.getMatrix()) * o;
+	auto e = glm::inverse(_projection) * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), 1.0, 1.0);
+	e /= e.w;
+	e = glm::inverse(_camera.getMatrix()) * e;
+	return Ray{glm::vec3(o), glm::normalize(glm::vec3(e - o))};
+}
+
+glm::vec3 Application::getMouseProjection(float depth) const
+{
+	auto o = glm::inverse(_projection) * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), depth, 1.0);
+	o /= o.w;
+	o = glm::inverse(_camera.getMatrix()) * o;
+	return glm::vec3(o);
+}
+
 void Application::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods)
 {	
 	float z = _mouse.z;
@@ -356,6 +375,38 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 				w = 1.0;
 			} else {
 				w = 0.0;
+			}
+		}
+
+		/// @todo Remove
+		/// Quick hack for testing
+		static PointLight*	_selectedLight = nullptr;
+		if(!_controlCamera)
+		{
+			if(_selectedLight == nullptr && button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)
+			{
+				for(auto& l : _scene.getPointLights())
+				{
+					if(trace(getMouseRay(), Sphere{l.position, l.range}))
+					{
+						_selectedLight = &l;
+					}
+				}
+			} else if(_selectedLight != nullptr && button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
+				auto d = (_projection * _camera.getMatrix() * glm::vec4(_selectedLight->position, 1.0));
+				_selectedLight->position = getMouseProjection(d.z/d.w);
+				_selectedLight = nullptr;
+			}
+			
+			if(button == GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS)
+			{
+				auto d = (_projection * glm::vec4(0.0, 0.0, -10.0, 1.0));
+				_scene.getPointLights().push_back(PointLight{
+					getMouseProjection(d.z/d.w), 	// Position
+					10.0f,
+					2.0f * glm::vec3(1.0), // Color
+					0.0f
+				});
 			}
 		}
 	}

@@ -83,7 +83,7 @@ public:
 	**/
 	inline const T& getShadowMap() const { return _shadowMapFramebuffer.getColor(); }
 	
-	inline const size_t& getResolution() const { return _shadowMapResolution; }
+	inline size_t getResolution() const { return _shadowMapResolution; }
 	
 	/**
 	 * Warning!

@@ -38,7 +38,12 @@ public:
 		{
 			if(key == 257) // Return, GLFW_KEY_ENTER
 			{
-				*_value = from_string(_strValue);
+				if(_strValue == "") // Not valid, back to previous state.
+				{
+					_strValue = std::to_string(*_value);
+				} else {
+					*_value = from_string(_strValue);
+				}
 				_active = false;
 			} else if(key == 259) { // Backspace, GLFW_KEY_BACKSPACE
 				if(_strValue.size() > 0)
@@ -60,7 +65,7 @@ public:
 	{
 		if(_active)
 		{
-			/// @todo Regex to check if char is valid for T
+			/// @todo Check if char is valid for T
 			_strValue += unicode;
 			
 			_textValue.setText(_strValue);

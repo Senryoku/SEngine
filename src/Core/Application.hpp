@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 
 #include <GUISystem.hpp>
+#include <Raytracing.hpp>
 #include <TimeManager.hpp>
 #include <ResourcesManager.hpp>
 #include <Scene.hpp>
@@ -48,6 +49,9 @@ public:
 	
 	Scene& getScene() { return _scene; }
 	
+	Ray getMouseRay() const;
+	glm::vec3 getMouseProjection(float depth) const;
+	
 protected:
 	struct GPUViewProjection
 	{
@@ -62,16 +66,16 @@ protected:
 	bool 			_fullscreen = false;
 	bool 			_msaa = false;
 	
-	Scene		_scene;
+	Scene			_scene;
 
 	GUISystem		_gui;
 
 	// MainCamera
-	Camera		_camera;
-	float		_fov = 60.0;
-	glm::vec3 	_resolution;
-	glm::mat4 	_projection;
-	glm::vec4 	_mouse = glm::vec4(0.0);
+	Camera			_camera;
+	float			_fov = 60.0;
+	glm::vec3 		_resolution;
+	glm::mat4 		_projection;
+	glm::vec4 		_mouse = glm::vec4(0.0);
 	
 	GPUViewProjection	_gpuCameraData;
 	UniformBuffer		_camera_buffer;
