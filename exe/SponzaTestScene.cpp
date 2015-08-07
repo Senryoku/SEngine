@@ -185,6 +185,14 @@ public:
 		w->add(new GUISeparator(w));
 		w->add(new GUIText("Stats"));
 		
+		auto w5 = _gui.add(new GUIWindow());
+		w5->add(new GUIButton("3840*2160", [&] {setInternalResolution(3840, 2160);}));
+		w5->add(new GUIButton("2715*1527", [&] {setInternalResolution(2715, 1527);}));
+		w5->add(new GUIButton("1920*1080", [&] {setInternalResolution(1920, 1080);}));
+		w5->add(new GUIButton("Windows resolution", [&] {setInternalResolution(0, 0);}));
+		w5->add(new GUISeparator(w5));
+		w5->add(new GUIText("Internal Resolution"));
+		
 		auto w2 = _gui.add(new GUIWindow());
 		w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
 		/// @todo Come back here when GLFW 3.2 will be released :)

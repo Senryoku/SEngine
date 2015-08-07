@@ -9,10 +9,31 @@ public:
 	DeferredRenderer(int argc, char* argv[]);
 	virtual ~DeferredRenderer() =default;
 	
+	inline size_t getInternalWidth() const
+	{
+		return (_internalWidth != 0 && _internalHeight != 0) ?
+				_internalWidth : _width;
+	}
+	
+	inline size_t getInternalHeight() const
+	{
+		return (_internalWidth != 0 && _internalHeight != 0) ?
+				_internalHeight : _height;
+	}
+	
+	virtual void screen(const std::string& path) const override;
+	
+	void setInternalResolution(size_t width, size_t height);
+	
 	virtual void run_init() override;
 
 protected:
 	Framebuffer<Texture2D, 3>		_offscreenRender;
+	
+	// Downsampling
+	bool		_postProcessBlur = false;
+	size_t		_internalWidth = 0;
+	size_t		_internalHeight = 0;
 	
 	// Post Process settings
 	float		_exposure = 2.0f;
@@ -25,6 +46,8 @@ protected:
 	int			_aoSamples = 16;
 	float		_aoThreshold = 1.0f;
 	float		_aoRadius = 200.0f;
+	
+	virtual void initGBuffer(size_t width, size_t height);
 
 	virtual void render() override;
 	

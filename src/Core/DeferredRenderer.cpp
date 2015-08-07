@@ -1,8 +1,19 @@
 #include <DeferredRenderer.hpp>
 
+#include <stb_image_write.hpp>
+
 DeferredRenderer::DeferredRenderer(int argc, char* argv[]) :
 	Application(argc, argv)
 {
+}
+
+void DeferredRenderer::screen(const std::string& path) const
+{
+	_offscreenRender.bind(FramebufferTarget::Read);
+	GLubyte* pixels = new GLubyte[4 * getInternalWidth() * getInternalHeight()];
+	glReadPixels(0, 0, getInternalWidth(), getInternalHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	stbi_write_png(path.c_str(), getInternalWidth(), getInternalHeight(), 4, pixels, 0);
+	delete[] pixels;
 }
 
 void DeferredRenderer::run_init()
@@ -80,20 +91,27 @@ void DeferredRenderer::renderLightPass()
 	DeferredShadowCS.getProgram().setUniform("AOThreshold", _aoThreshold);
 	DeferredShadowCS.getProgram().setUniform("AORadius", _aoRadius);
 
-	DeferredShadowCS.compute(_resolution.x / DeferredShadowCS.getWorkgroupSize().x + 1, _resolution.y / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
+	DeferredShadowCS.compute(getInternalWidth() / DeferredShadowCS.getWorkgroupSize().x + 1, 
+								getInternalHeight() / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
 	DeferredShadowCS.memoryBarrier();
 }
 
 void DeferredRenderer::renderPostProcess()
 {
 	Framebuffer<>::unbind(FramebufferTarget::Draw);
+	
+	// This looks really good with downsampling (but is obviously really expensive)
+	/// @todo The amount of blur (i.e. its kernel) should be customizable.
+	if(_postProcessBlur)
+		blur(_offscreenRender.getColor(0), getInternalWidth(), getInternalHeight(), 0);
+	
 	if(_bloom > 0.0)
 	{
 		// Downsampling and blur
 		_offscreenRender.getColor(2).generateMipmaps();
 		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, _bloomDownsampling);
 		for(int i = 0; i < _bloomBlur; ++i)
-			blur(_offscreenRender.getColor(2), _resolution.x, _resolution.y, _bloomDownsampling);
+			blur(_offscreenRender.getColor(2), getInternalWidth(), getInternalHeight(), _bloomDownsampling);
 		_offscreenRender.getColor(2).generateMipmaps();
 		
 		// Blend
@@ -109,7 +127,9 @@ void DeferredRenderer::renderPostProcess()
 	} else {
 		// No post process, just blit.
 		_offscreenRender.bind(FramebufferTarget::Read);
-		glBlitFramebuffer(0, 0, _resolution.x, _resolution.y, 0, 0, _resolution.x, _resolution.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		glBlitFramebuffer(0, 0, getInternalWidth(), getInternalHeight(), 
+							0, 0, _width, _height, 
+							GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 }
 
@@ -121,24 +141,44 @@ void DeferredRenderer::render()
 	renderGUI();
 }
 
+void DeferredRenderer::setInternalResolution(size_t width, size_t height)
+{
+	_internalWidth = width;
+	_internalHeight = height;
+	if(_internalWidth == 0 || _internalHeight == 0)
+	{
+		initGBuffer(_width, _height);
+	} else {
+		initGBuffer(_internalWidth, _internalHeight);
+	}
+}
+
+void DeferredRenderer::initGBuffer(size_t width, size_t height)
+{
+	_offscreenRender = Framebuffer<Texture2D, 3>(width, height);
+	_offscreenRender.getColor(0).setPixelType(Texture::PixelType::Float);
+	_offscreenRender.getColor(0).create(nullptr, width, height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(0).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(0).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(1).setPixelType(Texture::PixelType::Float);
+	_offscreenRender.getColor(1).create(nullptr, width, height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(1).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(1).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(2).setPixelType(Texture::PixelType::Float);
+	_offscreenRender.getColor(2).create(nullptr, width, height, GL_RGBA32F, GL_RGBA, false);
+	_offscreenRender.getColor(2).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_offscreenRender.getColor(2).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
+	_offscreenRender.init();
+}
+	
 void DeferredRenderer::resize_callback(GLFWwindow* _window, int width, int height)
 {
 	Application::resize_callback(_window, width, height);
 	
-	_offscreenRender = Framebuffer<Texture2D, 3>(_width, _height);
-	_offscreenRender.getColor(0).setPixelType(Texture::PixelType::Float);
-	_offscreenRender.getColor(0).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
-	_offscreenRender.getColor(0).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
-	_offscreenRender.getColor(0).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
-	_offscreenRender.getColor(1).setPixelType(Texture::PixelType::Float);
-	_offscreenRender.getColor(1).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
-	_offscreenRender.getColor(1).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
-	_offscreenRender.getColor(1).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
-	_offscreenRender.getColor(2).setPixelType(Texture::PixelType::Float);
-	_offscreenRender.getColor(2).create(nullptr, _width, _height, GL_RGBA32F, GL_RGBA, false);
-	_offscreenRender.getColor(2).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
-	_offscreenRender.getColor(2).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
-	_offscreenRender.init();
+	if(_internalWidth == 0 || _internalHeight == 0)
+	{
+		initGBuffer(_width, _height);
+	}
 }
 
 void DeferredRenderer::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)

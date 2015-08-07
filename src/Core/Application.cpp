@@ -38,7 +38,7 @@ void Application::init(const std::string& windowName)
 		std::cerr << "Error: couldn't initialize GLFW." << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES, 0);
 
 	if(_fullscreen)
 	{

@@ -45,7 +45,7 @@ public:
 		return uniform_dist(gen);
 	}
 
-	void screen(const std::string& path) const;
+	virtual void screen(const std::string& path) const;
 	
 	Scene& getScene() { return _scene; }
 	
