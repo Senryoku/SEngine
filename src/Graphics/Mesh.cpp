@@ -105,6 +105,11 @@ void Mesh::computeNormals()
 
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
+	return load(path, ResourcesManager::getInstance().getProgram("Deferred"));
+}
+
+std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
+{
 	//std::cout << "Loading " << path << " using assimp..." << std::endl;
 	
 	std::vector<Mesh*> M;
@@ -169,12 +174,10 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 				}
 				
 				// TODO: Load animations.
-				
-				M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("DeferredRigged"));
 			} else {
 				M[meshIdx] = &ResourcesManager::getInstance().getMesh(name);
-				M[meshIdx]->getMaterial().setShadingProgram(ResourcesManager::getInstance().getProgram("Deferred"));
 			}
+			M[meshIdx]->getMaterial().setShadingProgram(p);
 			
 			//std::cout << "Material Index: " << LoadedMesh->mMaterialIndex << std::endl;
 			aiMaterial* m = scene->mMaterials[LoadedMesh->mMaterialIndex];

@@ -16,6 +16,7 @@ uniform mat4 ModelMatrix = mat4(1.0);
 out layout(location = 0) vec3  position;
 out layout(location = 1) vec3  color;
 out layout(location = 2) float draw;
+out layout(location = 3) float range;
 
 void main()
 {
@@ -24,6 +25,7 @@ void main()
 	{
 		vec4 pos = ModelMatrix * Lights[gl_VertexID].position;
 		position = pos.xyz;
+		range = Lights[gl_VertexID].position.w;
 		color = Lights[gl_VertexID].color.rgb;
 		gl_Position = pos;
 	}

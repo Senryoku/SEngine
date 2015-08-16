@@ -54,7 +54,9 @@ public:
      */
 	inline Real getInstantFrameRate() const { return 1.f/getRealDeltaTime(); }
 	
-	inline Real getRuntime() const { return _runtime; }
+	inline Real getRuntime() const { return Seconds(now() - TimePoint()).count(); }
+
+	inline Real getRuntimeAtFrameStart() const { return _runtime; }	
 	
 	inline void subscribe(const Callback& c) { _callbacks.push_back(c); }
 	

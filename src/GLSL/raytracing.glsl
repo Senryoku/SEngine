@@ -20,3 +20,17 @@ bool traceSphere(vec3 ro, vec3 rd, vec3 ce, float r, out vec3 p, out vec3 n)
 	}
     return false;
 }
+
+/// pp : plane point
+/// pn : plane normal
+bool tracePlane(vec3 ro, vec3 rd, vec3 pp, vec3 pn, out vec3 p, out vec3 n)
+{
+	if(dot(pn, rd) == 0) return false;
+	float t = dot(pn, pp - ro) / dot(pn, rd);
+	if(t > 0)
+	{
+		p = ro + t * rd;
+		n = pn;
+	}
+	return (t > 0);
+}

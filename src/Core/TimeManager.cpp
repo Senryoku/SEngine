@@ -3,7 +3,7 @@
 TimeManager::TimeManager() :
 	_timerate(1.f),
 	_cachedRealDeltaTime(s_minTimeFrame),
-	_cachedDeltaTime(_timerate*s_minTimeFrame),
+	_cachedDeltaTime(_timerate * s_minTimeFrame),
 	_lastUpdate(now())
 {
 }

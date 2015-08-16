@@ -68,6 +68,7 @@ public:
 	const BoundingBox& getBoundingBox() const		{ return _bbox; }
 
 	static std::vector<Mesh*> load(const std::string& path);
+	static std::vector<Mesh*> load(const std::string& path, const Program& p);
 	
 protected:
 	std::vector<Vertex>		_vertices;

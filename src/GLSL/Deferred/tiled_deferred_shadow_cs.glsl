@@ -1,5 +1,5 @@
 #version 430
-#pragma include cook_torrance.glsl
+#pragma include ../cook_torrance.glsl
 
 #define SHADOWBLOCKCOUNT			10
 #define CUBESHADOWBLOCKCOUNT		3

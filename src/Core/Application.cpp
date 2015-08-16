@@ -385,9 +385,10 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 		{
 			if(_selectedLight == nullptr && button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)
 			{
+				float depth = 1000.0;
 				for(auto& l : _scene.getPointLights())
 				{
-					if(trace(getMouseRay(), Sphere{l.position, l.range}))
+					if(trace(getMouseRay(), Sphere{l.position, l.range}, depth))
 					{
 						_selectedLight = &l;
 					}
@@ -403,7 +404,7 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 				auto d = (_projection * glm::vec4(0.0, 0.0, -10.0, 1.0));
 				_scene.getPointLights().push_back(PointLight{
 					getMouseProjection(d.z/d.w), 	// Position
-					10.0f,
+					5.0f,
 					2.0f * glm::vec3(1.0), // Color
 					0.0f
 				});

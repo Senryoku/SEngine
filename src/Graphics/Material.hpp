@@ -42,7 +42,7 @@ public:
 
 	//	Getters/Setters
 	const Program& getShadingProgram() const;
-	void setShadingProgram(Program& P);
+	void setShadingProgram(const Program& P);
 	
 	const Program* getShadingProgramPtr() const;
 	void setShadingProgramPtr(const Program* P);
@@ -112,7 +112,7 @@ inline const Program* Material::getShadingProgramPtr() const
 }
 
 
-inline void Material::setShadingProgram(Program& P)
+inline void Material::setShadingProgram(const Program& P)
 {
 	_shadingProgram = &P;
 	updateLocations();

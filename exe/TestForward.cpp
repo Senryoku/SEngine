@@ -28,30 +28,36 @@ std::string to_string(const T a_value, const int n = 6)
     return out.str();
 }
 
-class Test : public DeferredRenderer
+class Test : public Application
 {
 public:
 	Test(int argc, char* argv[]) : 
-		DeferredRenderer(argc, argv)
+		Application(argc, argv)
 	{
 	}
 	
 	virtual void run_init() override
 	{
-		DeferredRenderer::run_init();
+		Application::run_init();
 		
 		auto& LightDraw = loadProgram("LightDraw",
 			load<VertexShader>("src/GLSL/Debug/light_vs.glsl"),
 			load<GeometryShader>("src/GLSL/Debug/light_gs.glsl"),
 			load<FragmentShader>("src/GLSL/Debug/light_star_fs.glsl")
 		);
-		/*
-		auto& LightDraw = loadProgram("LightDraw",
-			load<VertexShader>("src/GLSL/Debug/light_range_vs.glsl"),
-			load<GeometryShader>("src/GLSL/Debug/light_range_gs.glsl"),
-			load<FragmentShader>("src/GLSL/Debug/light_range_fs.glsl")
+		
+		auto& Simple = loadProgram("Simple",
+			load<VertexShader>("src/GLSL/vs.glsl"),
+			load<FragmentShader>("src/GLSL/fs.glsl")
 		);
-		*/
+		Simple.bindUniformBlock("Camera", _camera_buffer); 
+		
+		auto& Forward = loadProgram("Forward",
+			load<VertexShader>("src/GLSL/Forward/forward_vs.glsl"),
+			load<FragmentShader>("src/GLSL/Forward/forward_fs.glsl")
+		);
+		Forward.bindUniformBlock("Camera", _camera_buffer); 
+		
 		_camera.speed() = 15;
 		_camera.setPosition(glm::vec3(0.0, 15.0, -20.0));
 		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
@@ -59,11 +65,11 @@ public:
 		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		
-		auto TestMesh = Mesh::load("in/3DModels/sponza/sponza.obj");
+		auto TestMesh = Mesh::load("in/3DModels/sponza/sponza.obj", Forward);
 		for(auto part : TestMesh)
 		{
 			part->createVAO();
-			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.08))));
+			_scene.add(MeshInstance(*part, glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04))));
 		}
 		
 		for(size_t i = 0; i < 1000; ++i)
@@ -101,12 +107,14 @@ public:
 		w2->add(new GUICheckbox("Pause", &_paused));
 		w2->add(new GUISeparator(w2));
 		w2->add(new GUIText("Controls"));
+		
+		_axes.reset(new Axes());
 	}
 
 	virtual void update() override
 	{
 		auto start = TimeManager::getInstance().getRuntime();
-		DeferredRenderer::update();
+		Application::update();
 		
 		if(!_paused)
 		{
@@ -119,12 +127,9 @@ public:
 			{
 				cooldown -= 1.0;
 				RandomHelper r;
-				const glm::vec3 center = glm::vec3(35.0, 100.0, 0.0);
 				size_t first = 100 * (static_cast<size_t>(time) % 10);
-				auto p = center + (1.0f + 5.0f * (float) r.get0_1()) * r.getSpherical();
-				auto c = glm::vec3(r.get0_1(), r.get0_1(), r.get0_1());
-				c = glm::normalize(c);
-				//c = 0.5f + 0.5f * c;
+				auto p = (1.0f + 5.0f * (float) r.get0_1()) * r.getSpherical();
+				auto c = 0.5f + 0.5f * glm::vec3(r.get0_1(), r.get0_1(), r.get0_1());
 				// Flash
 				_scene.getPointLights()[first].info = 0.5;
 				_scene.getPointLights()[first].range = 5.0;
@@ -153,12 +158,17 @@ public:
 				}
 			}
 		}
+		ResourcesManager::getInstance().getProgram("Forward").setUniform("CameraPosition", _camera.getPosition());
 		
 		_updateTiming = TimeManager::getInstance().getRuntime() - start;
 	}
 
-	virtual void renderGBufferPost() override
-	{		
+	virtual void render() override
+	{
+		Context::clear();
+	
+		_scene.draw(_projection, _camera.getMatrix());
+		
 		_lightsTiming.begin(Query::Target::TimeElapsed);
 		
 		Context::disable(Capability::CullFace);
@@ -169,6 +179,17 @@ public:
 		ld.useNone();
 		
 		_lightsTiming.end();
+		
+		Context::enable(Capability::Blend);
+		auto& s = ResourcesManager::getInstance().getProgram("Simple");
+		s.use();
+		s.setUniform("Color", glm::vec4(1.0));
+		_axes->draw();
+		s.setUniform("Color", glm::vec4(1.0, 1.0, 1.0, 0.25));
+		_axes->drawMarks();
+		s.useNone();
+		
+		renderGUI();
 	}
 	
 protected:
@@ -176,6 +197,7 @@ protected:
 	Query	_lightsTiming;
 	
 	std::vector<glm::vec3>	_partVelocities;
+	std::unique_ptr<Axes>		_axes;
 };
 
 int main(int argc, char* argv[])
