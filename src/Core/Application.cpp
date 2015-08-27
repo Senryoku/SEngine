@@ -103,33 +103,56 @@ void Application::update()
 									.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
 								.c_str());
 
+	_cameraMoved = false;
 	if(_controlCamera)
 	{
 		float _frameTime = TimeManager::getInstance().getRealDeltaTime(); // Should move even on pause :)
 		if(glfwGetKey(_window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			_cameraMoved = true;
 			_camera.moveForward(_frameTime);
+		}
 			
 		if(glfwGetKey(_window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			_cameraMoved = true;
 			_camera.strafeLeft(_frameTime);
+		}
 				
 		if(glfwGetKey(_window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			_cameraMoved = true;
 			_camera.moveBackward(_frameTime);
+		}
 				
 		if(glfwGetKey(_window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			_cameraMoved = true;
 			_camera.strafeRight(_frameTime);
+		}
 				
 		if(glfwGetKey(_window, GLFW_KEY_Q) == GLFW_PRESS)
+		{
+			_cameraMoved = true;
 			_camera.moveDown(_frameTime);
+		}
 				
 		if(glfwGetKey(_window, GLFW_KEY_E) == GLFW_PRESS)
+		{
+			_cameraMoved = true;
 			_camera.moveUp(_frameTime);
+		}
 			
 		double mx = _mouse_x, my = _mouse_y;
 		glfwGetCursorPos(_window, &_mouse_x, &_mouse_y);
+		_cameraMoved = _cameraMoved || (_mouse_x != mx || _mouse_y != my);
 		if(_mouse_x != mx || _mouse_y != my)
 			_camera.look(glm::vec2(_mouse_x - mx, my - _mouse_y));
 	}
 	_camera.updateView();
+	_invViewMatrix = glm::inverse(_camera.getMatrix());
+	_invViewProjection = _invViewMatrix * _invProjection;
+	
 	_gpuCameraData = {_camera.getMatrix(), _projection};
 	_camera_buffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
 	_camera_buffer.unbind();
@@ -221,6 +244,7 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 	
 	float inRad = _fov * glm::pi<float>()/180.f;
 	_projection = glm::perspective(inRad, (float) _width/_height, 0.1f, 1000.0f);
+	_invProjection = glm::inverse(_projection);
 }
 
 void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
@@ -335,22 +359,29 @@ void Application::char_callback(GLFWwindow* window, unsigned int codepoint)
 	_gui.handleTextInput(codepoint);
 }
 
+Ray Application::getScreenRay(size_t x, size_t y) const
+{
+	/*
+	auto e = _invViewProjection * glm::vec4((2.0f * x) / _resolution.x - 1.0f, -((2.0f * y) / _resolution.y - 1.0f), 0.0f, 1.0f);
+	e /= e.w;
+	auto d = glm::normalize(glm::vec3(e) - _camera.getPosition());
+	*/
+	auto ratio = _resolution.y / _resolution.x;
+	auto d = glm::normalize(((2.0f * x) / _resolution.x - 1.0f) * _camera.getRight() + -ratio * ((2.0f * y) / _resolution.y - 1.0f) * glm::cross(_camera.getRight(), _camera.getDirection()) + _camera.getDirection());
+
+	return Ray{_camera.getPosition(), d};
+}
+
 Ray Application::getMouseRay() const
 {
-	auto o = glm::inverse(_projection) * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), 0.0, 1.0);
-	o /= o.w;
-	o = glm::inverse(_camera.getMatrix()) * o;
-	auto e = glm::inverse(_projection) * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), 1.0, 1.0);
-	e /= e.w;
-	e = glm::inverse(_camera.getMatrix()) * e;
-	return Ray{glm::vec3(o), glm::normalize(glm::vec3(e - o))};
+	return getScreenRay(_mouse.x, _mouse.y);
 }
 
 glm::vec3 Application::getMouseProjection(float depth) const
 {
-	auto o = glm::inverse(_projection) * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), depth, 1.0);
+	auto o = _invProjection * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), depth, 1.0);
 	o /= o.w;
-	o = glm::inverse(_camera.getMatrix()) * o;
+	o = _invViewMatrix * o;
 	return glm::vec3(o);
 }
 

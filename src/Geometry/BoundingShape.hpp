@@ -30,24 +30,6 @@ public:
 	float		radius;
 };
 
-/**
- * BoundingBox
- * @todo Change to a general bounding box (not an AABB) : 8 Points.
-**/
-class BoundingBox : public BoundingShape
-{
-public:
-	BoundingBox() =default;
-	BoundingBox(const glm::vec3& _min, const glm::vec3& _max) :
-		min(_min),
-		max(_max)
-	{
-	}
-	
-	glm::vec3	min;
-	glm::vec3	max;
-};
-
 // Forward Declarations
 template<typename Vector>
 class AABB;
@@ -177,3 +159,9 @@ inline bool intersect(const AABB<glm::vec3>& rhs, const BoundingSphere& lhs)
 	else if (lhs.center.z > rhs.max.z) dist_squared -= sqr(lhs.center.z - rhs.max.z);
 	return dist_squared > 0;
 }
+
+/**
+ * BoundingBox
+ * @todo Change to a general bounding box (not an AABB) : 8 Points.
+**/
+using BoundingBox = AABB<glm::vec3>;

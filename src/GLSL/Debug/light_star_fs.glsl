@@ -46,7 +46,7 @@ void main()
 		d0 = cross(d1, n);
 		vec3 d = p - world_position;
 		vec2 pix = vec2(dot(d, normalize(d0)), dot(d, normalize(d1))) / particle_size;
-		if(abs(pix.x * pix.y) > 0.02)
+		if(abs(pix.x * pix.y) > 0.04)
 			discard;
 	} else {
 		discard;

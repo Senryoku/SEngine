@@ -50,6 +50,7 @@ public:
 	Scene& getScene() { return _scene; }
 	
 	Ray getMouseRay() const;
+	Ray getScreenRay(size_t x, size_t y) const;
 	glm::vec3 getMouseProjection(float depth) const;
 	
 protected:
@@ -61,32 +62,36 @@ protected:
 	
 	// Window settings
 	GLFWwindow*	_window;
-	int				_width = 1366;
-	int				_height = 720;
-	bool 			_fullscreen = false;
-	bool 			_msaa = false;
+	int					_width = 1366;
+	int					_height = 720;
+	bool 					_fullscreen = false;
+	bool 					_msaa = false;
 	
-	Scene			_scene;
+	Scene				_scene;
 
 	GUISystem		_gui;
 
 	// MainCamera
+	bool					_cameraMoved = true;
 	Camera			_camera;
-	float			_fov = 60.0;
+	float					_fov = 60.0;
 	glm::vec3 		_resolution;
 	glm::mat4 		_projection;
+	glm::mat4 		_invProjection;
+	glm::mat4 		_invViewMatrix;
+	glm::mat4		_invViewProjection;
 	glm::vec4 		_mouse = glm::vec4(0.0);
 	
 	GPUViewProjection	_gpuCameraData;
-	UniformBuffer		_camera_buffer;
+	UniformBuffer			_camera_buffer;
 
 	bool 		_controlCamera = true;
-	double 		_mouse_x = 0.0, 
+	double 	_mouse_x = 0.0, 
 				_mouse_y = 0.0;
 	
 	// Time Management
 	float		_timescale = 0.5;
-	float 		_time = 0.f;
+	float 	_time = 0.f;
 	float		_frameTime;
 	float		_frameRate;
 	bool		_paused = false;

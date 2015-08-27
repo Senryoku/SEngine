@@ -247,6 +247,8 @@ void main(void)
 			// Simple Point Lights
 			for(int l2 = 0; l2 < local_lights_count; ++l2)
 			{
+				if(Lights[local_lights[l2]].color.w <= 0.0)
+					continue;
 				float sqRad = max(Lights[local_lights[l2]].position.w, 0.01);
 				sqRad *= sqRad;
 				float d = dot(position.xyz - Lights[local_lights[l2]].position.xyz,
