@@ -435,9 +435,9 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 				auto d = (_projection * glm::vec4(0.0, 0.0, -10.0, 1.0));
 				_scene.getPointLights().push_back(PointLight{
 					getMouseProjection(d.z/d.w), 	// Position
-					5.0f,
+					10.0f,
 					2.0f * glm::vec3(1.0), // Color
-					0.0f
+					1.0f
 				});
 			}
 		}

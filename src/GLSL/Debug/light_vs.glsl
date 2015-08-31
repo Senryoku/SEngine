@@ -20,7 +20,7 @@ out layout(location = 2) float draw;
 void main()
 {
 	draw = Lights[gl_VertexID].color.w;
-	if(draw > 0.0)
+	if(draw >= 0.0)
 	{
 		vec4 pos = ModelMatrix * Lights[gl_VertexID].position;
 		position = pos.xyz;

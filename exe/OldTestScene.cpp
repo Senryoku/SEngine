@@ -136,7 +136,7 @@ public:
 				glm::vec3((float) (i % 25) * 10.0f, 3.f, (float) (i / 25) * 10.0f - 5.0f), // Position
 				10.0f, // Range
 				2.0f * glm::vec3((i % 13) / 13.0, (i % 27) / 27.0, (i % 57) / 57.0), // Color
-				0.0f		
+				1.0f		
 			});
 		}
 

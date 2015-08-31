@@ -67,14 +67,14 @@ public:
 			glm::vec3(40.0, 4.0, 7.0), 	// Position
 			10.0f,
 			2.0f * glm::vec3(1.0), // Color
-			0.0f
+			1.0f
 		});
 		
 		_scene.getPointLights().push_back(PointLight{
 			glm::vec3(60.0, 4.0, 7.0), 	// Position
 			10.0f,
 			2.0f * glm::vec3(1.0), // Color
-			0.0f
+			1.0f
 		});
 		
 		// Shadow casting lights ---------------------------------------------------

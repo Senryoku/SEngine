@@ -146,6 +146,8 @@ inline bool trace(const Ray& r, const Mesh& m, glm::vec3& p, glm::vec3& n)
 	if(!trace(r, m.getBoundingBox()))
 		return false;
 	
+	bool hit = false;
+	glm::vec3 tmp;
 	for(auto& t : m.getTriangles())
 	{
 		if(glm::intersectRayTriangle(r.origin,
@@ -153,23 +155,47 @@ inline bool trace(const Ray& r, const Mesh& m, glm::vec3& p, glm::vec3& n)
 						m.getVertices()[t.vertices[0]].position,
 						m.getVertices()[t.vertices[1]].position,
 						m.getVertices()[t.vertices[2]].position,
-						p))
+						tmp))
 		{
-			n = p.x * m.getVertices()[t.vertices[0]].normal +
-					p.y * m.getVertices()[t.vertices[1]].normal +
-					(1.0f - p.y - p.z) * m.getVertices()[t.vertices[2]].normal;
-			p = r(p.z);
-			return true;
+			p = r(tmp.z);
+			n = tmp.x * m.getVertices()[t.vertices[0]].normal +
+					tmp.y * m.getVertices()[t.vertices[1]].normal +
+					(1.0f - tmp.y - tmp.z) * m.getVertices()[t.vertices[2]].normal;
+			hit = true;
 		}
 	}
 	
-	return false;
+	return hit;
 }
 
 inline bool trace(const Ray& r, const Mesh& m, float& depth, glm::vec3& p, glm::vec3& n)
 {
-	bool b = trace(r, m, p, n);
-	if(b)
-		depth = glm::distance(r.origin, p);
-	return b;
+	if(!trace(r, m.getBoundingBox()))
+		return false;
+	
+	bool hit = false;
+	glm::vec3 tmp;
+	for(auto& t : m.getTriangles())
+	{
+		if(glm::intersectRayTriangle(r.origin,
+						r.direction, 
+						m.getVertices()[t.vertices[0]].position,
+						m.getVertices()[t.vertices[1]].position,
+						m.getVertices()[t.vertices[2]].position,
+						tmp))
+		{
+			if(tmp.z < depth)
+			{
+				depth = tmp.z;
+				p = r(tmp.z);
+				n = tmp.x * m.getVertices()[t.vertices[0]].normal +
+						tmp.y * m.getVertices()[t.vertices[1]].normal +
+						(1.0f - tmp.x - tmp.y) * m.getVertices()[t.vertices[2]].normal;
+				n = glm::normalize(n);
+				hit = true;
+			}
+		}
+	}
+	
+	return hit;
 }
