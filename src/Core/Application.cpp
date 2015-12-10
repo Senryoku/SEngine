@@ -174,6 +174,12 @@ void Application::update()
 				l.drawShadowMap(_scene.getObjects());
 			}
 	}
+	
+	if(_selectedLight)
+	{
+		auto d = (_projection * _camera.getMatrix() * glm::vec4(_selectedLight->position, 1.0));
+		_selectedLight->position = getMouseProjection(d.z/d.w);
+	}
 }
 
 void Application::renderGUI()
@@ -242,9 +248,7 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 	glViewport(0, 0, _width, _height);
 	_resolution = glm::vec3(_width, _height, 0.0);
 	
-	float inRad = _fov * glm::pi<float>()/180.f;
-	_projection = glm::perspective(inRad, (float) _width/_height, 0.1f, 1000.0f);
-	_invProjection = glm::inverse(_projection);
+	update_projection();
 }
 
 void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
@@ -300,8 +304,8 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 				} else {
 					glDisable(GL_MULTISAMPLE);
 					
-					GLint  iMultiSample = 0;
-					GLint  iNumSamples = 0;
+					GLint iMultiSample = 0;
+					GLint iNumSamples = 0;
 					glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
 					glGetIntegerv(GL_SAMPLES, &iNumSamples);
 					std::cout << "Disabled MSAA (GL_SAMPLES : " << iNumSamples << ", GL_SAMPLE_BUFFERS : " << iMultiSample << ")" << std::endl;
@@ -385,12 +389,20 @@ glm::vec3 Application::getMouseProjection(float depth) const
 	return glm::vec3(o);
 }
 
+void Application::update_projection()
+{
+	float inRad = _fov * glm::pi<float>()/180.f;
+	_projection = glm::perspective(inRad, (float) _width/_height, 0.1f, 1000.0f);
+	_invProjection = glm::inverse(_projection);
+}
+
 void Application::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods)
 {	
 	float z = _mouse.z;
 	float w = _mouse.w;
 
-	if(action == GLFW_PRESS || !_gui.handleClick({_mouse.x, _resolution.y - _mouse.y}, button))
+	bool gui_test = action != GLFW_PRESS || !_gui.handleClick({_mouse.x, _resolution.y - _mouse.y}, button);
+	if(gui_test)
 	{
 		if(button == GLFW_MOUSE_BUTTON_1)
 		{
@@ -411,7 +423,6 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 
 		/// @todo Remove
 		/// Quick hack for testing
-		static PointLight*	_selectedLight = nullptr;
 		if(!_controlCamera)
 		{
 			if(_selectedLight == nullptr && button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)

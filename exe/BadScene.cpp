@@ -55,7 +55,6 @@ public:
 		auto TestMesh = Mesh::load("in/3DModels/sponza/sponza.obj");
 		for(auto part : TestMesh)
 		{
-			part->computeNormals();
 			part->createVAO();
 			part->getMaterial().setUniform("R", &R);
 			part->getMaterial().setUniform("F0", &F0);
@@ -148,8 +147,20 @@ public:
 		s->setAngle(3.14159f * 0.5f);
 		s->updateMatrices();
 		
+		_scene.getOmniLights().resize(1);
+		_scene.getOmniLights()[0].setResolution(2048);
+		_scene.getOmniLights()[0].dynamic = true; /// @todo Doesn't work if not dynamic...
+		_scene.getOmniLights()[0].init();
+		_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0, 25.0, -2.0));
+		_scene.getOmniLights()[0].setColor(glm::vec3(1.5));
+		_scene.getOmniLights()[0].setRange(40.0f);
+		_scene.getOmniLights()[0].updateMatrices();
+		
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
+		
+		for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
+			_scene.getOmniLights()[i].drawShadowMap(_scene.getObjects());
 
 		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
 				"in/Textures/skybox/negx.png",
@@ -241,6 +252,21 @@ public:
 			
 			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
 			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+		
+			static glm::vec3 TorchSpeed = glm::vec3(0.0f);
+			static float TorchRangeSpeed = 0.0f;
+			static glm::vec3 TorchRelativePos = glm::vec3(0.0f);
+			if(!_scene.getOmniLights().empty() && _scene.getOmniLights()[0].dynamic)
+			{
+				TorchRangeSpeed += _frameTime * 2000.f * (rand<float>() - 0.5f);
+				_scene.getOmniLights()[0].setRange(std::min(std::max(_scene.getOmniLights()[0].getRange() + _frameTime * TorchRangeSpeed, 30.f), 50.0f));
+				TorchSpeed += _frameTime * (2000.0f * (glm::vec3(rand<float>(), rand<float>(), rand<float>()) - 0.5f)
+					- 50.0f * TorchRelativePos);
+				TorchRelativePos += _frameTime * TorchSpeed;
+				if(glm::length(TorchRelativePos) > 2.0f) 
+					TorchRelativePos = 2.0f * glm::normalize(TorchRelativePos);
+				_scene.getOmniLights()[0].setPosition(_camera.getPosition() + TorchRelativePos);
+			}
 		}
 	
 		DeferredRenderer::update();

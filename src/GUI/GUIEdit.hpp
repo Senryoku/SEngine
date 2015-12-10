@@ -9,14 +9,25 @@ template<typename T = float>
 class GUIEdit : public GUIElement
 {
 public:
+	using Callback = std::function<void(void)>;
+	
 	GUIEdit(const std::string& label, T* value) :
 		_value(value),
 		_strValue(std::to_string(*_value)),
 		_textLabel(label),
 		_textValue(_strValue)
 	{
-		_textValue.Position = {_textLabel.getAABB().max.x, 0.0};
-		updateAABB();
+		init();
+	}
+	
+	GUIEdit(const std::string& label, T* value, Callback callback) :
+		_value(value),
+		_callback(callback),
+		_strValue(std::to_string(*_value)),
+		_textLabel(label),
+		_textValue(_strValue)
+	{
+		init();
 	}
 	
 	void updateAABB()
@@ -43,6 +54,8 @@ public:
 					_strValue = std::to_string(*_value);
 				} else {
 					*_value = from_string(_strValue);
+					if(_callback)
+						_callback();
 				}
 				_active = false;
 			} else if(key == 259) { // Backspace, GLFW_KEY_BACKSPACE
@@ -98,10 +111,17 @@ public:
 	}
 
 private:
-	T*				_value;
+	T*			_value;
+	Callback	_callback;
 	
 	std::string	_strValue;
 	
 	GUIText		_textLabel;
 	GUIText		_textValue;
+	
+	void init()
+	{
+		_textValue.Position = {_textLabel.getAABB().max.x, 0.0};
+		updateAABB();
+	}
 };

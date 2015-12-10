@@ -56,12 +56,14 @@ out layout(location = 2) vec2 texcoord;
 void main(void)
 {
 	//gl_Layer = gl_InvocationID;
+	mat4 FinalProjections[6];
 	for(gl_Layer = 0; gl_Layer < 6; ++gl_Layer)
 	{
+		FinalProjections[gl_Layer] = ProjectionMatrix * CubeFaceMatrix[gl_Layer];
 		for(int i = 0; i < 3; ++i)
 		{
 			world_position = in_position[i];
-			gl_Position = ProjectionMatrix * CubeFaceMatrix[gl_Layer] * ViewMatrix * vec4(in_position[i], 1.0);
+			gl_Position = FinalProjections[gl_Layer] * ViewMatrix * vec4(in_position[i], 1.0);
 			gl_PrimitiveID = gl_PrimitiveIDIn;
 			world_normal = in_normal[i];
 			texcoord = in_texcoord[i];

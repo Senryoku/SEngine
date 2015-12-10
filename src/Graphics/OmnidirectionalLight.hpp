@@ -153,19 +153,19 @@ public:
 	inline static const Program& getShadowMapInstanceProgram();
 	
 protected:
-	glm::vec3			_color = glm::vec3(1.f);				///< Light's color
+	glm::vec3			_color = glm::vec3(1.f);		///< Light's color
 	
-	glm::vec3			_position = glm::vec3(0.f);				///< Light's position in World Space
-	float				_range = 1000.0; 							///< Light's range, mainly used for the Shadow Mapping settings
+	glm::vec3			_position = glm::vec3(0.f);		///< Light's position in World Space
+	float				_range = 1000.0; 				///< Light's range, mainly used for the Shadow Mapping settings
 
 	unsigned int		_shadowMapResolution;			///< Resolution of the shadow map (depth map)
-	ShadowBuffer		_shadowMapFramebuffer;		///< Framebuffer used to draw the shadow map
+	ShadowBuffer		_shadowMapFramebuffer;			///< Framebuffer used to draw the shadow map
 	glm::mat4			_projection;					///< Projection matrix used to draw the shadow map
-	UniformBuffer		_gpuBuffer;					///< Buffer used for shadow mapping
+	UniformBuffer		_gpuBuffer;						///< Buffer used for shadow mapping
 	
 	// Static	
 	static Program* 			s_depthProgram;	///< Program used to draw the shadow map
-    static VertexShader*		s_depthVS;			///< VertexShader used to draw the shadow map
+    static VertexShader*		s_depthVS;		///< VertexShader used to draw the shadow map
     static GeometryShader*	s_depthGS;			///< GeometryShader used to draw the shadow map
     static FragmentShader*	s_depthFS;			///< FragmentShader used to draw the shadow map
 	

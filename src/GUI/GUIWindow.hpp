@@ -100,7 +100,7 @@ public:
 private:
 	std::vector<GUIElement*>	_elements;
 	
-	GUIElement*				_activeElement = nullptr;
+	GUIElement*		_activeElement = nullptr;
 	
 	float			_padding = 5.0;
 	glm::vec4		_color = glm::vec4(1.0, 1.0, 1.0, 0.1);

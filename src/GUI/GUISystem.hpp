@@ -48,6 +48,7 @@ public:
 			if(!_activeWindow->getAABB().contains(_activeWindow->p2c(coords)))
 			{
 				closeActiveWindow();
+				return true;
 			} else {
 				return _activeWindow->handleClick(coords, button);
 			}
@@ -60,7 +61,7 @@ public:
 				_activeWindow = p;
 				_activeWindow->setActive();
 				_activeWindow->Position = {25.0, 35.0};
-				break;
+				return true;
 			}
 		}
 		
@@ -84,7 +85,7 @@ public:
 private:
 	std::vector<GUIWindow*>	_windows;
 	
-	GUIWindow*					_activeWindow = nullptr;
+	GUIWindow*				_activeWindow = nullptr;
 	
 	size_t getIndex(GUIWindow* w) const
 	{

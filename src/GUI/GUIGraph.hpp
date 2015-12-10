@@ -51,7 +51,7 @@ public:
 
 private:
 	T*						_value;
-	std::function<T()>	_func;
+	std::function<T()>		_func;
 	T						_min;			///< Min value for the plot
 	T						_max;			///< Min value for the plot
 	float					_timeWindow;	///< Time window for the plot

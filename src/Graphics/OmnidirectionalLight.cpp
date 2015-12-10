@@ -10,10 +10,44 @@
 ///////////////////////////////////////////////////////////////////
 // Static attributes
 
-Program* 			OmnidirectionalLight::s_depthProgram = nullptr;
-VertexShader*		OmnidirectionalLight::s_depthVS = nullptr;
+Program* 		OmnidirectionalLight::s_depthProgram = nullptr;
+VertexShader*	OmnidirectionalLight::s_depthVS = nullptr;
 GeometryShader*	OmnidirectionalLight::s_depthGS = nullptr;
 FragmentShader*	OmnidirectionalLight::s_depthFS = nullptr;
+
+const glm::mat4 CubeFaceMatrix[6] = {
+	glm::mat4(
+		 0.0,  0.0, -1.0,  0.0,
+		 0.0, -1.0,  0.0,  0.0,
+		-1.0,  0.0,  0.0,  0.0,
+		 0.0,  0.0,  0.0,  1.0 
+	), glm::mat4(
+		 0.0,  0.0,  1.0,  0.0,
+		 0.0, -1.0,  0.0,  0.0,
+		 1.0,  0.0,  0.0,  0.0,
+		 0.0,  0.0,  0.0,  1.0 
+	), glm::mat4(
+		 1.0,  0.0,  0.0,  0.0,
+		 0.0,  0.0, -1.0,  0.0,
+		 0.0,  1.0,  0.0,  0.0,
+		 0.0,  0.0,  0.0,  1.0 
+	), glm::mat4(
+		 1.0,  0.0,  0.0,  0.0,
+		 0.0,  0.0,  1.0,  0.0,
+		 0.0, -1.0,  0.0,  0.0,
+		 0.0,  0.0,  0.0,  1.0 
+	), glm::mat4(
+		 1.0,  0.0,  0.0,  0.0,
+		 0.0, -1.0,  0.0,  0.0,
+		 0.0,  0.0, -1.0,  0.0,
+		 0.0,  0.0,  0.0,  1.0 
+	), glm::mat4(
+		-1.0,  0.0,  0.0,  0.0,
+		 0.0, -1.0,  0.0,  0.0,
+		 0.0,  0.0,  1.0,  0.0,
+		 0.0,  0.0,  0.0,  1.0 
+	)
+};
 
 ///////////////////////////////////////////////////////////////////
 
@@ -41,7 +75,7 @@ void OmnidirectionalLight::init()
 	_shadowMapFramebuffer.getColor().set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
 	_shadowMapFramebuffer.getColor().set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
 	_shadowMapFramebuffer.getColor().set(Texture::Parameter::WrapR, GL_CLAMP_TO_EDGE);
-	_shadowMapFramebuffer.getColor().set(Texture::Parameter::MinFilter, GL_LINEAR_MIPMAP_LINEAR);
+	_shadowMapFramebuffer.getColor().set(Texture::Parameter::MinFilter, GL_LINEAR);
 	_shadowMapFramebuffer.getColor().set(Texture::Parameter::MagFilter, GL_LINEAR);
 	_shadowMapFramebuffer.getColor().unbind();
 	
@@ -63,7 +97,8 @@ void OmnidirectionalLight::bind() const
 	getShadowBuffer().bind();
 	getShadowBuffer().clear(BufferBit::All);
 	getShadowMapProgram().setUniform("Position", _position);
-	getShadowMapProgram().setUniform("Projection", _projection);
+	for(int i = 0; i < 6; ++i)
+		getShadowMapProgram().setUniform("Projections[" + std::to_string(i) +"]", _projection * CubeFaceMatrix[i]);
 	getShadowMapProgram().use();
 	Context::enable(Capability::CullFace);
 }
@@ -77,7 +112,7 @@ void OmnidirectionalLight::unbind() const
 
 void OmnidirectionalLight::drawShadowMap(const std::vector<MeshInstance>& objects) const
 {
-	getShadowMap().set(Texture::Parameter::BaseLevel, 0);
+	//getShadowMap().set(Texture::Parameter::BaseLevel, 0);
 	
 	BoundingSphere BoundingVolume(_position, _range);
 	
@@ -94,10 +129,9 @@ void OmnidirectionalLight::drawShadowMap(const std::vector<MeshInstance>& object
 		
 	unbind();
 	
-	getShadowMap().generateMipmaps();
-	/// @todo Good blur for Cubemaps
-	getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
 	//getShadowMap().generateMipmaps();
+	/// @todo Good blur for Cubemaps
+	//getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
 }
 	
 void OmnidirectionalLight::initPrograms()

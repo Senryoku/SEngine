@@ -1,5 +1,7 @@
 #version 430 core
 
+#pragma include ../encode_normal.glsl
+
 #define Samples9
 
 layout(std140) uniform Camera {
@@ -34,12 +36,6 @@ out layout(location = 0) vec4 colorMatOut;
 out layout(location = 1) vec4 worldPositionOut;
 out layout(location = 2) vec4 worldNormalOut;
 
-vec2 encode_normal(vec3 n)
-{
-    vec2 enc = normalize(n.xy) * (sqrt(-n.z * 0.5 + 0.5));
-    return enc * 0.5 + 0.5;
-}
-
 mat3 tangent_space(vec3 n)
 {
 	vec3 N = normalize(n);
@@ -73,12 +69,11 @@ vec3 basic_normal()
 subroutine(normal)
 vec3 normal_mapping()
 {
-	vec3 map = normalize(texture(NormalMap, texcoord).xyz);
+	vec3 map = texture(NormalMap, texcoord).xyz;
 	map = map * 2.0 - 1.0;
-    map.z = sqrt(1.0 - dot( map.xy, map.xy ) );
-    map.y = -map.y;
-	mat3 TBN = tangent_space(normalize(world_normal));
-	return normalize(TBN * map);
+    map.z = sqrt(1.0 - dot( map.xy, map.xy));
+	mat3 TBN = tangent_space(world_normal);
+	return normalize(TBN * normalize(map));
 }
 
 /*

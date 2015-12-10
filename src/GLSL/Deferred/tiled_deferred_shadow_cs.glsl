@@ -1,5 +1,6 @@
 #version 430
 #pragma include ../cook_torrance.glsl
+#pragma include ../encode_normal.glsl
 
 #define SHADOWBLOCKCOUNT			10
 #define CUBESHADOWBLOCKCOUNT		3
@@ -8,14 +9,14 @@
 
 
 /*************
- * How data is laid down :
+ * How input data is laid down :
  * ColorMaterial.xyz	=> Color
- * ColorMaterial.w	=> if > 0 : Non transparent
+ * ColorMaterial.w		=> if > 0 : Non transparent
  * PositionDepth.xyz	=> World Position
- * PositionDepth.w	=> Depth
- * Normal.xy			=> Compressed Normal
- * Normal.z			=> Fresnel Reflectance (F0)
- * Normal.w			=> Roughness (R)
+ * PositionDepth.w		=> Depth
+ * Normal.xy			=> Compressed World Normal
+ * Normal.z				=> Fresnel Reflectance (F0)
+ * Normal.w				=> Roughness (R)
 **************/
 
 struct LightStruct
@@ -47,6 +48,7 @@ uniform unsigned int LightCount = 75;
 uniform unsigned int ShadowCount = 0;
 uniform unsigned int CubeShadowCount = 0;
 uniform float	MinVariance = 0.0000001;
+uniform float	DepthBias = 0.01; // In LINEAR space!
 uniform float	ShadowClamp = 0.8;
 
 uniform float	Bloom = 1.0;
@@ -55,7 +57,7 @@ uniform float	Gamma = 2.2;
 uniform float	Exposure = 5.0;
 uniform vec3	Ambiant = vec3(0.06);
 
-uniform int	AOSamples = 8;
+uniform int		AOSamples = 8;
 uniform float	AOThreshold = 1.0f;
 uniform float	AORadius = 10.0f;
 
@@ -64,6 +66,7 @@ uniform vec3	CameraPosition;
 layout(binding = 0, rgba32f) uniform image2D ColorMaterial;
 layout(binding = 1, rgba32f) uniform readonly image2D PositionDepth;
 layout(binding = 2, rgba32f) uniform image2D Normal;
+layout(binding = 3, rgba32f) uniform image2D Other;
 
 layout(binding = 3) uniform sampler2D ShadowMaps[SHADOWBLOCKCOUNT];
 layout(binding = CUBESHADOWBLOCKOFFSET) uniform samplerCube CubeShadowMaps[CUBESHADOWBLOCKCOUNT];
@@ -102,15 +105,6 @@ bool sphereAABBIntersect(vec3 min, vec3 max, vec3 center, float radius)
     if(center.z < min.z) r -= square(center.z - min.z);
     else if(center.z > max.z) r -= square(center.z - max.z);
     return r > 0;
-}
-
-vec3 decode_normal(vec2 enc)
-{
-    vec4 nn = vec4(enc, 0, 0) * vec4(2, 2, 0, 0) + vec4(-1, -1, 1, -1);
-    float l = dot(nn.xyz,-nn.xyw);
-    nn.z = l;
-    nn.xy *= sqrt(l);
-    return nn.xyz * 2 + vec3(0,0,-1);
 }
 
 #pragma include ../poisson_samples.glsl
@@ -277,7 +271,7 @@ void main(void)
 					
 					float att = (!spotlight) ? 1.0 :
 							max(0.0, (1.0 - square(length(Shadows[shadow].position_range.xyz - position.xyz)/Shadows[shadow].position_range.w)));
-					vec3 light_pos = (!spotlight) ? position.xyz - 10.0 * Shadows[shadow].position_range.xyz:
+					vec3 light_pos = (!spotlight) ? position.xyz - Shadows[shadow].position_range.xyz:
 											Shadows[shadow].position_range.xyz;
 					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
 										light_pos, Shadows[shadow].color.rgb, 
@@ -294,9 +288,11 @@ void main(void)
 					vec3 direction = normalize(position.xyz - CubeShadows[shadow].position_range.xyz);
 					
 					vec2 moments = texture(CubeShadowMaps[shadow], direction).xy;
-					float visibility = VSM(dist, moments);
+					// Not using VSM for Omnidirectional since there is no filtering on those for now.
+					//float visibility = VSM(dist, moments);
+					float visibility = (dist < moments.x + DepthBias) ? 1.0 : 0.0;
 					
-					float att = max(0.0, (1.0 - square(dist/CubeShadows[shadow].position_range.w)));
+					float att = max(0.0, (1.0 - square(dist/max(CubeShadows[shadow].position_range.w, 0.01))));
 					ColorOut.rgb += att * att * visibility * cookTorrance(position.xyz, normal, V, color, 
 										CubeShadows[shadow].position_range.xyz, CubeShadows[shadow].color.rgb, 
 										data.w, data.z);
