@@ -184,6 +184,7 @@ void Application::update()
 
 void Application::renderGUI()
 {
+	Context::disable(Capability::CullFace);
 	Context::disable(Capability::DepthTest);
 	Context::enable(Capability::Blend);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

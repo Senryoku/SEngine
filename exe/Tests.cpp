@@ -1,6 +1,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include <Tools/CubicSpline.hpp>
+
 #include <Query.hpp>
 
 #include <SpotLight.hpp>
@@ -30,7 +32,28 @@ class Test : public DeferredRenderer
 {
 public:
 	Test(int argc, char* argv[]) : 
-		DeferredRenderer(argc, argv)
+		DeferredRenderer(argc, argv),
+		_cameraPath{{
+				glm::dvec3(50, 70, -30), 
+				glm::dvec3(28, 53, -6),
+				glm::dvec3(18, 23, -2),
+				glm::dvec3(3, 4, -6),
+				glm::dvec3(-21, 3, -5),
+				glm::dvec3(-48, 4, -2),
+				glm::dvec3(-48, 9, 15),
+				glm::dvec3(-9, 7, 15),
+				glm::dvec3(23, 6, 15),
+				glm::dvec3(42, 7, 11),
+				glm::dvec3(36, 11, 0),
+				glm::dvec3(26, 19, -4),
+				glm::dvec3(8, 24, -15),
+				glm::dvec3(-6, 25, -18),
+				glm::dvec3(-40, 25, -18),
+				glm::dvec3(-50, 25, -1),
+				glm::dvec3(-41, 25, 15),
+				glm::dvec3(-7, 24, 16.5),
+				glm::dvec3(20, 24, 16.5)
+			}}
 	{
 	}
 	
@@ -117,6 +140,29 @@ public:
 			glm::vec3(1.8), // Color
 			1.0f
 		});
+		
+		_lightPathStart = _scene.getPointLights().size();
+		const size_t point_count = 500;
+		for(size_t i = 0; i < point_count; ++i)
+		{
+			_scene.getPointLights().push_back(PointLight{
+				glm::vec3(0.0, 1.0, 0.0) + glm::vec3(_cameraPath((_cameraPath.getPointCount() * i) / (float) point_count)), 	// Position
+				20.0f,
+				glm::vec3(0.0, 0.0, 0.1), // Color
+				1.0f
+			});
+		}
+		_lightPathEnd = _scene.getPointLights().size();
+				
+		for(const auto& p : _cameraPath)
+		{
+			_scene.getPointLights().push_back(PointLight{
+				glm::vec3(0.0, 1.0, 0.0) + glm::vec3(p.getPosition()), 	// Position
+				20.0f,
+				glm::vec3(0.8, 0.0, 0.0), // Color
+				1.0f
+			});
+		}
 		
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
@@ -222,7 +268,14 @@ public:
 		w4->add(new GUIEdit<float>("Ambiant Color G: ", &_ambiant.g));
 		w4->add(new GUIEdit<float>("Ambiant Color R: ", &_ambiant.r));
 		w4->add(new GUISeparator(w4));
+		w4->add(new GUICheckbox("Draw Debug Lights", &_debugLights));
+		w4->add(new GUISeparator(w4));
 		w4->add(new GUIText("Lights Test"));
+		
+		auto w6 = _gui.add(new GUIWindow());
+		w6->add(new GUIEdit<float>("Speed: ", &_cameraSpeed));
+		w6->add(new GUICheckbox("Auto", &_autoCamera));
+		w6->add(new GUIText("Auto Camera"));
 	}
 	
 	virtual void update() override
@@ -242,19 +295,38 @@ public:
 			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  0.2f * glm::vec3(rand<float>(), rand<float>(), rand<float>());
 			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
 		}
-	
+		
+		for(size_t i = _lightPathStart; i < _lightPathEnd; ++i)
+		{
+			_scene.getPointLights()[i].color = glm::vec3(0.0, 0.0, 0.08) + 
+				(float) (0.07f * std::cos(2.0 * TimeManager::getInstance().getRuntime() + i * 15.0 * 3.14159 / (_lightPathEnd - _lightPathStart))) * glm::vec3(0.0, 0.0, 1.0) +
+				(float) (0.07f * std::sin(0.7 * TimeManager::getInstance().getRuntime() + i * 15.0 * 3.14159 / (_lightPathEnd - _lightPathStart))) * glm::vec3(0.0, 1.0, 0.0);
+		}
+		
+		if(_autoCamera)
+		{
+			float t = mod<float>(_cameraSpeed * TimeManager::getInstance().getRuntime(), _cameraPath.getPointCount());
+			float t2 = mod<float>(_cameraSpeed * TimeManager::getInstance().getRuntime() + 0.1f, _cameraPath.getPointCount());
+			_camera.setPosition(glm::vec3(_cameraPath(t)));
+			//_camera.setDirection(glm::vec3(_cameraPath.getSpeed(t)));
+			_camera.setDirection(glm::vec3(_cameraPath(t2)) - glm::vec3(_cameraPath(t)));
+		}
+		
 		DeferredRenderer::update();
 		_updateTiming.end();
 	}
 	
 	virtual void renderGBufferPost() override
 	{
-		Context::disable(Capability::CullFace);
-		auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
-		ld.setUniform("CameraPosition", _camera.getPosition());
-		ld.use();
-		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
-		ld.useNone();
+		if(_debugLights)
+		{
+			Context::disable(Capability::CullFace);
+			auto& ld = ResourcesManager::getInstance().getProgram("LightDraw");
+			ld.setUniform("CameraPosition", _camera.getPosition());
+			ld.use();
+			glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
+			ld.useNone();
+		}
 	}
 	
 	virtual void render() override
@@ -282,6 +354,14 @@ protected:
 	Query	_lightPassTiming;
 	Query	_postProcessTiming;
 	Query	_GUITiming;
+	
+	bool	_debugLights = false;
+	
+	CubicSpline<glm::dvec3, double>	_cameraPath;
+	bool							_autoCamera = false;
+	float							_cameraSpeed = 1.0f;
+	size_t 							_lightPathStart = 0;
+	size_t 							_lightPathEnd = 0;
 };
 
 int main(int argc, char* argv[])
