@@ -1,4 +1,4 @@
-# Engine2
+# SEngine
 
 OpenGL Playground.
 It's mainly a Deferred rendering engine.
