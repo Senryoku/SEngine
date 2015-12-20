@@ -77,12 +77,12 @@ private:
 	const Program*	_shadingProgram = nullptr;
 	
 	std::vector<std::unique_ptr<GenericUniform>>	_uniforms;
-	GLuint 												_textureCount = 0;
+	GLuint 											_textureCount = 0;
 	
 	class SubroutineState
 	{
 	public:
-		ShaderType								shadertype;
+		ShaderType							shadertype;
 		std::map<std::string, std::string>	activeSubroutines;
 		std::vector<GLuint>					activeIndices;
 
