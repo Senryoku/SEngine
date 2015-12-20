@@ -3,9 +3,9 @@ cmake_minimum_required (VERSION 2.6)
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0048 OLD)
 
-project (Engine)
-set (Engine_VERSION_MAJOR 2)
-set (Engine_VERSION_MINOR 0)
+project (SEngine)
+set (SEngine_VERSION_MAJOR 2)
+set (SEngine_VERSION_MINOR 0)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -90,13 +90,13 @@ AUX_SOURCE_DIRECTORY(exe/ EXECUTABLES)
 
 list(APPEND CMAKE_CXX_FLAGS "-O2 -std=c++0x -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
 
-add_library(Engine STATIC ${SOURCE_FILES})
+add_library(SEngine STATIC ${SOURCE_FILES})
 
 foreach(Exe ${EXECUTABLES})
 	get_filename_component(Target ${Exe} NAME_WE [CACHE])
 	if(NOT TARGET ${Target})
 		add_executable(${Target} ${Exe})
-		target_link_libraries(${Target} Engine ${SenOGL_LIBRARY} assimp.dll glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
+		target_link_libraries(${Target} SEngine ${SenOGL_LIBRARY} assimp.dll glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
 		MESSAGE(STATUS "Adding rule for ${Target}.")
 	endif(NOT TARGET ${Target})
 endforeach(Exe)
