@@ -128,7 +128,10 @@ public:
 		w->add(new GUIText("Stats"));
 		
 		auto w2 = _gui.add(new GUIWindow());
-		w2->add(new GUIEdit<float>("DisplayedLOD ", &_displayedLoD));
+		w2->add(new GUIEdit<float>("AOThreshold ", &_aoThreshold));
+		w2->add(new GUIEdit<float>("AOStrength ", &_aoStrength));
+		w2->add(new GUICheckbox("Shadows", &_shadows));
+		w2->add(new GUIEdit<int>("DisplayedLOD ", &_displayedLoD));
 		w2->add(new GUICheckbox("Pause", &_paused));
 		w2->add(new GUISeparator(w2));
 		w2->add(new GUIText("Controls"));
@@ -148,7 +151,14 @@ public:
 		_cubeTrace->setUniform("Data0", 0);
 		_cubeTrace->setUniform("Resolution", _resolution);
 		_cubeTrace->setUniform("Tex3DRes", (float) _texture3DResolution);
-		_cubeTrace->setUniform("displayedLoD", _displayedLoD);
+		_cubeTrace->setUniform("DisplayedLoD", _displayedLoD);
+		if(_shadows)
+			_cubeTrace->setUniform("Shadows", (int) 1);
+		else
+			_cubeTrace->setUniform("Shadows", (int) 0);
+		_cubeTrace->setUniform("AOStrength", _aoStrength);
+		_cubeTrace->setUniform("AOThreshold", _aoThreshold);
+
 		_cubeTrace->setUniform("CameraPosition", _camera.getPosition());
 		_cubeTrace->setUniform("Forward", _camera.getDirection());
 		_cubeTrace->use();
@@ -163,7 +173,10 @@ protected:
 	
 	size_t		_texture3DResolution = 128;
 	Texture3D	_data0;
-	float		_displayedLoD = 0.0;
+	int			_displayedLoD = 0;
+	bool		_shadows = true;
+	float		_aoStrength = 0.50;
+	float		_aoThreshold = 0.50;
 };
 
 int main(int argc, char* argv[])

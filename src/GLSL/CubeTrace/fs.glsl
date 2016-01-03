@@ -8,9 +8,12 @@ uniform float Time = 0.0;
 
 // Configuration
 uniform float Tex3DRes = 32.0;
-uniform float displayedLoD = 0.0;
+uniform int DisplayedLoD = 0;
+uniform int Shadows = 1; 
+uniform float AOStrength = 0.5; 
+uniform float AOThreshold = 0.5; 
 
-uniform float Ambiant = 0.2;
+uniform float Ambient = 0.2;
 
 int Steps; // Max. ray steps before bailing out
 float maxLoD = log2(32) - 1;
@@ -20,7 +23,7 @@ float maxLoD = log2(32) - 1;
 
 float object(vec3 p, float bias)
 {
-	return textureLod(Data0, p / Tex3DRes + vec3(0.5), displayedLoD).x;
+	return textureLod(Data0, p / Tex3DRes + vec3(0.5), DisplayedLoD).x;
 }
 /*
 float object(vec3 p)
@@ -138,31 +141,33 @@ bool traceLoD(vec3 origin, vec3 direction, int LoD, out vec3 p, out vec3 n, out 
 	return false;
 }
 
-#define NoLOD
+//#define NoLOD
 
 bool trace(vec3 a, vec3 u, out vec3 p, out vec3 n, out int i)
 {
 	a = a + Tex3DRes / 2;
 #ifdef NoLOD
-	return traceLoD(a / pow(2, displayedLoD), u, int(displayedLoD), p, n, i);
+	return traceLoD(a / pow(2, DisplayedLoD), u, DisplayedLoD, p, n, i);
 #else
-	i = 0;
 	vec3 ap;
 	float t;
-	for(int LoD = int(maxLoD - 1); LoD >= displayedLoD;)
+	for(int LoD = int(maxLoD - 1); LoD >= DisplayedLoD;)
 	{
-		if(traceLoD(p / pow(2, LoD), u, LoD, ap, n, i))
+		if(traceLoD(a / pow(2, LoD), u, LoD, ap, n, i))
 		{
-			ap = ap * pow(2, LoD);
-			if(LoD == displayedLoD)
+			if(LoD == DisplayedLoD)
 			{
 				p = ap;
 				return true;
 			}
 			
+			float voxel_size = pow(2, LoD);
+			float res = Tex3DRes / voxel_size;
+			ap = voxel_size * ap;
+			
 			--LoD;
-			traceBox(p, u, ap - vec3(0.51 * pow(2, LoD)), ap + vec3(0.51 * pow(2, LoD)), t);
-			p = p + u * t;
+			traceBox(a, u, ap - vec3(0.51 * voxel_size), ap + vec3(0.51 * voxel_size), t);
+			a = a + t * u;
 		} else return false;
 	}
 
@@ -237,22 +242,8 @@ void main(void)
 			if(trace(ro + ts[i] * rd - box_positions[i], rd, pos, n, s))
 			{
 				hit = true;
-				/*
-				vec3 center = box_positions[i] + ivec3(pos);
-				float t = 0;
-				hits[i] = traceBox(ro, rd, center + vec3(-0.5), center + vec3(0.5), t);
-				pos = ro + rd * t;
-				*/
 				rgb = box_colors[i];
 				current_hit = i;
-				/*
-				pos += vec3(0.5 * Tex3DRes);
-				vec3 n = pos - (ivec3(pos) + vec3(0.5));
-				vec3 an = abs(n);
-				if(an.x > an.y && an.x > an.z) n = sign(n.x) * vec3(1.0, 0.0, 0.0);
-				else if(an.y > an.x && an.y > an.z) n = sign(n.y) * vec3(0.0, 1.0, 0.0);
-				else n = sign(n.z) * vec3(0.0, 0.0, 1.0);
-				*/
 			}
 		}
 	}
@@ -260,91 +251,39 @@ void main(void)
 	if(hit)
 	{
 		// Get precise position
-		float voxel_size = (displayedLoD + 1);
-		float res = Tex3DRes / (displayedLoD + 1);
+		float voxel_size = pow(2, DisplayedLoD);
+		float res = Tex3DRes / voxel_size;
 		float t;
-		vec3 voxel_world_pos = (displayedLoD + 1) * (pos - vec3(res / 2)) + box_positions[current_hit];
+		vec3 voxel_world_pos = voxel_size * pos - vec3(Tex3DRes / 2) + box_positions[current_hit];
 		if(traceBox(ro, rd, voxel_world_pos - vec3(0.51 * voxel_size), 
 							voxel_world_pos + vec3(0.51 * voxel_size), t))
 		{
 			pos = ro + t * rd;
-
-			// Ambiant Occlusion ?
-			/*
-			// TODO: Debug; Weight with distance from occluder!
-			float radius = 0.5;
-			float ao = 0.0;
-			float ao_strength = 0.5;
-			vec3 t = cross(vec3(1.0), n);
-			t = normalize(cross(t, n));
-			vec3 b = normalize(cross(n, t));
-			vec3 local_pos = pos + 0.5 * res - box_positions[current_hit];
-			vec3 flp = local_pos - ivec3(local_pos);
-			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n + radius * t), int(displayedLoD)).x;
-			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n - radius * t), int(displayedLoD)).x;
-			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n + radius * b), int(displayedLoD)).x;
-			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n - radius * b), int(displayedLoD)).x;
-			rgb *= 1.0 - ao_strength * 0.25 * ao;
-			*/
-			/*
-			float ao = 0.0;
-			float ao_radius = 0.5;
-			float ao_strength = 0.5;
-			vec3 local_pos = pos + 0.5 * res - box_positions[current_hit];
-			float w[4];
-			vec3 tangent, bitangent;
-			vec3 flp = local_pos - ivec3(local_pos);
-			if(n.x != 0)
-			{
-				tangent = vec3(0.0, 1.0, 0.0);
-				bitangent = vec3(0.0, 0.0, 1.0);
-				w[0] = 1.0 - flp.y;
-				w[1] = flp.y;
-				w[2] = 1.0 - flp.z;
-				w[3] = flp.z;
-			} else if(n.y != 0) {
-				tangent = vec3(1.0, 0.0, 0.0);
-				bitangent = vec3(0.0, 0.0, 1.0);
-				w[0] = 1.0 - flp.x;
-				w[1] = flp.x;
-				w[2] = 1.0 - flp.z;
-				w[3] = flp.z;
-			} else {
-				tangent = vec3(0.0, 1.0, 0.0);
-				bitangent = vec3(1.0, 0.0, 0.0);
-				w[0] = 1.0 - flp.y;
-				w[1] = flp.y;
-				w[2] = 1.0 - flp.x;
-				w[3] = flp.x;
-			}
-			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n + ao_radius * tangent), int(displayedLoD)).x * (1.0 - w[0] / ao_radius);
-			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n - ao_radius * tangent), int(displayedLoD)).x * (1.0 - w[1] / ao_radius);
-			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n + ao_radius * bitangent), int(displayedLoD)).x * (1.0 - w[2] / ao_radius);
-			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n - ao_radius * bitangent), int(displayedLoD)).x * (1.0 - w[3] / ao_radius);
-			rgb *= 1.0 - ao_strength * 0.125 * ao;
-			*/
 			
-			float ao_threshold = 0.5; 
-			rgb *= 1.0 - 0.5 * max(0.0, (texture(Data0, (pos + 0.01 * n + 0.5 * res - box_positions[current_hit])/res).x - ao_threshold));
+			// Ambient Occlusion (Doesn't work for DisplayedLoD != 0 ?)
+			rgb *= 1.0 - AOStrength * max(0.0, (textureLod(Data0, (pos + 0.01 * n - box_positions[current_hit])/res + 0.5, DisplayedLoD).x - AOThreshold));
 			
 			// Shadow casting
-			/*
-			vec3 dummy;
-			bool shadow_hit = false;
-			for(int i = 0; i < box_count; ++i)
+			if(Shadows > 0)
 			{
-				if(traceBox(pos, -LightDirection, box_positions[i] + vec3(-0.5 * res), box_positions[i] + vec3(0.5 * res), t))
-					if(trace(pos - t * LightDirection - box_positions[i] - 0.1 * LightDirection, -LightDirection, dummy, dummy, s))
-					{
-						shadow_hit = true;
-						break;
-					}
+				vec3 dummy;
+				bool shadow_hit = false;
+				for(int i = 0; i < box_count; ++i)
+				{
+					if(traceBox(pos, -LightDirection, box_positions[i] + vec3(-0.5 * res), box_positions[i] + vec3(0.5 * res), t))
+						if(trace(pos - t * LightDirection - box_positions[i] - 0.1 * LightDirection, -LightDirection, dummy, dummy, s))
+						{
+							shadow_hit = true;
+							break;
+						}
+				}
+				if(!shadow_hit)
+					rgb *= max(Ambient, dot(n, -LightDirection));
+				else
+					rgb *= Ambient;
+			} else {
+				rgb *= max(Ambient, dot(n, -LightDirection));
 			}
-			if(!shadow_hit)
-				rgb *= max(Ambiant, dot(n, -LightDirection));
-			else
-				rgb *= Ambiant;
-			*/
 		}
 	}
 	
