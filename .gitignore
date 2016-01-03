@@ -49,3 +49,4 @@ Makefile
 lib/*
 in/*
 out/*
+chrono.bat

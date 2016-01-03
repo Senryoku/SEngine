@@ -84,25 +84,27 @@ public:
 		b = trace(r, Plane{glm::vec3(50.0, 0.0, 0.0), glm::vec3(-1.0, 0.0, 0.0)}, depth, p, n) || b;
 		b = trace(r, Plane{glm::vec3(-0.0, 0.0, -50.0), glm::vec3(0.0, 0.0, 1.0)}, depth, p, n) || b;
 		b = trace(r, Plane{glm::vec3(-0.0, 0.0, 50.0), glm::vec3(0.0, 0.0, -1.0)}, depth, p, n) || b;
-		
+		/*
 		for(size_t i = 0; i <_testMesh.size(); ++i)
 		{
 			b = trace(r, *_testMesh[i], depth, p, n) || b;
 		}
-		
+		*/
 		// Lights
 		const Sphere Lights[]{
 			//Sphere{glm::vec3(0.0, 50.0, 0.0), 20.0},
 			Sphere{glm::vec3(10.0, 25.0, 15.0), 5.0},
-			Sphere{glm::vec3(10.0, 25.0, -15.0), 5.0}
+			Sphere{glm::vec3(10.0, 25.0, -15.0), 5.0},
+			Sphere{glm::vec3(-15.0, 25.0, 0.0), 5.0}
 		};
 		const glm::vec3 LightColors[]{
 			//glm::vec3(2.0),
 			glm::vec3(1.0, 0.0, 0.0),
-			glm::vec3(0.0, 1.0, 0.0)
+			glm::vec3(0.0, 1.0, 0.0),
+			glm::vec3(0.0, 0.0, 40.0)
 		};
 		const glm::vec3 lightColor(1.0);
-		for(int i = 0; i < 2; ++i)
+		for(int i = 0; i < 3; ++i)
 			if(trace(r, Lights[i], depth, p, n))
 			{
 				b = true;
@@ -127,8 +129,8 @@ public:
 	
 	inline float tonemap(float c)
 	{
-		//constexpr float exposure = 2.0;
-		//return 1.0f - glm::exp(-c * exposure);
+		constexpr float exposure = 2.0;
+		return 1.0f - std::exp(-c * exposure);
 		return std::min(c, 1.0f);
 	}
 	
@@ -166,9 +168,9 @@ public:
 
 		glm::vec3 randomDir[samplePerFrame];
 		glm::vec3 randomDir2[secondaryRays];
-		for(size_t i = 0; i <samplePerFrame; ++i)
+		for(size_t i = 0; i < samplePerFrame; ++i)
 			randomDir[i] =RandomHelper::getInstance().getSpherical();
-		for(size_t i = 0; i <secondaryRays; ++i)
+		for(size_t i = 0; i < secondaryRays; ++i)
 			randomDir2[i] = RandomHelper::getInstance().getSpherical();
 		
 		#pragma omp parallel for collapse(2)
@@ -179,20 +181,20 @@ public:
 				glm::vec3 c = _hitsColors[i * _width + j];		
 				if(_hits[i * _width + j])
 				{
-					const glm::vec3& p =  _hitsPositions[i * _width + j],
-												n = _hitsNormals[i * _width + j];
+					const glm::vec3& p = _hitsPositions[i * _width + j],
+									 n = _hitsNormals[i * _width + j];
 					for(size_t s = 0; s < samplePerFrame; ++s)
 					{
 						auto cos0 = glm::dot(randomDir[s], n);
 						const auto dir = (cos0 > 0.0) ? randomDir[s] : -randomDir[s];
-						if(cos0 < 0.0) cos0 = -cos0;
+						cos0 = std::abs(cos0);
 						glm::vec3 p2, n2, c2 = glm::vec3(0.0);
 						if(scene(Ray{p + 0.00001f * n, dir}, p2, n2, c2))
 						{
-							if(c2 != glm::vec3(0.0))
+							if(c2 != glm::vec3(0.0)) // Hit an emissive surface
 							{
 								c += cos0 * c2;
-							} else {
+							} else if(!_cameraMoved) {
 								glm::vec3 tmp(0.0);
 								for(size_t s2 = 0; s2 < secondaryRays; ++s2)
 								{
@@ -215,7 +217,7 @@ public:
 					_tmpFrame[i * _width + j] += color;
 				}
 				
-				for(int o = 0; o < 4; ++o)
+				for(int o = 0; o < 3; ++o)
 					_frame[4 * (i * _width + j) + o] = 255.0 * tonemap(_tmpFrame[i * _width + j][o] / _sampleCount);
 			}
 		}
