@@ -64,8 +64,8 @@ public:
 						
 		_data0.create(data, _texture3DResolution, _texture3DResolution, _texture3DResolution, 1);
 		//_data0.set(Texture::Parameter::MinFilter, GL_NEAREST);
-		_data0.set(Texture::Parameter::MinFilter, GL_NEAREST_MIPMAP_NEAREST);
-		_data0.set(Texture::Parameter::MagFilter, GL_NEAREST);
+		//_data0.set(Texture::Parameter::MinFilter, GL_NEAREST_MIPMAP_NEAREST);
+		//_data0.set(Texture::Parameter::MagFilter, GL_NEAREST);
 		//_data0.set(Texture::Parameter::MinFilter, GL_LINEAR);
 		//_data0.set(Texture::Parameter::MagFilter, GL_LINEAR);
 		

@@ -33,143 +33,6 @@ float object(vec3 p)
 //////////////////////////////////////////////////////////////////////////
 // Tracing
 
-bool lodTrace(vec3 a, vec3 u, out vec3 p, out vec3 n, out int i)
-{
-	p = a + Tex3DRes / 2;
-	float step = 0.0;
-	float LoD = maxLoD;
-	float depth = 0.0;
-	vec3 dist = vec3(0);
-	vec3 abs_dir = abs(u);
-	ivec3 dirSign;
-	dirSign.x = u.x < 0.0f ? -1 : 1;
-    dirSign.y = u.y < 0.0f ? -1 : 1;
-    dirSign.z = u.z < 0.0f ? -1 : 1;
-	
-	ivec3 rayPos = ivec3(p);
-    vec3 absDir = abs(u);
-    vec3 projLength = 1.0 / (absDir + 0.0001);
-    vec3 d = p - rayPos;
-    if(dirSign.x == 1) d.x = 1-d.x;
-    if(dirSign.y == 1) d.y = 1-d.y;
-    if(dirSign.z == 1) d.z = 1-d.z;
-	projLength *= pow(2, LoD);
-    d *= projLength;
-	
-	float v = texelFetch(Data0, ivec3(rayPos / pow(2, LoD)), int(LoD)).x;
-	for(i = 0; i < Steps; i++)
-	{
-		if (v > 0.0)
-		{
-			if(LoD < displayedLoD + 0.5)
-			{
-				p = rayPos + 0.5;
-				
-				d = abs(d - projLength);
-				if(d.x < 0.0001) n = -dirSign.x * vec3(1, 0, 0);
-				if(d.y < 0.0001) n = -dirSign.y * vec3(0, 1, 0);
-				if(d.z < 0.0001) n = -dirSign.z * vec3(0, 0, 1);
-				n = normalize(n);
-				
-				return true;
-			}
-			LoD = clamp(LoD - 1.0, 0.0, maxLoD);
-			projLength = 1.0 / (absDir + 0.0001) * pow(2, LoD);
-		} else {
-            if(d.x < d.y || d.z < d.y) {
-                if(d.x < d.z) {
-                    rayPos.x += dirSign.x * int(pow(2, LoD));
-                    d.yz -= d.x;
-                    d.x = projLength.x;
-                } else {
-                    rayPos.z += dirSign.z * int(pow(2, LoD));
-                    d.xy -= d.z;
-                    d.z = projLength.z;
-                }
-            } else {
-                rayPos.y += dirSign.y * int(pow(2, LoD));
-                d.xz -= d.y;
-                d.y = projLength.y;
-            }
-
-			//LoD = clamp(LoD + 1.0, 0.0, maxLoD);
-		}
-		
-		if(any(greaterThanEqual(rayPos, ivec3(Tex3DRes, Tex3DRes, Tex3DRes))) || 
-			any(lessThan(rayPos, ivec3(0, 0, 0))))
-            return false;
-			
-		v = texelFetch(Data0, ivec3(rayPos / pow(2, LoD)), int(LoD)).x;
-	}
-
-	return false;
-}
-
-bool trace(vec3 a, vec3 u, out vec3 p, out vec3 n, out int i)
-{
-	p = a + Tex3DRes / 2;
-	float step = 0.0;
-	float depth = 0.0;
-	vec3 dist = vec3(0);
-	vec3 abs_dir = abs(u);
-	ivec3 dirSign;
-	dirSign.x = u.x < 0.0f ? -1 : 1;
-    dirSign.y = u.y < 0.0f ? -1 : 1;
-    dirSign.z = u.z < 0.0f ? -1 : 1;
-	
-	ivec3 rayPos = ivec3(p);
-    vec3 absDir = abs(u);
-    vec3 projLength = 1.0 / (absDir + 0.0001);
-    vec3 d = p - rayPos;
-    if(dirSign.x == 1) d.x = 1-d.x;
-    if(dirSign.y == 1) d.y = 1-d.y;
-    if(dirSign.z == 1) d.z = 1-d.z;
-    d *= projLength;
-	
-	float v = texelFetch(Data0, ivec3(rayPos / pow(2, displayedLoD)), int(displayedLoD)).x;
-	for(i = 0; i < Steps; i++)
-	{
-		if (v > 0.0)
-		{
-			p = rayPos + 0.5;
-			
-			d = abs(d - projLength);
-			if(d.x < 0.0001) n = -dirSign.x * vec3(1, 0, 0);
-			if(d.y < 0.0001) n = -dirSign.y * vec3(0, 1, 0);
-			if(d.z < 0.0001) n = -dirSign.z * vec3(0, 0, 1);
-			n = normalize(n);
-			
-			return true;
-		} else {
-            if(d.x < d.y || d.z < d.y) {
-                if(d.x < d.z) {
-                    rayPos.x += dirSign.x;
-                    d.yz -= d.x;
-                    d.x = projLength.x;
-                } else {
-                    rayPos.z += dirSign.z;
-                    d.xy -= d.z;
-                    d.z = projLength.z;
-                }
-            } else {
-                rayPos.y += dirSign.y;
-                d.xz -= d.y;
-                d.y = projLength.y;
-            }
-		}
-		
-		if(any(greaterThanEqual(rayPos, ivec3(Tex3DRes, Tex3DRes, Tex3DRes))) || 
-			any(lessThan(rayPos, ivec3(0, 0, 0))))
-            return false;
-			
-		v = texelFetch(Data0, ivec3(rayPos / pow(2, displayedLoD)), int(displayedLoD)).x;
-	}
-
-	return false;
-}
-
-//////////////////////////////////////////////////////////////////////////
-
 bool traceBox(vec3 ro, vec3 rd, vec3 lb, vec3 rt, out float t)
 {
 	if(all(lessThan(lb, ro)) && all(lessThan(ro, rt))) // Inside the box
@@ -210,6 +73,113 @@ bool traceBox(vec3 ro, vec3 rd, vec3 lb, vec3 rt, out float t)
 
 	t = tmin;
 	return true;
+}
+
+bool traceLoD(vec3 origin, vec3 direction, int LoD, out vec3 p, out vec3 n, out int i)
+{
+	p = origin;
+	float step = 0.0;
+	float depth = 0.0;
+	ivec3 dirSign;
+	dirSign.x = direction.x < 0.0f ? -1 : 1;
+    dirSign.y = direction.y < 0.0f ? -1 : 1;
+    dirSign.z = direction.z < 0.0f ? -1 : 1;
+	
+	ivec3 rayPos = ivec3(p);
+    vec3 absDir = abs(direction);
+    vec3 projLength = 1.0 / (absDir + 0.0001);
+    vec3 d = p - rayPos;
+    if(dirSign.x == 1) d.x = 1 - d.x;
+    if(dirSign.y == 1) d.y = 1 - d.y;
+    if(dirSign.z == 1) d.z = 1 - d.z;
+    d *= projLength;
+	
+	float v = texelFetch(Data0, ivec3(rayPos), LoD).x;
+	for(i = 0; i < Steps; i++)
+	{
+		if (v > 0.0)
+		{
+			p = rayPos + 0.5;
+			
+			d = abs(d - projLength);
+			if(d.x < 0.0001) n = -dirSign.x * vec3(1, 0, 0);
+			if(d.y < 0.0001) n = -dirSign.y * vec3(0, 1, 0);
+			if(d.z < 0.0001) n = -dirSign.z * vec3(0, 0, 1);
+			n = normalize(n);
+			
+			return true;
+		} else {
+            if(d.x < d.y || d.z < d.y)
+			{
+                if(d.x < d.z)
+				{
+                    rayPos.x += dirSign.x;
+                    d.yz -= d.x;
+                    d.x = projLength.x;
+                } else {
+                    rayPos.z += dirSign.z;
+                    d.xy -= d.z;
+                    d.z = projLength.z;
+                }
+            } else {
+                rayPos.y += dirSign.y;
+                d.xz -= d.y;
+                d.y = projLength.y;
+            }
+		}
+		
+		if(any(greaterThanEqual(rayPos, ivec3(Tex3DRes / pow(2, LoD)))) || 
+			any(lessThan(rayPos, ivec3(0, 0, 0))))
+            return false;
+			
+		v = texelFetch(Data0, ivec3(rayPos), LoD).x;
+	}
+
+	return false;
+}
+
+#define NoLOD
+
+bool trace(vec3 a, vec3 u, out vec3 p, out vec3 n, out int i)
+{
+	a = a + Tex3DRes / 2;
+#ifdef NoLOD
+	return traceLoD(a / pow(2, displayedLoD), u, int(displayedLoD), p, n, i);
+#else
+	i = 0;
+	vec3 ap;
+	float t;
+	for(int LoD = int(maxLoD - 1); LoD >= displayedLoD;)
+	{
+		if(traceLoD(p / pow(2, LoD), u, LoD, ap, n, i))
+		{
+			ap = ap * pow(2, LoD);
+			if(LoD == displayedLoD)
+			{
+				p = ap;
+				return true;
+			}
+			
+			--LoD;
+			traceBox(p, u, ap - vec3(0.51 * pow(2, LoD)), ap + vec3(0.51 * pow(2, LoD)), t);
+			p = p + u * t;
+		} else return false;
+	}
+
+	return false;
+#endif
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+float sqr(float f)
+{
+	return f * f;
+}
+
+float diag(float f)
+{
+	return sqrt(2) * abs(f);
 }
 
 vec3 LightDirection = normalize(vec3(0.0, -1.0, 1.0));
@@ -262,11 +232,9 @@ void main(void)
 	{
 		if((!hit || ts[i] < ts[current_hit]) && hits[i])
 		{
+			rgb *= 0.5f; // Debug (View Chunks)
 			
-			rgb *= 0.5f; // Debug
-			
-			if(lodTrace(ro + ts[i] * rd - box_positions[i], rd, pos, n, s))
-			//if(trace(ro + ts[i] * rd - box_positions[i], rd, pos, n, s))
+			if(trace(ro + ts[i] * rd - box_positions[i], rd, pos, n, s))
 			{
 				hit = true;
 				/*
@@ -292,19 +260,80 @@ void main(void)
 	if(hit)
 	{
 		// Get precise position
+		float voxel_size = (displayedLoD + 1);
+		float res = Tex3DRes / (displayedLoD + 1);
 		float t;
-		vec3 voxel_world_pos = pos - vec3(Tex3DRes / 2) + box_positions[current_hit];
-		if(traceBox(ro, rd, voxel_world_pos - vec3(0.51), 
-							voxel_world_pos + vec3(0.51), t))
+		vec3 voxel_world_pos = (displayedLoD + 1) * (pos - vec3(res / 2)) + box_positions[current_hit];
+		if(traceBox(ro, rd, voxel_world_pos - vec3(0.51 * voxel_size), 
+							voxel_world_pos + vec3(0.51 * voxel_size), t))
 		{
 			pos = ro + t * rd;
 
+			// Ambiant Occlusion ?
+			/*
+			// TODO: Debug; Weight with distance from occluder!
+			float radius = 0.5;
+			float ao = 0.0;
+			float ao_strength = 0.5;
+			vec3 t = cross(vec3(1.0), n);
+			t = normalize(cross(t, n));
+			vec3 b = normalize(cross(n, t));
+			vec3 local_pos = pos + 0.5 * res - box_positions[current_hit];
+			vec3 flp = local_pos - ivec3(local_pos);
+			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n + radius * t), int(displayedLoD)).x;
+			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n - radius * t), int(displayedLoD)).x;
+			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n + radius * b), int(displayedLoD)).x;
+			ao += texelFetch(Data0, ivec3(local_pos + 0.01 * n - radius * b), int(displayedLoD)).x;
+			rgb *= 1.0 - ao_strength * 0.25 * ao;
+			*/
+			/*
+			float ao = 0.0;
+			float ao_radius = 0.5;
+			float ao_strength = 0.5;
+			vec3 local_pos = pos + 0.5 * res - box_positions[current_hit];
+			float w[4];
+			vec3 tangent, bitangent;
+			vec3 flp = local_pos - ivec3(local_pos);
+			if(n.x != 0)
+			{
+				tangent = vec3(0.0, 1.0, 0.0);
+				bitangent = vec3(0.0, 0.0, 1.0);
+				w[0] = 1.0 - flp.y;
+				w[1] = flp.y;
+				w[2] = 1.0 - flp.z;
+				w[3] = flp.z;
+			} else if(n.y != 0) {
+				tangent = vec3(1.0, 0.0, 0.0);
+				bitangent = vec3(0.0, 0.0, 1.0);
+				w[0] = 1.0 - flp.x;
+				w[1] = flp.x;
+				w[2] = 1.0 - flp.z;
+				w[3] = flp.z;
+			} else {
+				tangent = vec3(0.0, 1.0, 0.0);
+				bitangent = vec3(1.0, 0.0, 0.0);
+				w[0] = 1.0 - flp.y;
+				w[1] = flp.y;
+				w[2] = 1.0 - flp.x;
+				w[3] = flp.x;
+			}
+			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n + ao_radius * tangent), int(displayedLoD)).x * (1.0 - w[0] / ao_radius);
+			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n - ao_radius * tangent), int(displayedLoD)).x * (1.0 - w[1] / ao_radius);
+			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n + ao_radius * bitangent), int(displayedLoD)).x * (1.0 - w[2] / ao_radius);
+			ao += texelFetch(Data0, ivec3(local_pos + 0.001 * n - ao_radius * bitangent), int(displayedLoD)).x * (1.0 - w[3] / ao_radius);
+			rgb *= 1.0 - ao_strength * 0.125 * ao;
+			*/
+			
+			float ao_threshold = 0.5; 
+			rgb *= 1.0 - 0.5 * max(0.0, (texture(Data0, (pos + 0.01 * n + 0.5 * res - box_positions[current_hit])/res).x - ao_threshold));
+			
 			// Shadow casting
+			/*
 			vec3 dummy;
 			bool shadow_hit = false;
 			for(int i = 0; i < box_count; ++i)
 			{
-				if(traceBox(pos, -LightDirection, box_positions[i] + vec3(-0.5 * Tex3DRes), box_positions[i] + vec3(0.5 * Tex3DRes), t))
+				if(traceBox(pos, -LightDirection, box_positions[i] + vec3(-0.5 * res), box_positions[i] + vec3(0.5 * res), t))
 					if(trace(pos - t * LightDirection - box_positions[i] - 0.1 * LightDirection, -LightDirection, dummy, dummy, s))
 					{
 						shadow_hit = true;
@@ -315,6 +344,7 @@ void main(void)
 				rgb *= max(Ambiant, dot(n, -LightDirection));
 			else
 				rgb *= Ambiant;
+			*/
 		}
 	}
 	
