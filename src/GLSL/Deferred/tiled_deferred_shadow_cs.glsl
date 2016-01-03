@@ -225,11 +225,9 @@ void main(void)
 	if(isVisible)
 	{
 		vec3 color = colmat.xyz;
-		vec4 ColorOut = vec4(Ambiant * color, 1.0);
-		if(colmat.w <= 0.0)
+		vec4 ColorOut = vec4(Ambiant * color, colmat.w);
+		if(colmat.w > 0.0 && lit > 0)
 		{
-			ColorOut = vec4(color, 1.0);
-		} else if(lit > 0) {
 			vec4 data = imageLoad(Normal, ivec2(pixel));
 			vec3 normal = normalize(decode_normal(data.xy));
 		
@@ -313,7 +311,7 @@ void main(void)
 			// Gamma correction (Deactivated for now)
 			//ColorOut.rgb = pow(ColorOut.rgb, vec3(1.0 / Gamma));
 		}
-
+		
 		imageStore(ColorMaterial, ivec2(pixel), ColorOut);
 	}
 }
