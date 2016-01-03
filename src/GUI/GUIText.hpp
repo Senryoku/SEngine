@@ -24,7 +24,7 @@ public:
 	};
 	
 	std::string			Name;
-	Texture2D*				Tex = nullptr;
+	Texture2D*			Tex = nullptr;
 	std::vector<Glyph>	Glyphs;
 	
 	Font() =default;
@@ -56,11 +56,11 @@ public:
 	void draw(const glm::vec2& resolution, const glm::vec2& position = glm::vec2(0.0)) override;
 	
 private:
-	TextFunc			_func;
+	TextFunc		_func;
 	std::string		_text;
 	
-	Font*				_font;
-	float				_fontSize = 18.0;
+	Font*			_font;
+	float			_fontSize = 18.0;
 	
 	struct VertexAttributes
 	{
@@ -69,8 +69,8 @@ private:
 	};
 
 	VertexArray		_vao;
-	Buffer				_vertex_buffer;
-	Buffer				_index_buffer;
+	Buffer			_vertex_buffer;
+	Buffer			_index_buffer;
 
 	std::vector<VertexAttributes>	_vertices;
 	std::vector<size_t>				_triangles;

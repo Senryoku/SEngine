@@ -85,3 +85,21 @@ T sqr(T a)
 {
 	return a * a;
 }
+
+template<typename T>
+T max(std::initializer_list<T> args)
+{
+	T r = std::numeric_limits<T>::min();
+	for(const auto& v: args)
+		r = std::max(v, r);
+	return r;
+}
+
+template<typename T>
+T min(std::initializer_list<T> args)
+{
+	T r = std::numeric_limits<T>::max();
+	for(const auto& v: args)
+		r = std::min(v, r);
+	return r;
+}
