@@ -7,6 +7,7 @@
 // 2 + SHADOWBLOCKCOUNT
 #define CUBESHADOWBLOCKOFFSET	12
 
+#define WORKGROUP_SIZE 16
 
 /*************
  * How input data is laid down :
@@ -50,7 +51,7 @@ uniform unsigned int CubeShadowCount = 0;
 uniform float	MinVariance = 0.0000001;
 uniform float	DepthBias = 0.01; // In LINEAR space!
 uniform float	ShadowClamp = 0.8;
-uniform int		VolumeSamples = 64;
+uniform int		VolumeSamples = 16;
 uniform float	AtmosphericDensity = 0.005;
 
 uniform float	Bloom = 1.0;
@@ -85,6 +86,10 @@ shared int bbmax_z;
 shared int local_lights_count; // = 0;
 shared int local_lights[1024];
 shared int lit;
+
+const int volume_tile_indexes[9] = {4, 3, 6, 8, 5, 9, 1, 7, 2};
+shared float vol_lights[SHADOWBLOCKCOUNT][WORKGROUP_SIZE * WORKGROUP_SIZE];
+shared float vol_cube_lights[CUBESHADOWBLOCKCOUNT][WORKGROUP_SIZE * WORKGROUP_SIZE];
 
 void add_light(int l)
 {
@@ -153,7 +158,7 @@ float VSM(float dist, vec2 moments)
 const int highValue = 2147483646;
 const float boxfactor = 10000.0f; // Minimize the impact of the use of int for bounding boxes
 
-layout (local_size_x = 16, local_size_y = 16) in;
+layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE) in;
 void main(void)
 {
 	uvec2 pixel = gl_GlobalInvocationID.xy;
@@ -161,8 +166,8 @@ void main(void)
 	ivec2 image_size = imageSize(ColorMaterial).xy;
 	
 	bool isVisible = pixel.x >= 0 && pixel.y >= 0 && pixel.x < image_size.x && pixel.y < image_size.y;
-	vec4 colmat;
-	vec4 position;
+	vec4 colmat = vec4(0.0);
+	vec4 position = vec4(0.0);
 	
 	if(local_pixel == uvec2(0, 0))
 	{
@@ -223,18 +228,19 @@ void main(void)
 	barrier();
 	
 	//Compute lights' contributions
-	
+	vec4 ColorOut;
+	float depth;
 	if(isVisible)
 	{
 		vec3 color = colmat.xyz;
-		vec4 ColorOut = vec4(Ambiant * color, colmat.w);
+		ColorOut = vec4(Ambiant * color, colmat.w);
 		if(colmat.w > 0.0 && lit > 0)
 		{
 			vec4 data = imageLoad(Normal, ivec2(pixel));
 			vec3 normal = normalize(decode_normal(data.xy));
 		
 			vec3 V = normalize(CameraPosition - position.xyz);
-			float depth = length(CameraPosition - position.xyz);
+			depth = length(CameraPosition - position.xyz);
 			
 			ColorOut *= ambiantOcclusion(position.xyz, normal, pixel, depth);
 			
@@ -278,6 +284,7 @@ void main(void)
 										data.w, data.z);
 				}
 				
+				/*
 				vec3 p = CameraPosition;
 				vec3 d = (position.xyz - CameraPosition) / VolumeSamples;
 				float vol = 0.0;
@@ -292,6 +299,7 @@ void main(void)
 					p += d;
 				}
 				ColorOut.rgb += (depth * AtmosphericDensity * vol / VolumeSamples) * Shadows[shadow].color.rgb;
+				*/
 			}
 			
 			// Shadow casting Omnidirectional lights
@@ -312,11 +320,34 @@ void main(void)
 										CubeShadows[shadow].position_range.xyz, CubeShadows[shadow].color.rgb, 
 										data.w, data.z);
 				}
-				
-				vec3 p = CameraPosition;
+			}
+		}
+		
+		if(VolumeSamples > 0)
+		{
+			for(int shadow = 0; shadow < ShadowCount; ++shadow)
+			{
 				vec3 d = (position.xyz - CameraPosition) / VolumeSamples;
-				float vol = 0.0;
-				for(int i = 0; i < VolumeSamples - 1; ++i)
+				vec3 p = CameraPosition - volume_tile_indexes[local_pixel.x % 3 + 3 * (local_pixel.y % 3)] / 9.0 * d;
+				vol_lights[shadow][gl_LocalInvocationIndex] = 0.0;
+				for(int i = 0; i < VolumeSamples; ++i)
+				{
+					p += d;
+					vec4 sc = Shadows[shadow].depthMVP * vec4(p, 1.0);
+					sc /= sc.w;
+					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f)))
+						continue;
+					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
+					vol_lights[shadow][gl_LocalInvocationIndex] += VSM(sc.z, moments);
+				}
+			}
+			
+			for(int shadow = 0; shadow < CubeShadowCount; ++shadow)
+			{
+				vec3 d = (position.xyz - CameraPosition) / VolumeSamples;
+				vec3 p = CameraPosition - volume_tile_indexes[local_pixel.x % 3 + 3 * (local_pixel.y % 3)] / 9.0 * d ;
+				vol_cube_lights[shadow][gl_LocalInvocationIndex] = 0.0;
+				for(int i = 0; i < VolumeSamples; ++i)
 				{
 					p += d;
 					float dist = distance(p, CubeShadows[shadow].position_range.xyz);
@@ -324,13 +355,59 @@ void main(void)
 						continue;
 					vec3 direction = normalize(p - CubeShadows[shadow].position_range.xyz);
 					vec2 moments = texture(CubeShadowMaps[shadow], direction).xy;
-					vol += (dist < moments.x + DepthBias) ? 1.0 : 0.0;
+					vol_cube_lights[shadow][gl_LocalInvocationIndex] += (dist < moments.x + DepthBias) ? 
+						1.0 : 0.0;
 				}
+			}
+		}
+	}
+	
+	barrier();
+	
+	if(isVisible)
+	{
+		if(VolumeSamples > 0)
+		{
+			uint i = gl_LocalInvocationIndex;
+			vec2 m = vec2(local_pixel.x > 0 ? 1.0 : 0.0,
+							local_pixel.y > 0 ? 1.0 : 0.0);
+			vec2 p = vec2(local_pixel.x < WORKGROUP_SIZE - 1 && pixel.x < image_size.x - 1 ? 1.0 : 0.0,
+							local_pixel.y < WORKGROUP_SIZE - 1 && pixel.y < image_size.y - 1 ? 1.0 : 0.0);
+			int gathered_pixels = 1 + int(p.x + p.y + (p.x * p.y)
+									+ m.x + m.y + (m.x * m.y)
+									+ (m.x * p.y) + (p.x * m.y));
+
+			for(int shadow = 0; shadow < ShadowCount; ++shadow)
+			{
+				float vol = vol_lights[shadow][i];
+				vol += p.x * vol_lights[shadow][i + 1] + 
+					p.y * vol_lights[shadow][i + WORKGROUP_SIZE] +
+					(p.x * p.y) * vol_lights[shadow][i + WORKGROUP_SIZE + 1] +
+					m.x * vol_lights[shadow][i - 1] + 
+					m.y * vol_lights[shadow][i - WORKGROUP_SIZE] +
+					(m.x * m.y) * vol_lights[shadow][i - WORKGROUP_SIZE - 1] + 
+					(m.x * p.y) * vol_lights[shadow][i - 1 + WORKGROUP_SIZE] + 
+					(p.x * m.y) * vol_lights[shadow][i + 1 - WORKGROUP_SIZE];
+				vol /= gathered_pixels;
+				ColorOut.rgb += (depth * AtmosphericDensity * vol / VolumeSamples) * Shadows[shadow].color.rgb;
+			}
+			
+			for(int shadow = 0; shadow < CubeShadowCount; ++shadow)
+			{
+				float vol = vol_cube_lights[shadow][i];
+				vol += p.x * vol_cube_lights[shadow][i + 1] + 
+					p.y * vol_cube_lights[shadow][i + WORKGROUP_SIZE] +
+					(p.x * p.y) * vol_cube_lights[shadow][i + WORKGROUP_SIZE + 1] +
+					m.x * vol_cube_lights[shadow][i - 1] + 
+					m.y * vol_cube_lights[shadow][i - WORKGROUP_SIZE] +
+					(m.x * m.y) * vol_cube_lights[shadow][i - WORKGROUP_SIZE - 1] + 
+					(m.x * p.y) * vol_cube_lights[shadow][i - 1 + WORKGROUP_SIZE] + 
+					(p.x * m.y) * vol_cube_lights[shadow][i + 1 - WORKGROUP_SIZE];
+				vol /= gathered_pixels;
 				ColorOut.rgb += (depth * AtmosphericDensity * vol / VolumeSamples) * CubeShadows[shadow].color.rgb;
 			}
-
 		}
-
+		
 		// Delay Tone Mapping and Gamma Correction if using Bloom
 		if(Bloom > 0.0) 
 		{

@@ -198,6 +198,8 @@ public:
 		/// @todo Come back here when GLFW 3.2 will be released :)
 		//w2->add(new GUICheckbox("Vsync", [&] { static int i = 0; i = (i + 1) % 2; glfwSwapInterval(i); return i == 1; }));
 		//w2->add(new GUICheckbox("Fullscreen", [&] { ... }));
+		w2->add(new GUIEdit<float>("AtmosphericDensity : ", &_atmosphericDensity));
+		w2->add(new GUIEdit<int>("VolumeSamples : ", &_volumeSamples));
 		w2->add(new GUIEdit<float>("AORadius : ", &_aoRadius));
 		w2->add(new GUIEdit<float>("AOThresold : ", &_aoThreshold));
 		w2->add(new GUIEdit<int>("AOSamples : ", &_aoSamples));

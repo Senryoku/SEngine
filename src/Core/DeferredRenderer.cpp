@@ -90,6 +90,9 @@ void DeferredRenderer::renderLightPass()
 	DeferredShadowCS.getProgram().setUniform("AOSamples", _aoSamples);
 	DeferredShadowCS.getProgram().setUniform("AOThreshold", _aoThreshold);
 	DeferredShadowCS.getProgram().setUniform("AORadius", _aoRadius);
+	DeferredShadowCS.getProgram().setUniform("AORadius", _aoRadius);
+	DeferredShadowCS.getProgram().setUniform("VolumeSamples", _volumeSamples);
+	DeferredShadowCS.getProgram().setUniform("AtmosphericDensity", _atmosphericDensity);
 
 	DeferredShadowCS.compute(getInternalWidth() / DeferredShadowCS.getWorkgroupSize().x + 1, 
 								getInternalHeight() / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
