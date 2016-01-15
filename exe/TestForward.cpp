@@ -197,7 +197,7 @@ protected:
 	Query	_lightsTiming;
 	
 	std::vector<glm::vec3>	_partVelocities;
-	std::unique_ptr<Axes>		_axes;
+	std::unique_ptr<Axes>	_axes;
 };
 
 int main(int argc, char* argv[])

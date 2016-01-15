@@ -48,6 +48,6 @@ template<typename ShaderType>
 ShaderType& load(const std::string& path);
 
 template<typename ... ShaderTypes>
-Program& loadProgram(const std::string& name, const ShaderTypes& ... shaders);
+Program& loadProgram(const std::string& name, ShaderTypes& ... shaders);
 
 #include <ResourcesManager.tcc>

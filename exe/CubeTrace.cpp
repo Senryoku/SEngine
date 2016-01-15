@@ -171,7 +171,7 @@ public:
 protected:
 	Program*	_cubeTrace = nullptr;
 	
-	size_t		_texture3DResolution = 128;
+	size_t		_texture3DResolution = 64;
 	Texture3D	_data0;
 	int			_displayedLoD = 0;
 	bool		_shadows = true;

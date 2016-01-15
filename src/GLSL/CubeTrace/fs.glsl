@@ -80,22 +80,26 @@ bool traceBox(vec3 ro, vec3 rd, vec3 lb, vec3 rt, out float t)
 
 bool traceLoD(vec3 origin, vec3 direction, int LoD, out vec3 p, out vec3 n, out int i)
 {
+	#define BRANCHLESS 1
 	p = origin;
 	float step = 0.0;
 	float depth = 0.0;
-	ivec3 dirSign;
-	dirSign.x = direction.x < 0.0f ? -1 : 1;
-    dirSign.y = direction.y < 0.0f ? -1 : 1;
-    dirSign.z = direction.z < 0.0f ? -1 : 1;
+	ivec3 dirSign = ivec3(sign(direction));
 	
 	ivec3 rayPos = ivec3(p);
     vec3 absDir = abs(direction);
+	#if BRANCHLESS
+	vec3 deltaDist = abs(vec3(length(direction)) / direction);
+	vec3 d = (sign(direction) * (vec3(rayPos) - origin) + (sign(direction) * 0.5) + 0.5) * deltaDist;
+	bvec3 mask;
+	#else
     vec3 projLength = 1.0 / (absDir + 0.0001);
     vec3 d = p - rayPos;
     if(dirSign.x == 1) d.x = 1 - d.x;
     if(dirSign.y == 1) d.y = 1 - d.y;
     if(dirSign.z == 1) d.z = 1 - d.z;
     d *= projLength;
+	#endif
 	
 	float v = texelFetch(Data0, ivec3(rayPos), LoD).x;
 	for(i = 0; i < Steps; i++)
@@ -104,31 +108,43 @@ bool traceLoD(vec3 origin, vec3 direction, int LoD, out vec3 p, out vec3 n, out 
 		{
 			p = rayPos + 0.5;
 			
+			#if BRANCHLESS
+			n = vec3(mask) * (-dirSign);
+			#else
 			d = abs(d - projLength);
 			if(d.x < 0.0001) n = -dirSign.x * vec3(1, 0, 0);
 			if(d.y < 0.0001) n = -dirSign.y * vec3(0, 1, 0);
 			if(d.z < 0.0001) n = -dirSign.z * vec3(0, 0, 1);
 			n = normalize(n);
+			#endif
 			
 			return true;
 		} else {
+			#if BRANCHLESS
+			bvec3 b1 = lessThan(d.xyz, d.yzx);
+			bvec3 b2 = lessThanEqual(d.xyz, d.zxy);
+			mask = b1 && b2;
+			d += vec3(mask) * deltaDist;
+			rayPos += ivec3(mask) * dirSign;
+			#else
             if(d.x < d.y || d.z < d.y)
 			{
                 if(d.x < d.z)
 				{
                     rayPos.x += dirSign.x;
-                    d.yz -= d.x;
+					d.yz -= d.x;
                     d.x = projLength.x;
                 } else {
                     rayPos.z += dirSign.z;
-                    d.xy -= d.z;
+					d.xy -= d.z;
                     d.z = projLength.z;
                 }
             } else {
                 rayPos.y += dirSign.y;
-                d.xz -= d.y;
+				d.xz -= d.y;
                 d.y = projLength.y;
             }
+			#endif
 		}
 		
 		if(any(greaterThanEqual(rayPos, ivec3(Tex3DRes / pow(2, LoD)))) || 
@@ -212,16 +228,20 @@ void main(void)
 	
 	//////////////////////////////////////////////
 	
-	const int box_count = 3;
-	vec3 box_positions[box_count] = {vec3(0.0), vec3(-128.0, 0.0, 0.0), vec3(128.0, 0.0, 0.0)};
-	vec3 box_colors[box_count] = {vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0)};
+	const int box_count = 9;
+	vec3 box_positions[box_count] = {vec3(0.0), vec3(-128.0, 0.0, 0.0), vec3(128.0, 0.0, 0.0),
+									vec3(0.0, 0.0, 128.0), vec3(-128.0, 0.0, 128.0), vec3(128.0, 0.0, 128.0),
+									vec3(0.0, 0.0, -128.0), vec3(-128.0, 0.0, -128.0), vec3(128.0, 0.0, -128.0)};
+	vec3 box_colors[box_count] = {vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0),
+								vec3(1.0, 1.0, 0.0), vec3(1.0, 0.0, 1.0), vec3(1.0, 0.0, 1.0),
+								vec3(0.0, 1.0, 1.0), vec3(1.0, 1.0, 1.0), vec3(0.0, 1.0, 1.0)};
 	
 	vec3 rgb = vec3(0.0, 0.0, 0.5 * max(0.5, pixel.y + 0.5) + 0.1);
 	float t = 100000000.0;
 	int s = 0;
 	bool hit = false;
-	bool hits[box_count] = {false, false, false};
-	float ts[box_count] = {100000000, 100000000, 100000000};
+	bool hits[box_count] = {false, false, false, false, false, false, false, false, false};
+	float ts[box_count] = {100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000, 100000000};
 	vec3 pos = vec3(0.0);
 	vec3 n = vec3(0.0);
 	
@@ -237,7 +257,7 @@ void main(void)
 	{
 		if((!hit || ts[i] < ts[current_hit]) && hits[i])
 		{
-			rgb *= 0.5f; // Debug (View Chunks)
+			//rgb *= 0.5f; // Debug (View Chunks)
 			
 			if(trace(ro + ts[i] * rd - box_positions[i], rd, pos, n, s))
 			{

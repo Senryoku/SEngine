@@ -50,20 +50,21 @@ public:
 
 	inline std::vector<Vertex>&			getVertices()		{ return _vertices; }		///< @return Array of Vertices
 	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }	///< @return Array of Triangles
-	inline Material& 						getMaterial()		{ return _material; }		///< @return Material
+	inline Material& 					getMaterial()		{ return _material; }		///< @return Material
 	
 	inline const std::vector<Vertex>&	getVertices() 		const { return _vertices; }		///< @return Array of Vertices
 	inline const std::vector<Triangle>&	getTriangles()		const { return _triangles; }		///< @return Array of Triangles
 	inline const Material&				getMaterial()		const { return _material; }		///< @return Material
 	inline const VertexArray& 			getVAO()			const { return _vao; }			///< @return VertexArray Object
-	inline const Buffer& 					getVertexBuffer()	const { return _vertex_buffer; }	///< @return Vertex Buffer
-	inline const Buffer&					getIndexBuffer()	const { return _index_buffer; }	///< @return Index Buffer
+	inline const Buffer& 				getVertexBuffer()	const { return _vertex_buffer; }	///< @return Vertex Buffer
+	inline const Buffer&				getIndexBuffer()	const { return _index_buffer; }	///< @return Index Buffer
 	
 	void computeNormals();
 	
 	virtual void createVAO();
 	void draw() const;
 	
+	void computeBoundingBox();
 	void setBoundingBox(const BoundingBox& bbox)	{ _bbox = bbox; }
 	const BoundingBox& getBoundingBox() const		{ return _bbox; }
 
@@ -73,13 +74,13 @@ public:
 	
 protected:
 	std::vector<Vertex>		_vertices;
-	std::vector<Triangle>		_triangles;
+	std::vector<Triangle>	_triangles;
 	
 	VertexArray				_vao;
-	Buffer						_vertex_buffer;
-	Buffer						_index_buffer;
+	Buffer					_vertex_buffer;
+	Buffer					_index_buffer;
 	
-	Material 					_material; ///< Base (default) Material for this mesh
+	Material 				_material; ///< Base (default) Material for this mesh
 	
 	BoundingBox				_bbox;
 };

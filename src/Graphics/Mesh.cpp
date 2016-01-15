@@ -99,6 +99,19 @@ void Mesh::computeNormals()
 		v.normal = glm::normalize(v.normal);
 }
 
+void Mesh::computeBoundingBox()
+{
+	for(const auto& v : _vertices)
+	{
+		_bbox.min = glm::vec3(std::min(_bbox.min.x, v.position.x), 
+							std::min(_bbox.min.y, v.position.y), 
+							std::min(_bbox.min.z, v.position.z));
+		_bbox.max = glm::vec3(std::max(_bbox.max.x, v.position.x), 
+							std::max(_bbox.max.y, v.position.y), 
+							std::max(_bbox.max.z, v.position.z));
+	}
+}
+
 ////////////////////// Static /////////////////////////////////////
 
 #include <RiggedMesh.hpp>
