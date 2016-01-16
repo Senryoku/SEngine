@@ -283,23 +283,6 @@ void main(void)
 										light_pos, Shadows[shadow].color.rgb, 
 										data.w, data.z);
 				}
-				
-				/*
-				vec3 p = CameraPosition;
-				vec3 d = (position.xyz - CameraPosition) / VolumeSamples;
-				float vol = 0.0;
-				for(int i = 0; i < VolumeSamples - 1; ++i)
-				{
-					vec4 sc = Shadows[shadow].depthMVP * vec4(p, 1.0);
-					sc /= sc.w;
-					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f)))
-						continue;
-					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
-					vol += VSM(sc.z, moments);
-					p += d;
-				}
-				ColorOut.rgb += (depth * AtmosphericDensity * vol / VolumeSamples) * Shadows[shadow].color.rgb;
-				*/
 			}
 			
 			// Shadow casting Omnidirectional lights

@@ -34,6 +34,7 @@ ShaderType& load(const std::string& path)
 	auto& s = ResourcesManager::getInstance().getShader<ShaderType>(path);
 	s.loadFromFile(path);
 	s.compile();
+	assert(s);
 	return s;
 }
 
@@ -43,5 +44,6 @@ Program& loadProgram(const std::string& name, ShaderTypes& ... shaders)
 	auto& p = ResourcesManager::getInstance().getProgram(name);
 	p.attach_chain(shaders...);
 	p.link();
+	assert(p);
 	return p;
 }
