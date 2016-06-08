@@ -2,8 +2,8 @@
 #pragma include ../cook_torrance.glsl
 #pragma include ../encode_normal.glsl
 
-#define SHADOWBLOCKCOUNT			10
-#define CUBESHADOWBLOCKCOUNT		3
+#define SHADOWBLOCKCOUNT		10
+#define CUBESHADOWBLOCKCOUNT	3
 // 2 + SHADOWBLOCKCOUNT
 #define CUBESHADOWBLOCKOFFSET	12
 
@@ -44,7 +44,9 @@ layout(std140, binding = CUBESHADOWBLOCKOFFSET) uniform CubeShadowBlock
 	vec4		color;
 } CubeShadows[CUBESHADOWBLOCKCOUNT];
 
-uniform unsigned int LightCount = 75;
+uniform float	Time = 0.0f;
+
+uniform unsigned int LightCount = 0;
 
 uniform unsigned int ShadowCount = 0;
 uniform unsigned int CubeShadowCount = 0;
@@ -157,6 +159,13 @@ float VSM(float dist, vec2 moments)
 
 const int highValue = 2147483646;
 const float boxfactor = 10000.0f; // Minimize the impact of the use of int for bounding boxes
+
+#pragma include ../random3.glsl
+float nothing(vec3 p) { return 1.0f; }
+#define ATMOSPHERIC_FUNC nothing
+//#define ATMOSPHERIC_FUNC noise
+//float anim_noise(vec3 p) { return noise(p + vec3(sin(0.3 * Time), 1.33 * Time, cos(0.8 * Time))); }
+//#define ATMOSPHERIC_FUNC anim_noise
 
 layout (local_size_x = WORKGROUP_SIZE, local_size_y = WORKGROUP_SIZE) in;
 void main(void)
@@ -311,6 +320,7 @@ void main(void)
 			for(int shadow = 0; shadow < ShadowCount; ++shadow)
 			{
 				vec3 d = (position.xyz - CameraPosition) / VolumeSamples;
+				// Starting point is slitghly moved to avoid visible patterns (banding)
 				vec3 p = CameraPosition - volume_tile_indexes[local_pixel.x % 3 + 3 * (local_pixel.y % 3)] / 9.0 * d;
 				vol_lights[shadow][gl_LocalInvocationIndex] = 0.0;
 				for(int i = 0; i < VolumeSamples; ++i)
@@ -321,7 +331,7 @@ void main(void)
 					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f)))
 						continue;
 					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
-					vol_lights[shadow][gl_LocalInvocationIndex] += VSM(sc.z, moments);
+					vol_lights[shadow][gl_LocalInvocationIndex] += VSM(sc.z, moments) * ATMOSPHERIC_FUNC(p);
 				}
 			}
 			
@@ -338,8 +348,8 @@ void main(void)
 						continue;
 					vec3 direction = normalize(p - CubeShadows[shadow].position_range.xyz);
 					vec2 moments = texture(CubeShadowMaps[shadow], direction).xy;
-					vol_cube_lights[shadow][gl_LocalInvocationIndex] += (dist < moments.x + DepthBias) ? 
-						1.0 : 0.0;
+					vol_cube_lights[shadow][gl_LocalInvocationIndex] += 
+						((dist < moments.x + DepthBias) ? 1.0 : 0.0) * ATMOSPHERIC_FUNC(p);
 				}
 			}
 		}
@@ -356,37 +366,37 @@ void main(void)
 							local_pixel.y > 0 ? 1.0 : 0.0);
 			vec2 p = vec2(local_pixel.x < WORKGROUP_SIZE - 1 && pixel.x < image_size.x - 1 ? 1.0 : 0.0,
 							local_pixel.y < WORKGROUP_SIZE - 1 && pixel.y < image_size.y - 1 ? 1.0 : 0.0);
-			int gathered_pixels = 1 + int(p.x + p.y + (p.x * p.y)
+			float gathered_pixels = 1.0 / (1.0 + p.x + p.y + (p.x * p.y)
 									+ m.x + m.y + (m.x * m.y)
 									+ (m.x * p.y) + (p.x * m.y));
+									
+			mat3 pixels = mat3(
+				(m.x * m.y),	m.y,	(p.x * m.y),
+				m.x,			1.0,	p.x,
+				(m.x * p.y),	p.y,	(p.x * p.y)
+			);
 
 			for(int shadow = 0; shadow < ShadowCount; ++shadow)
 			{
-				float vol = vol_lights[shadow][i];
-				vol += p.x * vol_lights[shadow][i + 1] + 
-					p.y * vol_lights[shadow][i + WORKGROUP_SIZE] +
-					(p.x * p.y) * vol_lights[shadow][i + WORKGROUP_SIZE + 1] +
-					m.x * vol_lights[shadow][i - 1] + 
-					m.y * vol_lights[shadow][i - WORKGROUP_SIZE] +
-					(m.x * m.y) * vol_lights[shadow][i - WORKGROUP_SIZE - 1] + 
-					(m.x * p.y) * vol_lights[shadow][i - 1 + WORKGROUP_SIZE] + 
-					(p.x * m.y) * vol_lights[shadow][i + 1 - WORKGROUP_SIZE];
-				vol /= gathered_pixels;
+				mat3 values = mat3(
+					vol_lights[shadow][i - WORKGROUP_SIZE - 1], vol_lights[shadow][i - WORKGROUP_SIZE], vol_lights[shadow][i - WORKGROUP_SIZE + 1],
+					vol_lights[shadow][i - 1], vol_lights[shadow][i], vol_lights[shadow][i + 1],
+					vol_lights[shadow][i + WORKGROUP_SIZE - 1], vol_lights[shadow][i + WORKGROUP_SIZE], vol_lights[shadow][i + WORKGROUP_SIZE + 1]
+				);
+				mat3 tmp = matrixCompMult(pixels, values);
+				float vol = gathered_pixels * (dot(tmp[0], vec3(1.0)) + dot(tmp[1], vec3(1.0)) + dot(tmp[2], vec3(1.0)));
 				ColorOut.rgb += (depth * AtmosphericDensity * vol / VolumeSamples) * Shadows[shadow].color.rgb;
 			}
 			
 			for(int shadow = 0; shadow < CubeShadowCount; ++shadow)
 			{
-				float vol = vol_cube_lights[shadow][i];
-				vol += p.x * vol_cube_lights[shadow][i + 1] + 
-					p.y * vol_cube_lights[shadow][i + WORKGROUP_SIZE] +
-					(p.x * p.y) * vol_cube_lights[shadow][i + WORKGROUP_SIZE + 1] +
-					m.x * vol_cube_lights[shadow][i - 1] + 
-					m.y * vol_cube_lights[shadow][i - WORKGROUP_SIZE] +
-					(m.x * m.y) * vol_cube_lights[shadow][i - WORKGROUP_SIZE - 1] + 
-					(m.x * p.y) * vol_cube_lights[shadow][i - 1 + WORKGROUP_SIZE] + 
-					(p.x * m.y) * vol_cube_lights[shadow][i + 1 - WORKGROUP_SIZE];
-				vol /= gathered_pixels;
+				mat3 values = mat3(
+					vol_cube_lights[shadow][i - WORKGROUP_SIZE - 1], vol_cube_lights[shadow][i - WORKGROUP_SIZE], vol_cube_lights[shadow][i - WORKGROUP_SIZE + 1],
+					vol_cube_lights[shadow][i - 1], vol_cube_lights[shadow][i], vol_cube_lights[shadow][i + 1],
+					vol_cube_lights[shadow][i + WORKGROUP_SIZE - 1], vol_cube_lights[shadow][i + WORKGROUP_SIZE], vol_cube_lights[shadow][i + WORKGROUP_SIZE + 1]
+				);
+				mat3 tmp = matrixCompMult(pixels, values);
+				float vol = gathered_pixels * (dot(tmp[0], vec3(1.0)) + dot(tmp[1], vec3(1.0)) + dot(tmp[2], vec3(1.0)));
 				ColorOut.rgb += (depth * AtmosphericDensity * vol / VolumeSamples) * CubeShadows[shadow].color.rgb;
 			}
 		}

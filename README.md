@@ -7,3 +7,6 @@ The main optimisation is the use of a compute shader to divise the computation o
 
 Quick video:
 https://youtu.be/NRjylzEVU9w
+
+
+[Font SDF are generated using SDFont (https://github.com/VDrift/sdfont)]

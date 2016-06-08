@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <limits>
+#include <algorithm>
+#include <initializer_list>
 
 /// Pi Constant
 constexpr double pi() { return std::atan(1)*4; }

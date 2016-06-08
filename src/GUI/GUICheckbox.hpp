@@ -11,26 +11,22 @@ public:
 	using ToggleFunc = std::function<bool(void)>;
 
 	GUICheckbox(const std::string& str, bool* b) :
-		_text(str),
-		_bool(b)
+		_text{str},
+		_bool{b}
 	{
 		_aabb = _text.getAABB();
 		_aabb.min -= glm::vec2(4.0);
 		_aabb.max += glm::vec2(4.0);
 	}
 	
-	GUICheckbox(const std::string& str, ToggleFunc func) :
-		_text(str),
-		_func(func)
+	GUICheckbox(const std::string& str, ToggleFunc func, bool default_val = false) :
+		_text{str},
+		_func{func},
+		_lastCall{default_val}
 	{
 		_aabb = _text.getAABB();
 		_aabb.min -= glm::vec2(4.0);
 		_aabb.max += glm::vec2(4.0);
-		
-		// Toggle twice, so _lastCall has the good value (yes, it's dirty.)
-		/// @todo Change
-		_lastCall = _func();
-		_lastCall = _func();
 	}
 	
 	bool onClick(const glm::vec2& coords, int button) override
@@ -63,8 +59,8 @@ public:
 	
 private:
 	GUIText		_text;
-	bool*			_bool = nullptr;
+	bool*		_bool = nullptr;
 	
-	ToggleFunc		_func;
-	bool			_lastCall = false;
+	ToggleFunc	_func;
+	bool		_lastCall = false;
 };

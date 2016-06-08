@@ -91,19 +91,19 @@ public:
 		}
 		*/
 		// Lights
-		const Sphere Lights[]{
+		static const Sphere Lights[]{
 			//Sphere{glm::vec3(0.0, 50.0, 0.0), 20.0},
 			Sphere{glm::vec3(10.0, 25.0, 15.0), 5.0},
 			Sphere{glm::vec3(10.0, 25.0, -15.0), 5.0},
 			Sphere{glm::vec3(-15.0, 25.0, 0.0), 5.0}
 		};
-		const glm::vec3 LightColors[]{
+		static const glm::vec3 LightColors[]{
 			//glm::vec3(2.0),
 			glm::vec3(1.0, 0.0, 0.0),
 			glm::vec3(0.0, 1.0, 0.0),
 			glm::vec3(0.0, 0.0, 40.0)
 		};
-		const glm::vec3 lightColor(1.0);
+		static const glm::vec3 lightColor(1.0);
 		for(int i = 0; i < 3; ++i)
 			if(trace(r, Lights[i], depth, p, n))
 			{
@@ -141,7 +141,7 @@ public:
 		auto start = TimeManager::getInstance().getRuntime();
 		
 		const size_t samplePerFrame = 1;
-		const size_t secondaryRays = 2;
+		const size_t secondaryRays = 0;
 		
 		if(_cameraMoved)
 		{
@@ -169,11 +169,11 @@ public:
 		glm::vec3 randomDir[samplePerFrame];
 		glm::vec3 randomDir2[secondaryRays];
 		for(size_t i = 0; i < samplePerFrame; ++i)
-			randomDir[i] =RandomHelper::getInstance().getSpherical();
+			randomDir[i] = RandomHelper::getInstance().getSpherical();
 		for(size_t i = 0; i < secondaryRays; ++i)
 			randomDir2[i] = RandomHelper::getInstance().getSpherical();
 		
-		#pragma omp parallel for collapse(2)
+		#pragma omp parallel for
 		for(int i = 0; i < _height; ++i)
 		{
 			for(int j = 0; j < _width; ++j)
@@ -185,8 +185,14 @@ public:
 									 n = _hitsNormals[i * _width + j];
 					for(size_t s = 0; s < samplePerFrame; ++s)
 					{
+						#if 0
 						auto cos0 = glm::dot(randomDir[s], n);
 						const auto dir = (cos0 > 0.0) ? randomDir[s] : -randomDir[s];
+						#else
+						auto rnd = RandomHelper::getInstance().getSpherical();
+						auto cos0 = glm::dot(rnd, n);
+						const auto dir = (cos0 > 0.0) ? rnd : -rnd;
+						#endif
 						cos0 = std::abs(cos0);
 						glm::vec3 p2, n2, c2 = glm::vec3(0.0);
 						if(scene(Ray{p + 0.00001f * n, dir}, p2, n2, c2))
@@ -194,12 +200,17 @@ public:
 							if(c2 != glm::vec3(0.0)) // Hit an emissive surface
 							{
 								c += cos0 * c2;
-							} else if(!_cameraMoved) {
+							} else if(!_cameraMoved && secondaryRays > 0) {
 								glm::vec3 tmp(0.0);
 								for(size_t s2 = 0; s2 < secondaryRays; ++s2)
 								{
 									glm::vec3 p3, n3, c3;
+									#if 0
 									const auto dir2 = (glm::dot(randomDir2[s2], n2) > 0.0) ? randomDir2[s2] : -randomDir2[s2];
+									#else
+									auto rnd = RandomHelper::getInstance().getSpherical();
+									const auto dir2 = (glm::dot(rnd, n2) > 0.0) ? rnd : -rnd;
+									#endif
 									if(scene(Ray{p2 + 0.00001f * n2, dir2}, p3, n3, c3))
 										tmp += c3 * glm::dot(dir2, n2);
 								}

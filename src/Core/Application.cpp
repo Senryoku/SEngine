@@ -97,11 +97,12 @@ void Application::run_init()
 
 void Application::update()
 {
-	glfwSetWindowTitle(_window, std::string("NamelessEngine2 - ")
-									.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
-									.append("ms - FPS: ")
-									.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
-								.c_str());
+	glfwSetWindowTitle(_window,
+		std::string("NamelessEngine2 - ")
+			.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
+			.append("ms - FPS: ")
+			.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
+			.c_str());
 
 	_cameraMoved = false;
 	if(_controlCamera)
@@ -158,7 +159,7 @@ void Application::update()
 	_camera_buffer.unbind();
 	
 	/// Shadow map update
-	if(!_paused)
+	if(!_paused || _time == 0.0f)
 	{
 		for(auto l : _scene.getLights())
 			if(l->Dynamic) // Updates shadow maps if needed
@@ -220,6 +221,20 @@ void Application::run()
 
 		glfwSwapBuffers(_window);
 		glfwPollEvents();
+	}
+}
+
+void Application::setFullscreen(bool val)
+{
+	_fullscreen = val;
+	if(_fullscreen)
+	{
+		int monitor_count;
+		const auto monitor = glfwGetMonitors(&monitor_count)[0];
+		const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+		glfwSetWindowMonitor(_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+	} else {
+		glfwSetWindowMonitor(_window, nullptr, 100, 100, 1280, 720, 0);
 	}
 }
 

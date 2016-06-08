@@ -47,7 +47,7 @@ protected:
 	float		_aoThreshold = 1.0f;
 	float		_aoRadius = 200.0f;
 	
-	int			_volumeSamples = 16;
+	int			_volumeSamples = 0;
 	float		_atmosphericDensity = 0.005f;
 	
 	virtual void initGBuffer(size_t width, size_t height);

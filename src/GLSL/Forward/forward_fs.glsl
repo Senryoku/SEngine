@@ -11,9 +11,9 @@ uniform mat4 ModelMatrix = mat4(1.0);
 uniform vec3 CameraPosition;
 
 uniform vec3 Color = vec3(1.0);
-uniform vec3 Ambiant = vec3(0.04);
+uniform vec3 Ambiant = vec3(0.1);
 
-uniform float R = 0.4;
+uniform float R = 0.95;
 uniform float F0 = 0.2;
 
 uniform float BumpScale = 0.1;
@@ -92,10 +92,15 @@ void main(void)
 	if(!gl_FrontFacing) n = -n;
 	
 	colorOut.rgb = c.rgb * Ambiant +
-		cookTorrance(world_position, n, 
+		cookTorrance(
+			world_position, 
+			n, 
 			normalize(CameraPosition - world_position),
 			c.rgb, 
-			vec3(100.0), vec3(1.0), 
-			R, F0);
+			world_position + vec3(1.0),
+			vec3(1.0), 
+			R, 
+			F0
+		);
 	colorOut.a = 1.0;
 }

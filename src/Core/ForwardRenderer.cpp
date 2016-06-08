@@ -26,6 +26,7 @@ void ForwardRenderer::render()
 {
 	Context::clear();
 
+	ResourcesManager::getInstance().getProgram("Forward").setUniform("CameraPosition", _camera.getPosition());
 	_scene.draw(_projection, _camera.getMatrix());
 	
 	renderGUI();

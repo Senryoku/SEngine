@@ -53,16 +53,16 @@ float object(glm::vec3 p)
 
 glm::vec3 object_normal(glm::vec3 p)
 {
-	float eps = 0.001;
-	//float eps = 1.0 / Tex3DRes;
-	glm::vec3 n;
-	auto v = object(p);
+	float eps = 0.0001;
+	//auto v = object(p);
 	glm::vec3 ex = glm::vec3(eps, 0.0, 0.0);
 	glm::vec3 ey = glm::vec3(0.0, eps, 0.0);
 	glm::vec3 ez = glm::vec3(0.0, 0.0, eps);
-	n.x = object(p + ex) - object(p - ex);
-	n.y = object(p + ey) - object(p - ey);
-	n.z = object(p + ez) - object(p - ez);
+	glm::vec3 n = {
+		object(p + ex) - object(p - ex),
+		object(p + ey) - object(p - ey),
+		object(p + ez) - object(p - ez)
+	};
 	return -glm::normalize(n);
 }
 

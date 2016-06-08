@@ -88,7 +88,7 @@ REC_SOURCE(${CMAKE_SOURCE_DIR}/src)
 
 AUX_SOURCE_DIRECTORY(exe/ EXECUTABLES)
 
-list(APPEND CMAKE_CXX_FLAGS "-O2 -std=c++0x -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
+list(APPEND CMAKE_CXX_FLAGS "-O2 -std=c++14 -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
 
 add_library(SEngine STATIC ${SOURCE_FILES})
 

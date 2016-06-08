@@ -44,6 +44,8 @@ public:
 		static std::uniform_real_distribution<T> uniform_dist(0, 1);
 		return uniform_dist(gen);
 	}
+	
+	void setFullscreen(bool val = true);
 
 	virtual void screen(const std::string& path) const;
 	
@@ -71,6 +73,7 @@ protected:
 	int				_width = 1366;
 	int				_height = 720;
 	bool 			_fullscreen = false;
+	bool 			_vsync = false;
 	bool 			_msaa = false;
 	
 	Scene			_scene;

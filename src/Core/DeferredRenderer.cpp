@@ -21,17 +21,34 @@ void DeferredRenderer::run_init()
 	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.loadFromFile("src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl");
 	DeferredShadowCS.compile();
+	if(!DeferredShadowCS)
+	{
+		std::cerr << "Error compiling tiled_deferred_shadow_cs.glsl\n";
+		exit(1);
+	}
 	
 	DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		
-	loadProgram("BloomBlend",
-				load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
-				load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl"));
+	auto& BloomBlend = loadProgram("BloomBlend",
+		load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
+		load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl"));
+	
+	if(!BloomBlend)
+	{
+		std::cerr << "Error loading deferred_[vs/fs].glsl\n";
+		exit(1);
+	}
 	
 	auto& Deferred = loadProgram("Deferred",
 		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
 		load<FragmentShader>("src/GLSL/Deferred/deferred_fs.glsl")
 	);
+	
+	if(!Deferred)
+	{
+		std::cerr << "Error loading deferred_[vs/fs].glsl\n";
+		exit(1);
+	}
 	
 	Deferred.bindUniformBlock("Camera", _camera_buffer); 
 }
