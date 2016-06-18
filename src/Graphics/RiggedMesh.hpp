@@ -31,8 +31,8 @@ public:
 
 private:
 	Skeleton						_skeleton;
-	std::vector<Animation>		_animations;
-	std::vector<VertexBoneData>	_vertexBoneData;
+	std::vector<Animation>			_animations;
+	std::vector<VertexBoneData>		_vertexBoneData;
 	
 	Buffer							_vertexBoneBuffer;
 	UniformBuffer					_bonesBuffer;

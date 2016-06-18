@@ -10,7 +10,7 @@ public:
 		// No scaling.
 	};
 	
-	double									fps = 30.0;
+	double								fps = 30.0;
 	std::vector<std::vector<Bone>>		bones;
 	
 	std::vector<Bone> get(const Skeleton& s, double t) const;

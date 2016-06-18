@@ -7,6 +7,12 @@ DeferredRenderer::DeferredRenderer(int argc, char* argv[]) :
 {
 }
 
+void DeferredRenderer::init(const std::string& windowName)
+{
+	_multisampling = 0; // Can't use multisampling in deferred mode (glBlitFramebuffer)
+	Application::init(windowName);
+}
+	
 void DeferredRenderer::screen(const std::string& path) const
 {
 	_offscreenRender.bind(FramebufferTarget::Read);
@@ -23,7 +29,7 @@ void DeferredRenderer::run_init()
 	DeferredShadowCS.compile();
 	if(!DeferredShadowCS)
 	{
-		std::cerr << "Error compiling tiled_deferred_shadow_cs.glsl\n";
+		std::cerr << "Error compiling tiled_deferred_shadow_cs.glsl" << std::endl;
 		exit(1);
 	}
 	
@@ -35,7 +41,7 @@ void DeferredRenderer::run_init()
 	
 	if(!BloomBlend)
 	{
-		std::cerr << "Error loading deferred_[vs/fs].glsl\n";
+		std::cerr << "Error loading deferred_[vs/fs].glsl" << std::endl;
 		exit(1);
 	}
 	
@@ -46,7 +52,7 @@ void DeferredRenderer::run_init()
 	
 	if(!Deferred)
 	{
-		std::cerr << "Error loading deferred_[vs/fs].glsl\n";
+		std::cerr << "Error loading deferred_[vs/fs].glsl" << std::endl;
 		exit(1);
 	}
 	

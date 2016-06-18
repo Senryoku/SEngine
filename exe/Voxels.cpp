@@ -166,7 +166,7 @@ public:
 		
 		OrthographicLight* o = _scene.add(new OrthographicLight());
 		o->init();
-		o->Dynamic = false;
+		o->dynamic = false;
 		o->setColor(glm::vec3(2.0));
 		o->setDirection(glm::normalize(glm::vec3{64.0, 0.0, 64.0} - glm::vec3{32.0, 50.0, 13.0}));
 		o->_position = glm::vec3{32.0, 50.0, 13.0};

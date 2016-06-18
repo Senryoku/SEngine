@@ -1,5 +1,6 @@
 #include <sstream>
 #include <iomanip>
+#include <Tools/range/range.hpp>
 
 #include <Query.hpp>
 
@@ -46,42 +47,65 @@ public:
 		static float R = 0.95f;
 		static float F0 = 0.15f;
 		Mesh& Plane = ResourcesManager::getInstance().getMesh("Plane");
-		float s = 250.f;
-		auto T = NoisyTerrain({3.f, 0.5f, 0.1f, 0.05f, 0.005f},
+		float s = 400.f;
+		auto T = NoisyTerrain({5.f, 1.0f, 0.5f, 0.1f, 0.05f},
 								{15.f, 4.f, 3.f, 2.f, 1.f},
 								{0.125f/2.f, 0.125f, 0.25f, 0.5f, 1.f});
-		Plane = create(T, glm::vec2(0.0), glm::vec2(s), glm::vec2(200));
+		Plane = create(T, glm::vec2(0.0), glm::vec2(s), glm::vec2(1200));
 		for(auto& v : Plane.getVertices())
 		{
 			v.texcoord *= 0.3f;
 		}
 		Plane.setBoundingBox({glm::vec3(-s, 0.f, -s), glm::vec3(s, 100.f, s)});
+		Plane.computeNormals();
 		Plane.createVAO();
 		Plane.getMaterial().setShadingProgram(
 			ResourcesManager::getInstance().getProgram("Deferred")
 		);
 		Plane.getMaterial().setUniform("R", &R);
 		Plane.getMaterial().setUniform("F0", &F0);
+		Plane.getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 0.5});
 		Plane.getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "uniform_color");
 		Plane.getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
 		_scene.add(MeshInstance(Plane));
+		
+		auto Meshes = {
+			Mesh::load("in/3DModels/sponza/sponza.obj"),
+			Mesh::load("in/3DModels/dragon/Figurine Dragon N170112.3DS"),
+			Mesh::load("in/3DModels/alduin/alduin.obj")
+		};
+		auto MeshesMat = {
+			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(300.0, 0.0, 300.0)), glm::vec3(0.04)),
+			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(100.0, 0.0, 100.0)), glm::vec3(0.08)),
+			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(200.0, 0.0, 100.0)), glm::vec3(0.08))
+		};
+		for(auto m : util::lang::indices(Meshes))
+			for(auto& part : Meshes.begin()[m])
+			{
+				part->createVAO();
+				part->getMaterial().setUniform("R", &R);
+				part->getMaterial().setUniform("F0", &F0);
+				_scene.add(MeshInstance(*part, MeshesMat.begin()[m]));
+			}
 		
 		// Shadow casting lights ---------------------------------------------------
 		
 		OrthographicLight* o = _scene.add(new OrthographicLight());
 		o->init();
-		o->Dynamic = true;
-		o->setColor(glm::vec3(2.0));
-		o->setDirection(glm::normalize(glm::vec3{58.8467 - 63.273, 161.167 - 173.158, -34.2005 - -37.1856}));
-		o->_position = glm::vec3{63.273, 173.158, -37.1856};
+		o->dynamic = true;
+		o->setColor(glm::vec3(1.0));
+		o->setDirection(glm::normalize(glm::vec3{0.05, -1.0, 0.05}));
+		o->_position = glm::vec3{0.0};
 		o->updateMatrices();
 
-		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
+		_scene.getSkybox().loadCubeMap({
+			"in/Textures/skybox/posx.png",
 			"in/Textures/skybox/negx.png",
 			"in/Textures/skybox/posy.png",
 			"in/Textures/skybox/negy.png",
 			"in/Textures/skybox/posz.png",
-			"in/Textures/skybox/negz.png"});
+			"in/Textures/skybox/negz.png"
+		});
 
 		auto w = _gui.add(new GUIWindow());
 		w->add(new GUIGraph<float>("GUIPass (ms): ", [&]() -> float { return _GUITiming.get<GLuint64>() / 1000000.0; }, 0.0, 3.0, 7.5));
@@ -155,8 +179,9 @@ public:
 		_updateTiming.begin(Query::Target::TimeElapsed);
 		if(!_paused)
 		{
-			if(!_scene.getLights().empty() && _scene.getLights()[0]->Dynamic)
-				static_cast<OrthographicLight*>(_scene.getLights()[0])->_position = _camera.getPosition() + glm::vec3{0.0, 50.0, 0.0};
+			if(!_scene.getLights().empty() && _scene.getLights()[0]->dynamic)
+				static_cast<OrthographicLight*>(_scene.getLights()[0])->_position = 
+					glm::vec3{_camera.getPosition().x, 150.0, _camera.getPosition().z};
 		}
 	
 		DeferredRenderer::update();

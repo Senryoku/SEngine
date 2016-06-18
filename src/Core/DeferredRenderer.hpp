@@ -5,7 +5,7 @@
 class DeferredRenderer : public Application
 {
 public:
-	DeferredRenderer();
+	DeferredRenderer() =default;
 	DeferredRenderer(int argc, char* argv[]);
 	virtual ~DeferredRenderer() =default;
 	
@@ -24,6 +24,8 @@ public:
 	virtual void screen(const std::string& path) const override;
 	
 	void setInternalResolution(size_t width, size_t height);
+	
+	virtual void init(const std::string& windowName = "Default Window") override;
 	
 	virtual void run_init() override;
 

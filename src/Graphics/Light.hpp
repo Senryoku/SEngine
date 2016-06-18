@@ -19,8 +19,8 @@ public:
 	using ShadowBuffer = Framebuffer<T, 1, T, true>;
 	
 	// Public attributes
-	bool			Dynamic = false;	///< Tells the application if the shadow map should be redrawn each frame
-	unsigned int	Downsampling = 1;	///< Strengh of the shadow map's downsampling
+	bool			dynamic = false;	///< Tells the application if the shadow map should be redrawn each frame
+	unsigned int	downsampling = 1;	///< Strengh of the shadow map's downsampling
 
 	/**
 	 * Constructor

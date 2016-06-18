@@ -38,7 +38,7 @@ void Application::init(const std::string& windowName)
 		std::cerr << "Error: couldn't initialize GLFW." << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES, _multisampling);
 
 	if(_fullscreen)
 	{
@@ -162,7 +162,7 @@ void Application::update()
 	if(!_paused || _time == 0.0f)
 	{
 		for(auto l : _scene.getLights())
-			if(l->Dynamic) // Updates shadow maps if needed
+			if(l->dynamic) // Updates shadow maps if needed
 			{
 				l->updateMatrices();
 				l->drawShadowMap(_scene.getObjects());

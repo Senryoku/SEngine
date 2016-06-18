@@ -76,8 +76,8 @@ void DirectionalLight::drawShadowMap(const std::vector<MeshInstance>& objects) c
 	
 	getShadowMap().generateMipmaps();
 	/// @todo Add some way to configure the blur
-	blur(getShadowMap(), getResolution(), getResolution(), Downsampling);
-	getShadowMap().set(Texture::Parameter::BaseLevel, Downsampling);
+	blur(getShadowMap(), getResolution(), getResolution(), downsampling);
+	getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
 	getShadowMap().generateMipmaps();
 }
 	

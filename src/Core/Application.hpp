@@ -22,7 +22,7 @@ public:
 	Application(int argc, char* argv[]);
 	virtual ~Application();
 
-	void init(const std::string& windowName = "Default Window");
+	virtual void init(const std::string& windowName = "Default Window");
 	
 	void clean();
 	
@@ -75,6 +75,7 @@ protected:
 	bool 			_fullscreen = false;
 	bool 			_vsync = false;
 	bool 			_msaa = false;
+	size_t			_multisampling = 4;
 	
 	Scene			_scene;
 

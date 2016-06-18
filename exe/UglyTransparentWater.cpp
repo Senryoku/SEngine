@@ -248,7 +248,7 @@ public:
 		
 		OrthographicLight* o = _scene.add(new OrthographicLight());
 		o->init();
-		o->Dynamic = false;
+		o->dynamic = false;
 		o->setColor(glm::vec3(2.0));
 		o->setDirection(glm::normalize(glm::vec3{58.8467 - 63.273, 161.167 - 173.158, -34.2005 - -37.1856}));
 		o->_position = glm::vec3{63.273, 173.158, -37.1856};
@@ -311,10 +311,15 @@ public:
 		}));
 		
 		auto w2 = _gui.add(new GUIWindow());
-		w2->add(new GUIButton("Print Something.", [&] { std::cout << "Something." << std::endl; }));
-		/// @todo Come back here when GLFW 3.2 will be released :)
-		//w2->add(new GUICheckbox("Vsync", [&] { static int i = 0; i = (i + 1) % 2; glfwSwapInterval(i); return i == 1; }));
-		//w2->add(new GUICheckbox("Fullscreen", [&] { ... }));
+		w2->add(new GUICheckbox("Vsync", [&] {
+			_vsync = !_vsync; 
+			glfwSwapInterval(_vsync); 
+			return _vsync;
+		}));
+		w2->add(new GUICheckbox("Fullscreen", [&]() -> bool {
+			setFullscreen(!_fullscreen);
+			return _fullscreen;
+		}));
 		w2->add(new GUIEdit<float>("AORadius : ", &_aoRadius));
 		w2->add(new GUIEdit<float>("AOThresold : ", &_aoThreshold));
 		w2->add(new GUIEdit<int>("AOSamples : ", &_aoSamples));
