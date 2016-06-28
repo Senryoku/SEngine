@@ -98,7 +98,7 @@ void Application::run_init()
 void Application::update()
 {
 	glfwSetWindowTitle(_window,
-		std::string("NamelessEngine2 - ")
+		std::string("SEngine - ")
 			.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
 			.append("ms - FPS: ")
 			.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
@@ -328,15 +328,10 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 				}
 				break;
 			}
-			case GLFW_KEY_V:
+			case GLFW_KEY_ENTER:
 			{
-				_fullscreen = !_fullscreen;
-				if(_fullscreen)
-				{
-					std::cout << "TODO: Add fullscreen :p (Sorry...)" << std::endl;
-				} else {
-					std::cout << "TODO: Add fullscreen :p (Sorry...)" << std::endl;
-				}
+				if(mods & GLFW_MOD_ALT)
+					setFullscreen(!_fullscreen);
 				break;
 			}
 			case GLFW_KEY_P:

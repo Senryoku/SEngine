@@ -58,6 +58,12 @@ protected:
 	int			_volumeSamples = 0;
 	float		_atmosphericDensity = 0.005f;
 	
+	Query		_updateTiming;
+	Query		_GBufferPassTiming;
+	Query		_lightPassTiming;
+	Query		_postProcessTiming;
+	Query		_GUITiming;
+	
 	virtual void initGBuffer(size_t width, size_t height);
 
 	virtual void render() override;
@@ -68,5 +74,4 @@ protected:
 	virtual void renderPostProcess();
 	
 	virtual void resize_callback(GLFWwindow* _window, int width, int height) override;
-	virtual void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods) override;
 };

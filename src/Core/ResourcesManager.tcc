@@ -31,7 +31,13 @@ inline T& ResourcesManager::getTexture(const std::string& name)
 template<typename ShaderType>
 ShaderType& load(const std::string& path)
 {
-	auto& s = ResourcesManager::getInstance().getShader<ShaderType>(path);
+	return load<ShaderType>(path, path);
+}
+
+template<typename ShaderType>
+ShaderType& load(const std::string& name, const std::string& path)
+{
+	auto& s = ResourcesManager::getInstance().getShader<ShaderType>(name);
 	s.loadFromFile(path);
 	s.compile();
 	if(!s)

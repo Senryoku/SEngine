@@ -45,7 +45,10 @@ private:
 };
 
 template<typename ShaderType>
-ShaderType& load(const std::string& path);
+inline ShaderType& load(const std::string& path);
+
+template<typename ShaderType>
+ShaderType& load(const std::string& name, const std::string& path);
 
 template<typename ... ShaderTypes>
 Program& loadProgram(const std::string& name, ShaderTypes& ... shaders);

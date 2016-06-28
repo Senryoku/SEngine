@@ -24,38 +24,21 @@ void DeferredRenderer::screen(const std::string& path) const
 
 void DeferredRenderer::run_init()
 {
-	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
-	DeferredShadowCS.loadFromFile("src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl");
-	DeferredShadowCS.compile();
-	if(!DeferredShadowCS)
-	{
-		std::cerr << "Error compiling tiled_deferred_shadow_cs.glsl" << std::endl;
-		exit(1);
-	}
-	
+	ComputeShader& DeferredShadowCS = load<ComputeShader>(
+		"DeferredShadowCS",
+		"src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl"
+	);
 	DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		
-	auto& BloomBlend = loadProgram("BloomBlend",
+	loadProgram("BloomBlend",
 		load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
-		load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl"));
-	
-	if(!BloomBlend)
-	{
-		std::cerr << "Error loading deferred_[vs/fs].glsl" << std::endl;
-		exit(1);
-	}
+		load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl")
+	);
 	
 	auto& Deferred = loadProgram("Deferred",
 		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
 		load<FragmentShader>("src/GLSL/Deferred/deferred_fs.glsl")
 	);
-	
-	if(!Deferred)
-	{
-		std::cerr << "Error loading deferred_[vs/fs].glsl" << std::endl;
-		exit(1);
-	}
-	
 	Deferred.bindUniformBlock("Camera", _camera_buffer); 
 }
 
@@ -161,10 +144,21 @@ void DeferredRenderer::renderPostProcess()
 
 void DeferredRenderer::render()
 {
+	_GBufferPassTiming.begin(Query::Target::TimeElapsed);
 	renderGBuffer();
+	_GBufferPassTiming.end();
+	
+	_lightPassTiming.begin(Query::Target::TimeElapsed);
 	renderLightPass();
+	_lightPassTiming.end();
+	
+	_postProcessTiming.begin(Query::Target::TimeElapsed);
 	renderPostProcess();
+	_postProcessTiming.end();
+	
+	_GUITiming.begin(Query::Target::TimeElapsed);
 	renderGUI();
+	_GUITiming.end();
 }
 
 void DeferredRenderer::setInternalResolution(size_t width, size_t height)
@@ -204,124 +198,5 @@ void DeferredRenderer::resize_callback(GLFWwindow* _window, int width, int heigh
 	if(_internalWidth == 0 || _internalHeight == 0)
 	{
 		initGBuffer(_width, _height);
-	}
-}
-
-void DeferredRenderer::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
-{
-	if(action == GLFW_PRESS && !_gui.handleKey(key, scancode, action, mods))
-	{
-		switch(key)
-		{
-			case GLFW_KEY_N:
-			{				
-				std::cout << _camera.getPosition().x << "\t" << _camera.getPosition().y << "\t" << _camera.getPosition().z << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_4:
-			{
-				if(_bloomDownsampling > 0)
-					_bloomDownsampling -= 1;
-				std::cout << "BloomDownsampling: " << _bloomDownsampling << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_5:
-			{
-				_bloomDownsampling += 1;
-				std::cout << "BloomDownsampling: " << _bloomDownsampling << std::endl;
-				break;
-			}
-			case GLFW_KEY_ESCAPE:
-			{
-				glfwSetWindowShouldClose(_window, GL_TRUE);
-				break;
-			}
-			case GLFW_KEY_R:
-			{
-				std::cout << "Reloading shaders..." << std::endl;
-				ResourcesManager::getInstance().reloadShaders();
-				std::cout << "Reloading shaders... Done !" << std::endl;
-				break;
-			}
-			case GLFW_KEY_SPACE:
-			{
-				if(!_controlCamera)
-				{
-					glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
-					glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				} else {
-					glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				}
-				_controlCamera = !_controlCamera;
-				break;
-			}
-			case GLFW_KEY_X:
-			{
-				_msaa = ! _msaa;
-				if(_msaa)
-				{
-					glEnable(GL_MULTISAMPLE);
-					
-					GLint iMultiSample = 0;
-					GLint iNumSamples = 0;
-					glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
-					glGetIntegerv(GL_SAMPLES, &iNumSamples);
-					
-					glfwWindowHint(GLFW_SAMPLES, iMultiSample);
-					
-					std::cout << "Enabled MSAA (GL_SAMPLES : " << iNumSamples << ", GL_SAMPLE_BUFFERS : " << iMultiSample << ")" << std::endl;
-				} else {
-					glDisable(GL_MULTISAMPLE);
-					
-					GLint  iMultiSample = 0;
-					GLint  iNumSamples = 0;
-					glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
-					glGetIntegerv(GL_SAMPLES, &iNumSamples);
-					std::cout << "Disabled MSAA (GL_SAMPLES : " << iNumSamples << ", GL_SAMPLE_BUFFERS : " << iMultiSample << ")" << std::endl;
-				}
-				break;
-			}
-			case GLFW_KEY_V:
-			{
-				_fullscreen = !_fullscreen;
-				if(_fullscreen)
-				{
-					std::cout << "TODO: Add fullscreen :p (Sorry...)" << std::endl;
-				} else {
-					std::cout << "TODO: Add fullscreen :p (Sorry...)" << std::endl;
-				}
-				break;
-			}
-			case GLFW_KEY_P:
-			{
-				_paused = !_paused;
-				break;
-			}
-			case GLFW_KEY_L:
-			{
-				const std::string ScreenPath("out/screenshot.png");
-				std::cout << "Saving a screenshot to " << ScreenPath << "..." << std::endl;
-				screen(ScreenPath);
-				break;
-			}
-			case GLFW_KEY_KP_ADD:
-			{
-				if(_camera.speed() < 1)
-					_camera.speed() += .1;
-				else
-					_camera.speed() += 1;
-				std::cout << "Camera Speed: " << _camera.speed() << std::endl;
-				break;
-			}
-			case GLFW_KEY_KP_SUBTRACT:
-			{
-				if(_camera.speed() <= 1)
-					_camera.speed() -= .1;
-				else
-					_camera.speed() -= 1;
-				std::cout << "Camera Speed: " << _camera.speed() << std::endl;
-				break;
-			}
-		}
 	}
 }
