@@ -85,6 +85,8 @@ protected:
 	bool			_cameraMoved = true;
 	Camera			_camera;
 	float			_fov = 60.0;
+	float 			_near = 0.1f;
+	float 			_far = 1000.0f;
 	glm::vec3 		_resolution;
 	glm::mat4 		_projection;
 	glm::mat4 		_invProjection;
@@ -110,13 +112,6 @@ protected:
 	PointLight*	_selectedLight = nullptr;
 	
 	void update_projection();
-	
-	/**
-	 * G-Buffer:
-	 *  Color0 : Color (xyz) and MaterialInfo (w)
-	 *  Color1 : World Position (xyz) and Depth (w)
-	 *  Color2 : Encoded Normal (xy), F0 (z) and R (w)
-	**/
 
 	// Callbacks (GLFW)
 	virtual void error_callback(int error, const char* description);

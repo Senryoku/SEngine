@@ -23,11 +23,15 @@ public:
 	 * Should be automatically computed.
 	 * @todo Remove
 	**/
-	glm::vec3 _position;
+	glm::vec3	_position= glm::vec3{0.0};
+	float		_size = 50.0f;
+	float		_near = 1.0f;
+	float		_far = 500.0f;
 	/// TEMP!
 	/// @todo Remove
 	OrthographicLight(unsigned int shadowMapResolution = 2048) :
-		DirectionalLight(shadowMapResolution) {}
+		DirectionalLight(shadowMapResolution)
+	{}
 	
 	/**
 	 * Constructor

@@ -34,7 +34,11 @@ ShaderType& load(const std::string& path)
 	auto& s = ResourcesManager::getInstance().getShader<ShaderType>(path);
 	s.loadFromFile(path);
 	s.compile();
-	assert(s);
+	if(!s)
+	{
+		std::cerr << "Error compiling '" << path << "'. Exiting..." << std::endl;
+		exit(1);
+	}
 	return s;
 }
 
@@ -44,6 +48,10 @@ Program& loadProgram(const std::string& name, ShaderTypes& ... shaders)
 	auto& p = ResourcesManager::getInstance().getProgram(name);
 	p.attach_chain(shaders...);
 	p.link();
-	assert(p);
+	if(!p)
+	{
+		std::cerr << "Error linking GLSL program. Exiting..." << std::endl;
+		exit(1);
+	}
 	return p;
 }

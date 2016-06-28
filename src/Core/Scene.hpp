@@ -80,12 +80,12 @@ public:
 	{
 		if(_skybox)
 			_skybox.draw(p, v);
-		
+
 		updateLights();
-		
+
 		if(_dirtyPointLights)
 			updatePointLightBuffer();
-		
+
 		for(auto& o : _objects)
 		{
 			if(o.isVisible(p, v))

@@ -408,7 +408,7 @@ glm::vec3 Application::getMouseProjection(float depth) const
 void Application::update_projection()
 {
 	float inRad = _fov * glm::pi<float>()/180.f;
-	_projection = glm::perspective(inRad, (float) _width/_height, 0.1f, 1000.0f);
+	_projection = glm::perspective(inRad, (float) _width/_height, _near, _far);
 	_invProjection = glm::inverse(_projection);
 }
 

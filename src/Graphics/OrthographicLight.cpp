@@ -81,7 +81,7 @@ void OrthographicLight::updateMatrices()
 
 		_projection = glm::ortho(-bound_right * 0.5f, bound_right * 0.5f, -bound_up * 0.5f, bound_up * 0.5f, 0.01f, range);
 	} else 
-		_projection = glm::ortho(-100.0f * 0.5f, 100.0f * 0.5f, -100.0f * 0.5f, 100.0f * 0.5f, 0.01f, 500.0f);
+		_projection = glm::ortho(-_size, _size, -_size, _size, _near, _far);
 	
 	_view = glm::lookAt(_position, _position + _direction, up);
 	_VPMatrix = _projection * _view;

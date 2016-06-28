@@ -36,7 +36,7 @@ public:
 	std::unique_ptr<Mesh>& getMeshPtr(const std::string& name) { return _meshes[name]; }
 
 private:
-	std::map<std::string, std::unique_ptr<Texture>>	_textures;
+	std::map<std::string, std::unique_ptr<Texture>>		_textures;
 	std::map<std::string, std::unique_ptr<Shader>>		_shaders;
 	
 	std::map<std::string, Program>						_programs;

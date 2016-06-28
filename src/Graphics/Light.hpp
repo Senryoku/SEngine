@@ -121,19 +121,19 @@ public:
 	inline static const Program& getShadowMapProgram();
 	
 protected:
-	glm::vec3			_color = glm::vec3(1.f);				///< Light's color
+	glm::vec3			_color = glm::vec3(1.f);	///< Light's color
 	
-	unsigned int		_shadowMapResolution;			///< Resolution of the shadow map (depth map)
+	unsigned int		_shadowMapResolution;		///< Resolution of the shadow map (depth map)
 	ShadowBuffer		_shadowMapFramebuffer;		///< Framebuffer used to draw the shadow map
-	glm::mat4			_projection;					///< Projection matrix used to draw the shadow map
+	glm::mat4			_projection;				///< Projection matrix used to draw the shadow map
 	UniformBuffer		_gpuBuffer;					///< Buffer used for shadow mapping
 	
 	virtual void initPrograms() =0;
 	
 	// Static
-	static Program* 			s_depthProgram;	///< Program used to draw the shadow map
-    static VertexShader*		s_depthVS;			///< VertexShader used to draw the shadow map
-    static FragmentShader*	s_depthFS;			///< FragmentShader used to draw the shadow map
+	static Program* 		s_depthProgram;	///< Program used to draw the shadow map
+    static VertexShader*	s_depthVS;		///< VertexShader used to draw the shadow map
+    static FragmentShader*	s_depthFS;		///< FragmentShader used to draw the shadow map
 };
 
 // Inlined functions

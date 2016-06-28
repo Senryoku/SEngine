@@ -30,6 +30,12 @@ public:
 	virtual void run_init() override;
 
 protected:
+	/**
+	 * G-Buffer:
+	 *  Color0 : Color (xyz) and MaterialInfo (w)
+	 *  Color1 : World Position (xyz) and Depth (w)
+	 *  Color2 : Encoded Normal (xy), F0 (z) and R (w)
+	**/
 	Framebuffer<Texture2D, 3>		_offscreenRender;
 	
 	// Downsampling

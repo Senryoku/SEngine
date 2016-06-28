@@ -1,6 +1,8 @@
 #version 430 core
 #pragma include ../cook_torrance.glsl
 
+const int CASCADE_COUNT = 3;
+
 layout(std140) uniform Camera {
 	mat4 ViewMatrix;
 	mat4 ProjectionMatrix;
@@ -18,9 +20,16 @@ uniform float F0 = 0.2;
 
 uniform float BumpScale = 0.1;
 
+// Shadow parameter (VSM)
+uniform float	MinVariance = 0.0000001;
+uniform float	ShadowClamp = 0.8;
+
 uniform layout(binding = 0) sampler2D Texture;
 uniform layout(binding = 1) sampler2D NormalMap;
 uniform layout(binding = 2) samplerCube EnvMap;
+
+uniform layout(binding = 3) sampler2D ShadowMaps[CASCADE_COUNT];
+uniform float CascadeFar[CASCADE_COUNT];
 
 subroutine vec4 color();
 subroutine uniform color colorFunction;
@@ -31,6 +40,8 @@ subroutine uniform normal normalFunction;
 in layout(location = 0) vec3 world_position;
 in layout(location = 1) vec3 world_normal;
 in layout(location = 2) vec2 texcoord;
+in layout(location = 3) float clipspace_z;
+in layout(location = 4) vec3 lightspace_position[CASCADE_COUNT];
 
 out layout(location = 0) vec4 colorOut;
 
@@ -81,6 +92,18 @@ vec3 normal_mapping()
 	return normalize(TBN * map);
 }
 
+float VSM(float dist, vec2 moments)
+{
+	float d = dist - moments.x;
+	if(d > 0.0)
+	{
+		float variance = moments.y - (moments.x * moments.x);
+		variance = max(variance, MinVariance);
+		return smoothstep(ShadowClamp, 1.0, variance / (variance + d * d));
+	}
+	return 1.0;
+}
+
 void main(void)
 {
 	vec4 c = colorFunction();
@@ -91,8 +114,24 @@ void main(void)
 
 	if(!gl_FrontFacing) n = -n;
 	
-	colorOut.rgb = c.rgb * Ambiant +
-		cookTorrance(
+	colorOut.rgb = vec3(0);
+	float shadow_factor = 1.0f;
+    for(int i = 0; i < CASCADE_COUNT; i++)
+	{
+        if (clipspace_z <= CascadeFar[i])
+		{
+			vec2 moments = texture2D(ShadowMaps[i], lightspace_position[i].xy).xy;
+			shadow_factor = VSM(lightspace_position[i].z, moments);
+			// Cascades debug
+			colorOut.rgb += 0.1 * vec3((i == 0 ? 1.0 : 0.0), 
+									(i == 1 ? 1.0 : 0.0), 
+									(i == 2 ? 1.0 : 0.0));
+			break;
+		}
+	}
+	
+	colorOut.rgb += c.rgb * Ambiant +
+		shadow_factor * cookTorrance(
 			world_position, 
 			n, 
 			normalize(CameraPosition - world_position),
