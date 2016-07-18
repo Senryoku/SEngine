@@ -154,7 +154,6 @@ void GUIText::setText(const std::string& str)
 
 void GUIText::init()
 {
-	//std::cout << "Initializing text... ";
 	_vao.init();
 	_vao.bind();
 	
@@ -170,14 +169,12 @@ void GUIText::init()
 	_vao.unbind();
 	_index_buffer.unbind();
 	_vertex_buffer.unbind();
-	//std::cout << "Done." << std::endl;
 	
 	update();
 }
 
 void GUIText::update()
 {
-	//std::cout << "Updating text... ";
 	_vertices.clear();
 	_vertices.reserve(_text.size() * 4);
 	_triangles.clear();
@@ -223,8 +220,6 @@ void GUIText::update()
 		_triangles.push_back(idx + 3);
 		_triangles.push_back(idx);
 		
-		//_aabb.max = glm::max(_aabb.max, p + g.dim * _fontSize);
-		
 		position.x += g.advance * _fontSize;
 		_aabb.max = glm::max(_aabb.max, {position.x, (p + g.dim * _fontSize).y});
 	}
@@ -233,7 +228,6 @@ void GUIText::update()
 	_vertex_buffer.data(_vertices.data(), sizeof(VertexAttributes) * _vertices.size(), Buffer::Usage::DynamicDraw);
 	_index_buffer.bind();
 	_index_buffer.data(_triangles.data(), sizeof(size_t) * _triangles.size(), Buffer::Usage::DynamicDraw);
-	//std::cout << "Done." << std::endl;
 }
 
 const Font::Glyph& GUIText::getGlyph(char c) const

@@ -102,13 +102,22 @@ void DeferredRenderer::renderLightPass()
 	DeferredShadowCS.getProgram().setUniform("AtmosphericDensity", _atmosphericDensity);
 
 	DeferredShadowCS.compute(getInternalWidth() / DeferredShadowCS.getWorkgroupSize().x + 1, 
-								getInternalHeight() / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
+							getInternalHeight() / DeferredShadowCS.getWorkgroupSize().y + 1, 1);
 	DeferredShadowCS.memoryBarrier();
 }
 
 void DeferredRenderer::renderPostProcess()
 {
 	Framebuffer<>::unbind(FramebufferTarget::Draw);
+	
+	if(_debug_buffers) // Blit offscreen buffers.
+	{
+		_offscreenRender.bind(FramebufferTarget::Read, _framebufferToBlit);
+		glBlitFramebuffer(0, 0, getInternalWidth(), getInternalHeight(), 
+							0, 0, _width, _height, 
+							GL_COLOR_BUFFER_BIT, GL_LINEAR);
+		return;
+	}
 	
 	// This looks really good with downsampling (but is obviously really expensive)
 	/// @todo The amount of blur (i.e. its kernel) should be customizable.
@@ -124,7 +133,7 @@ void DeferredRenderer::renderPostProcess()
 			blur(_offscreenRender.getColor(2), getInternalWidth(), getInternalHeight(), _bloomDownsampling);
 		_offscreenRender.getColor(2).generateMipmaps();
 		
-		// Blend
+		// Blend and display (writes directly on main framebuffer)
 		_offscreenRender.getColor(0).bind(0);
 		_offscreenRender.getColor(2).bind(1);
 		Program& BloomBlend = Resources::getProgram("BloomBlend");
@@ -135,7 +144,7 @@ void DeferredRenderer::renderPostProcess()
 		
 		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, 0);
 	} else {
-		// No post process, just blit.
+		// No post process, just blit the result of the light pass.
 		_offscreenRender.bind(FramebufferTarget::Read);
 		glBlitFramebuffer(0, 0, getInternalWidth(), getInternalHeight(), 
 							0, 0, _width, _height, 
@@ -150,7 +159,8 @@ void DeferredRenderer::render()
 	_GBufferPassTiming.end();
 	
 	_lightPassTiming.begin(Query::Target::TimeElapsed);
-	renderLightPass();
+	if(!_debug_buffers)
+		renderLightPass();
 	_lightPassTiming.end();
 	
 	_postProcessTiming.begin(Query::Target::TimeElapsed);

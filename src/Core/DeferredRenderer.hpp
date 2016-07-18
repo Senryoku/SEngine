@@ -58,6 +58,10 @@ protected:
 	int			_volumeSamples = 0;
 	float		_atmosphericDensity = 0.005f;
 	
+	// Debug
+	bool		_debug_buffers		= false;
+	Attachment	_framebufferToBlit	= Attachment::Color0;
+	
 	Query		_updateTiming;
 	Query		_GBufferPassTiming;
 	Query		_lightPassTiming;

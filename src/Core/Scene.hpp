@@ -86,7 +86,7 @@ public:
 		if(_dirtyPointLights)
 			updatePointLightBuffer();
 
-		for(auto& o : _objects)
+		for(const auto& o : _objects)
 		{
 			if(o.isVisible(p, v))
 				o.draw();
@@ -104,12 +104,12 @@ public:
 private:
 	std::vector<MeshInstance>	_objects;
 	
-	bool									_dirtyLights = true;
+	bool								_dirtyLights = true;
 	std::vector<DirectionalLight*>		_lights;
 	std::vector<OmnidirectionalLight>	_omniLights;
 	
 	bool							_dirtyPointLights = true;
-	std::vector<PointLight>		_pointLights;
+	std::vector<PointLight>			_pointLights;
 	UniformBuffer					_pointLightBuffer;
 	
 	Skybox							_skybox;

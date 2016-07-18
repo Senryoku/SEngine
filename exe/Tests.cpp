@@ -219,6 +219,14 @@ public:
 		w->add(new GUISeparator(w));
 		w->add(new GUIText("Stats"));
 		
+		auto debug_buffers = _gui.add(new GUIWindow());
+		debug_buffers->add(new GUIButton("Normal", [&] { _framebufferToBlit = Attachment::Color2; }));
+		debug_buffers->add(new GUIButton("Position", [&] { _framebufferToBlit = Attachment::Color1; }));
+		debug_buffers->add(new GUIButton("Color", [&] { _framebufferToBlit = Attachment::Color0; }));
+		debug_buffers->add(new GUICheckbox("Toggle Debug", &_debug_buffers));
+		debug_buffers->add(new GUISeparator(debug_buffers));
+		debug_buffers->add(new GUIText("Debug render buffers"));
+		
 		auto w5 = _gui.add(new GUIWindow());
 		w5->add(new GUIButton("3840*2160", [&] {setInternalResolution(3840, 2160);}));
 		w5->add(new GUIButton("2715*1527", [&] {setInternalResolution(2715, 1527);}));
