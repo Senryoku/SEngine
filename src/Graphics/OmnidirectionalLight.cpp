@@ -5,7 +5,7 @@
 
 #include <MathTools.hpp>
 #include <Blur.hpp>
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 
 ///////////////////////////////////////////////////////////////////
 // Static attributes
@@ -138,10 +138,10 @@ void OmnidirectionalLight::initPrograms()
 {
 	if(s_depthProgram == nullptr)
 	{
-		s_depthProgram = &ResourcesManager::getInstance().getProgram("OmnidirectionalLight_Depth");
-		s_depthVS = &ResourcesManager::getInstance().getShader<VertexShader>("OmnidirectionalLight_DepthVS");
-		s_depthGS = &ResourcesManager::getInstance().getShader<GeometryShader>("OmnidirectionalLight_DepthGS");
-		s_depthFS = &ResourcesManager::getInstance().getShader<FragmentShader>("OmnidirectionalLight_DepthFS");
+		s_depthProgram = &Resources::getProgram("OmnidirectionalLight_Depth");
+		s_depthVS = &Resources::getShader<VertexShader>("OmnidirectionalLight_DepthVS");
+		s_depthGS = &Resources::getShader<GeometryShader>("OmnidirectionalLight_DepthGS");
+		s_depthFS = &Resources::getShader<FragmentShader>("OmnidirectionalLight_DepthFS");
 	}
 	
 	if(s_depthProgram != nullptr && !s_depthProgram->isValid())

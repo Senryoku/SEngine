@@ -1,6 +1,13 @@
-#include <ResourcesManager.hpp>
+#include <Core/Resources.hpp>
 
-Shader& ResourcesManager::getShader(const std::string& name) throw(std::runtime_error)
+std::unordered_map<std::string, std::unique_ptr<Texture>>	Resources::_textures;
+std::unordered_map<std::string, std::unique_ptr<Shader>>	Resources::_shaders;
+
+std::unordered_map<std::string, Program>					Resources::_programs;
+
+std::unordered_map<std::string, std::unique_ptr<Mesh>>		Resources::_meshes;
+
+Shader& Resources::getShader(const std::string& name) throw(std::runtime_error)
 {
 	auto it = _shaders.find(name);
 	if(it != _shaders.end())
@@ -11,7 +18,7 @@ Shader& ResourcesManager::getShader(const std::string& name) throw(std::runtime_
 	}
 }
 
-Texture& ResourcesManager::getTexture(const std::string& name) throw(std::runtime_error)
+Texture& Resources::getTexture(const std::string& name) throw(std::runtime_error)
 {
 	auto it = _textures.find(name);
 	if(it != _textures.end())
@@ -22,12 +29,12 @@ Texture& ResourcesManager::getTexture(const std::string& name) throw(std::runtim
 	}
 }
 
-Program& ResourcesManager::getProgram(const std::string& name)
+Program& Resources::getProgram(const std::string& name)
 { 
 	return _programs[name];
 }
 
-void ResourcesManager::reloadShaders()
+void Resources::reloadShaders()
 {
 	for(auto& S : _shaders)
 	{
@@ -39,13 +46,13 @@ void ResourcesManager::reloadShaders()
 		P.second.link();
 }
 
-bool ResourcesManager::isMesh(const std::string& name) const
+bool Resources::isMesh(const std::string& name)
 {
 	auto it = _meshes.find(name);
 	return it != _meshes.end();
 }
 	
-Mesh& ResourcesManager::getMesh(const std::string& name)
+Mesh& Resources::getMesh(const std::string& name)
 {
 	auto it = _meshes.find(name);
 	if(it != _meshes.end())

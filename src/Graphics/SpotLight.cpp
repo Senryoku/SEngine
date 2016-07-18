@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp> // glm::lookAt, glm::perspective
 
 #include <MathTools.hpp>
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 
 SpotLight::SpotLight(unsigned int shadowMapResolution) :
 	DirectionalLight(shadowMapResolution)

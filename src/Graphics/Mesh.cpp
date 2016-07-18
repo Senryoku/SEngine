@@ -7,7 +7,7 @@
 #include <assimp/scene.h> 		// Output data structure
 #include <assimp/postprocess.h> // Post processing flags
 
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 
 //////////////////////// Mesh::Triangle ///////////////////////////
 
@@ -118,7 +118,7 @@ void Mesh::computeBoundingBox()
 
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
-	return load(path, ResourcesManager::getInstance().getProgram("Deferred"));
+	return load(path, Resources::getProgram("Deferred"));
 }
 
 std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
@@ -154,7 +154,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 			std::string name(path);
 			name.append("::" + std::to_string(meshIdx));
 			name.append(scene->mMeshes[meshIdx]->mName.C_Str());
-			while(ResourcesManager::getInstance().isMesh(name))
+			while(Resources::isMesh(name))
 			{
 				std::cout << "Warning: Mesh '" << name << "' was already loaded. Re-loading it under the name '";
 				name.append("_");
@@ -166,7 +166,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 			if(LoadedMesh->mNumBones > 0)
 			{
 				RiggedMesh* m = new RiggedMesh();
-				ResourcesManager::getInstance().getMeshPtr(name).reset(m);
+				Resources::getMeshPtr(name).reset(m);
 				M[meshIdx] = m;
 				
 				m->getVertexBoneData().resize(LoadedMesh->mNumVertices);
@@ -188,7 +188,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 				
 				// TODO: Load animations.
 			} else {
-				M[meshIdx] = &ResourcesManager::getInstance().getMesh(name);
+				M[meshIdx] = &Resources::getMesh(name);
 			}
 			M[meshIdx]->getMaterial().setShadingProgram(p);
 			
@@ -203,7 +203,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 				p.append(Texture.C_Str());
 				std::replace(p.begin(), p.end(), '\\', '/');
 				//std::cout << "Loading " << p << std::endl;
-				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
+				auto& t = Resources::getTexture<Texture2D>(p);
 				if(!t.isValid())
 					t.load(p);
 				if(t.isValid())
@@ -223,7 +223,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 				p.append(Texture.C_Str());
 				std::replace(p.begin(), p.end(), '\\', '/');
 				//std::cout << "Loading NM " << p << std::endl;
-				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
+				auto& t = Resources::getTexture<Texture2D>(p);
 				if(!t.isValid())
 					t.load(p);
 				if(t.isValid())
@@ -243,7 +243,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 				p.append(Texture.C_Str());
 				std::replace(p.begin(), p.end(), '\\', '/');
 				std::cout << "Loading BumpMap " << p << std::endl;
-				auto& t = ResourcesManager::getInstance().getTexture<Texture2D>(p);
+				auto& t = Resources::getTexture<Texture2D>(p);
 				if(!t.isValid())
 					t.load(p);
 				if(t.isValid())
@@ -315,14 +315,14 @@ std::vector<Mesh*> Mesh::loadNoShading(const std::string& path)
 			std::string name(path);
 			name.append("::" + std::to_string(meshIdx));
 			name.append(scene->mMeshes[meshIdx]->mName.C_Str());
-			while(ResourcesManager::getInstance().isMesh(name))
+			while(Resources::isMesh(name))
 			{
 				std::cout << "Warning: Mesh '" << name << "' was already loaded. Re-loading it under the name '";
 				name.append("_");
 				std::cout << name << "'." << std::endl;
 			}
 			
-			M[meshIdx] = &ResourcesManager::getInstance().getMesh(name);
+			M[meshIdx] = &Resources::getMesh(name);
 			
 			aiVector3D* n = LoadedMesh->mNormals;
 			aiVector3D** t = LoadedMesh->mTextureCoords;

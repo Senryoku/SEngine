@@ -5,7 +5,7 @@
 
 #include <MathTools.hpp>
 #include <Blur.hpp>
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 
 ///////////////////////////////////////////////////////////////////
 // Static attributes
@@ -85,9 +85,9 @@ void DirectionalLight::initPrograms()
 {
 	if(s_depthProgram == nullptr)
 	{
-		s_depthProgram = &ResourcesManager::getInstance().getProgram("Light_Depth");
-		s_depthVS = &ResourcesManager::getInstance().getShader<VertexShader>("Light_DepthVS");
-		s_depthFS = &ResourcesManager::getInstance().getShader<FragmentShader>("Light_DepthFS");
+		s_depthProgram = &Resources::getProgram("Light_Depth");
+		s_depthVS = &Resources::getShader<VertexShader>("Light_DepthVS");
+		s_depthFS = &Resources::getShader<FragmentShader>("Light_DepthFS");
 	}
 	
 	if(s_depthProgram != nullptr && !s_depthProgram->isValid())

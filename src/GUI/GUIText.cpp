@@ -13,7 +13,7 @@ Font::Font(const std::string& path)
 void Font::load(const std::string& path)
 {
 	// Load the distance filed texture
-	Tex = &ResourcesManager::getInstance().getTexture<Texture2D>(Name);
+	Tex = &Resources::getTexture<Texture2D>(Name);
 	if(!(*Tex))
 		Tex->load(path + std::string(".png"));
 	
@@ -50,46 +50,36 @@ void Font::load(const std::string& path)
 	}
 	
 	/// @tod Optimize this shit.
-	glm::vec2 dim = {static_cast<float>(Tex->getSize().x), 
-					static_cast<float>(Tex->getSize().y)};
+	glm::vec2 dim = {
+		static_cast<float>(Tex->getSize().x), 
+		static_cast<float>(Tex->getSize().y)
+	};
 	Glyphs.resize(glyph_count);
 	Glyph tmp;
 	std::stringstream ss;
+		
+	auto get_next = [&](auto& v) {
+		pos = line.find('=', pos) + 1;
+		ss.str(line.substr(pos));
+		ss >> v;
+	};
+		
 	while(std::getline(file, line))
 	{
 		size_t c;
 		pos = 0;
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> c;
+		get_next(c);
 		
 		if(Glyphs.size() - 1 < c)
 			Glyphs.resize(c + 1);
 		
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.uv_min.x;
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.uv_min.y;
-		
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.dim.x;
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.dim.y;
-		
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.offset.x;
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.offset.y;
-		
-		pos = line.find('=', pos) + 1;
-		ss.str(line.substr(pos)),
-		ss >> tmp.advance;
+		get_next(tmp.uv_min.x);
+		get_next(tmp.uv_min.y);
+		get_next(tmp.dim.x);
+		get_next(tmp.dim.y);
+		get_next(tmp.offset.x);
+		get_next(tmp.offset.y);
+		get_next(tmp.advance);
 		
 		tmp.uv_max = tmp.uv_min + tmp.dim;
 		
@@ -267,12 +257,12 @@ void GUIText::draw(const glm::vec2& resolution, const glm::vec2& position)
 	if(_func)
 		setText(_func());
 	
-	Program& P = ResourcesManager::getInstance().getProgram("TextRendering");
+	Program& P = Resources::getProgram("TextRendering");
 	if(!P)
 	{
-		P = loadProgram("TextRendering",
-			load<VertexShader>("src/GLSL/Text/text_vs.glsl"),
-			load<FragmentShader>("src/GLSL/Text/text_fs.glsl")
+		P = Resources::loadProgram("TextRendering",
+			Resources::load<VertexShader>("src/GLSL/Text/text_vs.glsl"),
+			Resources::load<FragmentShader>("src/GLSL/Text/text_fs.glsl")
 		);
 	}
 	P.use();

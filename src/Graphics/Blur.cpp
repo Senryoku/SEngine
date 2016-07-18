@@ -1,6 +1,6 @@
 #include <Blur.hpp>
 
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 
 void blur(const Texture2D& t, size_t resx, size_t resy, unsigned int level)
 {
@@ -11,13 +11,13 @@ void blur(const Texture2D& t, size_t resx, size_t resy, unsigned int level)
 	resx /= std::pow(2.0, level);
 	resy /= std::pow(2.0, level);
 	
-	ComputeShader& GaussianBlurH = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurH");
+	ComputeShader& GaussianBlurH = Resources::getShader<ComputeShader>("GaussianBlurH");
 	if(!GaussianBlurH)
 	{
 		GaussianBlurH.loadFromFile("src/GLSL/gaussian_blur_h_cs.glsl");
 		GaussianBlurH.compile();
 	}
-	ComputeShader& GaussianBlurV = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurV");
+	ComputeShader& GaussianBlurV = Resources::getShader<ComputeShader>("GaussianBlurV");
 	if(!GaussianBlurV)
 	{
 		GaussianBlurV.loadFromFile("src/GLSL/gaussian_blur_v_cs.glsl");
@@ -42,13 +42,13 @@ void blur(const CubeMap& t, size_t resx, size_t resy, unsigned int level)
 	resx /= std::pow(2.0, level);
 	resy /= std::pow(2.0, level);
 	
-	ComputeShader& GaussianBlurH = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurH");
+	ComputeShader& GaussianBlurH = Resources::getShader<ComputeShader>("GaussianBlurH");
 	if(!GaussianBlurH)
 	{
 		GaussianBlurH.loadFromFile("src/GLSL/gaussian_blur_h_cs.glsl");
 		GaussianBlurH.compile();
 	}
-	ComputeShader& GaussianBlurV = ResourcesManager::getInstance().getShader<ComputeShader>("GaussianBlurV");
+	ComputeShader& GaussianBlurV = Resources::getShader<ComputeShader>("GaussianBlurV");
 	if(!GaussianBlurV)
 	{
 		GaussianBlurV.loadFromFile("src/GLSL/gaussian_blur_v_cs.glsl");

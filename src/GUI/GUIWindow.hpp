@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 #include <GUIElement.hpp>
 
 class GUIWindow : public GUIElement

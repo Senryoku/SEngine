@@ -8,7 +8,7 @@
 
 #include <Buffer.hpp>
 #include <VertexArray.hpp>
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 #include <GUIElement.hpp>
 
 class Font

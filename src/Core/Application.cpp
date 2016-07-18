@@ -286,7 +286,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			case GLFW_KEY_R:
 			{
 				std::cout << "Reloading shaders..." << std::endl;
-				ResourcesManager::getInstance().reloadShaders();
+				Resources::reloadShaders();
 				std::cout << "Reloading shaders... Done !" << std::endl;
 				break;
 			}

@@ -1,13 +1,14 @@
 #pragma once
 
 #include <GL/gl3w.h>
-
 #include <GLFW/glfw3.h>
+#include <glm/gtc/random.hpp>
+#include <random>
 
 #include <GUISystem.hpp>
 #include <Raytracing.hpp>
 #include <TimeManager.hpp>
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 #include <Scene.hpp>
 #include <Framebuffer.hpp>
 #include <Camera.hpp>
@@ -37,13 +38,7 @@ public:
 	virtual void renderGUI();
 	
 	template<typename T>
-	T rand()
-	{
-		static std::random_device rd;
-		static std::mt19937 gen(rd());
-		static std::uniform_real_distribution<T> uniform_dist(0, 1);
-		return uniform_dist(gen);
-	}
+	static T rand();
 	
 	void setFullscreen(bool val = true);
 
@@ -154,3 +149,18 @@ protected:
 	static void s_drop_callback(GLFWwindow* window, int count, const char ** paths)
 	{ getInstance().drop_callback(window, count, paths); }
 };
+
+template<typename T>
+T Application::rand()
+{
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	static std::uniform_real_distribution<T> uniform_dist(0, 1);
+	return uniform_dist(gen);
+}
+	
+template<>
+inline glm::vec3 Application::rand<glm::vec3>()
+{
+	return glm::sphericalRand(1.0f);
+}

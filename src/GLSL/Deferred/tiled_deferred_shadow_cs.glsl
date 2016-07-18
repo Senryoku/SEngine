@@ -279,7 +279,7 @@ void main(void)
 								(sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5); // Spot Light
 				if((sc.x >= 0 && sc.x <= 1.f) &&
 					(sc.y >= 0 && sc.y <= 1.f) && 
-					r < 0.25)
+					r < 0.25 && sc.z > 0.0)
 				{
 					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
 					float visibility = VSM(sc.z, moments);
@@ -328,7 +328,7 @@ void main(void)
 					p += d;
 					vec4 sc = Shadows[shadow].depthMVP * vec4(p, 1.0);
 					sc /= sc.w;
-					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f)))
+					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f)) || sc.z < 0.0)
 						continue;
 					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
 					vol_lights[shadow][gl_LocalInvocationIndex] += VSM(sc.z, moments) * ATMOSPHERIC_FUNC(p);

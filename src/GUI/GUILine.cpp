@@ -10,13 +10,13 @@ void GUILine::draw(const glm::vec2& resolution, const glm::vec2& position)
 {
 	auto p = c2p(position);
 	
-	auto& P = ResourcesManager::getInstance().getProgram("Line");
+	auto& P = Resources::getProgram("Line");
 	if(!P)
 	{
-		P = loadProgram("Line",
-				load<VertexShader>("src/GLSL/GUI/line_vs.glsl"),
-				load<FragmentShader>("src/GLSL/GUI/line_fs.glsl")
-			);
+		P = Resources::loadProgram("Line",
+			Resources::load<VertexShader>("src/GLSL/GUI/line_vs.glsl"),
+			Resources::load<FragmentShader>("src/GLSL/GUI/line_fs.glsl")
+		);
 	}
 	P.use();
 	P.setUniform("Resolution", resolution);

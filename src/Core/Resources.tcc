@@ -1,7 +1,10 @@
 #pragma once
 
+namespace Resources
+{
+
 template<typename ShaderType>
-inline ShaderType& ResourcesManager::getShader(const std::string& name)
+inline ShaderType& getShader(const std::string& name)
 {
 	auto it = _shaders.find(name);
 	if(it != _shaders.end())
@@ -15,7 +18,7 @@ inline ShaderType& ResourcesManager::getShader(const std::string& name)
 } 
 
 template<typename T>
-inline T& ResourcesManager::getTexture(const std::string& name)
+inline T& getTexture(const std::string& name)
 {
 	auto it = _textures.find(name);
 	if(it != _textures.end())
@@ -37,7 +40,7 @@ ShaderType& load(const std::string& path)
 template<typename ShaderType>
 ShaderType& load(const std::string& name, const std::string& path)
 {
-	auto& s = ResourcesManager::getInstance().getShader<ShaderType>(name);
+	auto& s = Resources::getShader<ShaderType>(name);
 	s.loadFromFile(path);
 	s.compile();
 	if(!s)
@@ -51,7 +54,7 @@ ShaderType& load(const std::string& name, const std::string& path)
 template<typename ... ShaderTypes>
 Program& loadProgram(const std::string& name, ShaderTypes& ... shaders)
 {
-	auto& p = ResourcesManager::getInstance().getProgram(name);
+	auto& p = Resources::getProgram(name);
 	p.attach_chain(shaders...);
 	p.link();
 	if(!p)
@@ -61,3 +64,5 @@ Program& loadProgram(const std::string& name, ShaderTypes& ... shaders)
 	}
 	return p;
 }
+
+} // Namespace Resources

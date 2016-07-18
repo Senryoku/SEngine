@@ -24,18 +24,19 @@ void DeferredRenderer::screen(const std::string& path) const
 
 void DeferredRenderer::run_init()
 {
+	using Resources::load;
 	ComputeShader& DeferredShadowCS = load<ComputeShader>(
 		"DeferredShadowCS",
 		"src/GLSL/Deferred/tiled_deferred_shadow_cs.glsl"
 	);
 	DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		
-	loadProgram("BloomBlend",
+	Resources::loadProgram("BloomBlend",
 		load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
 		load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl")
 	);
 	
-	auto& Deferred = loadProgram("Deferred",
+	auto& Deferred = Resources::loadProgram("Deferred",
 		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
 		load<FragmentShader>("src/GLSL/Deferred/deferred_fs.glsl")
 	);
@@ -74,7 +75,7 @@ void DeferredRenderer::renderLightPass()
 	for(const auto& l : _scene.getOmniLights())
 		l.getShadowMap().bind(lc++ + 13);
 	
-	ComputeShader& DeferredShadowCS = ResourcesManager::getInstance().getShader<ComputeShader>("DeferredShadowCS");
+	ComputeShader& DeferredShadowCS = Resources::getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.getProgram().setUniform("ColorMaterial", (int) 0);
 	DeferredShadowCS.getProgram().setUniform("PositionDepth", (int) 1);
 	DeferredShadowCS.getProgram().setUniform("Normal", (int) 2);	
@@ -126,7 +127,7 @@ void DeferredRenderer::renderPostProcess()
 		// Blend
 		_offscreenRender.getColor(0).bind(0);
 		_offscreenRender.getColor(2).bind(1);
-		Program& BloomBlend = ResourcesManager::getInstance().getProgram("BloomBlend");
+		Program& BloomBlend = Resources::getProgram("BloomBlend");
 		BloomBlend.use();
 		BloomBlend.setUniform("Exposure", _exposure);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call

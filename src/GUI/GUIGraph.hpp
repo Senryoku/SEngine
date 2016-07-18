@@ -5,7 +5,7 @@
 #include <vector>
 #include <functional>
 
-#include <ResourcesManager.hpp>
+#include <Resources.hpp>
 #include <TimeManager.hpp>
 #include <GUIElement.hpp>
 #include <GUIText.hpp>
