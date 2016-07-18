@@ -178,6 +178,7 @@ void main(void)
 	vec4 colmat = vec4(0.0);
 	vec4 position = vec4(0.0);
 	
+	// Initialize bounding boxes
 	if(local_pixel == uvec2(0, 0))
 	{
 		local_lights_count = 0;
@@ -190,6 +191,13 @@ void main(void)
 		bbmax_z = -highValue;
 		lit = 0;
 	}
+
+	// Initialize volume light samples
+	for(int i = 0; i < SHADOWBLOCKCOUNT; ++i)
+		vol_lights[i][gl_LocalInvocationIndex] = 0;
+	for(int i = 0; i < CUBESHADOWBLOCKCOUNT; ++i)
+		vol_cube_lights[i][gl_LocalInvocationIndex] = 0;
+
 	barrier();
 		
 	// Compute Bounding Box
