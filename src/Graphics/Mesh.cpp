@@ -3,10 +3,6 @@
 #include <iostream>
 #include <algorithm>
 
-#include <assimp/Importer.hpp> 	// C++ importer interface
-#include <assimp/scene.h> 		// Output data structure
-#include <assimp/postprocess.h> // Post processing flags
-
 #include <Resources.hpp>
 
 //////////////////////// Mesh::Triangle ///////////////////////////
@@ -115,6 +111,32 @@ void Mesh::computeBoundingBox()
 ////////////////////// Static /////////////////////////////////////
 
 #include <RiggedMesh.hpp>
+
+void Mesh::importFaces(aiMesh* assMesh)
+{			
+	aiVector3D* n = assMesh->mNormals;
+	aiVector3D** t = assMesh->mTextureCoords;
+	aiVector3D& minmax = assMesh->mVertices[0];
+	_bbox.min = glm::vec3(minmax.x, minmax.y, minmax.z);
+	_bbox.max = glm::vec3(minmax.x, minmax.y, minmax.z);
+	for(unsigned int i = 0; i < assMesh->mNumVertices; ++i)
+	{
+		aiVector3D& v = assMesh->mVertices[i];
+		getVertices().push_back(Mesh::Vertex(glm::vec3(v.x, v.y, v.z),
+			(n == nullptr) ? glm::vec3() : glm::vec3((*(n + i)).x, (*(n + i)).y, (*(n + i)).z),
+			(t == nullptr || t[0] == nullptr) ? glm::vec2() : glm::vec2(t[0][i].x, t[0][i].y)));
+		
+		_bbox.min = glm::vec3(std::min(_bbox.min.x, v.x), std::min(_bbox.min.y, v.y), std::min(_bbox.min.z, v.z));
+		_bbox.max = glm::vec3(std::max(_bbox.max.x, v.x), std::max(_bbox.max.y, v.y), std::max(_bbox.max.z, v.z));
+	}
+	
+	for(unsigned int i = 0; i < assMesh->mNumFaces; ++i)
+	{
+		aiFace& f = assMesh->mFaces[i];
+		unsigned int* idx = f.mIndices;
+		getTriangles().push_back(Mesh::Triangle(idx[0], idx[1], idx[2]));
+	}
+}
 
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
@@ -254,28 +276,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 			}
 			*/
 			
-			aiVector3D* n = LoadedMesh->mNormals;
-			aiVector3D** t = LoadedMesh->mTextureCoords;
-			aiVector3D& minmax = LoadedMesh->mVertices[0];
-			M[meshIdx]->_bbox.min = glm::vec3(minmax.x, minmax.y, minmax.z);
-			M[meshIdx]->_bbox.max = glm::vec3(minmax.x, minmax.y, minmax.z);
-			for(unsigned int i = 0; i < LoadedMesh->mNumVertices; ++i)
-			{
-				aiVector3D& v = LoadedMesh->mVertices[i];
-				M[meshIdx]->getVertices().push_back(Mesh::Vertex(glm::vec3(v.x, v.y, v.z),
-																	(n == nullptr) ? glm::vec3() : glm::vec3((*(n + i)).x, (*(n + i)).y, (*(n + i)).z),
-																	(t == nullptr || t[0] == nullptr) ? glm::vec2() : glm::vec2(t[0][i].x, t[0][i].y)));
-				
-				M[meshIdx]->_bbox.min = glm::vec3(std::min(M[meshIdx]->_bbox.min.x, v.x), std::min(M[meshIdx]->_bbox.min.y, v.y), std::min(M[meshIdx]->_bbox.min.z, v.z));
-				M[meshIdx]->_bbox.max = glm::vec3(std::max(M[meshIdx]->_bbox.max.x, v.x), std::max(M[meshIdx]->_bbox.max.y, v.y), std::max(M[meshIdx]->_bbox.max.z, v.z));
-			}
-			
-			for(unsigned int i = 0; i < LoadedMesh->mNumFaces; ++i)
-			{
-				aiFace& f = LoadedMesh->mFaces[i];
-				unsigned int* idx = f.mIndices;
-				M[meshIdx]->getTriangles().push_back(Mesh::Triangle(idx[0], idx[1], idx[2]));
-			}
+			M[meshIdx]->importFaces(LoadedMesh);
 		}
 	}
 	
@@ -323,29 +324,7 @@ std::vector<Mesh*> Mesh::loadNoShading(const std::string& path)
 			}
 			
 			M[meshIdx] = &Resources::getMesh(name);
-			
-			aiVector3D* n = LoadedMesh->mNormals;
-			aiVector3D** t = LoadedMesh->mTextureCoords;
-			aiVector3D& minmax = LoadedMesh->mVertices[0];
-			M[meshIdx]->_bbox.min = glm::vec3(minmax.x, minmax.y, minmax.z);
-			M[meshIdx]->_bbox.max = glm::vec3(minmax.x, minmax.y, minmax.z);
-			for(unsigned int i = 0; i < LoadedMesh->mNumVertices; ++i)
-			{
-				aiVector3D& v = LoadedMesh->mVertices[i];
-				M[meshIdx]->getVertices().push_back(Mesh::Vertex(glm::vec3(v.x, v.y, v.z),
-																	(n == nullptr) ? glm::vec3() : glm::vec3((*(n + i)).x, (*(n + i)).y, (*(n + i)).z),
-																	(t == nullptr || t[0] == nullptr) ? glm::vec2() : glm::vec2(t[0][i].x, t[0][i].y)));
-				
-				M[meshIdx]->_bbox.min = glm::vec3(std::min(M[meshIdx]->_bbox.min.x, v.x), std::min(M[meshIdx]->_bbox.min.y, v.y), std::min(M[meshIdx]->_bbox.min.z, v.z));
-				M[meshIdx]->_bbox.max = glm::vec3(std::max(M[meshIdx]->_bbox.max.x, v.x), std::max(M[meshIdx]->_bbox.max.y, v.y), std::max(M[meshIdx]->_bbox.max.z, v.z));
-			}
-			
-			for(unsigned int i = 0; i < LoadedMesh->mNumFaces; ++i)
-			{
-				aiFace& f = LoadedMesh->mFaces[i];
-				unsigned int* idx = f.mIndices;
-				M[meshIdx]->getTriangles().push_back(Mesh::Triangle(idx[0], idx[1], idx[2]));
-			}
+			M[meshIdx]->importFaces(LoadedMesh);
 		}
 	}
 	

@@ -8,6 +8,10 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp> // glm::value_ptr
 
+#include <assimp/Importer.hpp> 	// C++ importer interface
+#include <assimp/scene.h> 		// Output data structure
+#include <assimp/postprocess.h> // Post processing flags
+
 #include <Buffer.hpp>
 #include <VertexArray.hpp>
 #include <BoundingShape.hpp>
@@ -83,4 +87,6 @@ protected:
 	Material 				_material; ///< Base (default) Material for this mesh
 	
 	BoundingBox				_bbox;
+	
+	void importFaces(aiMesh* assMesh);
 };
