@@ -5,7 +5,6 @@
 #include <glm/gtc/random.hpp>
 #include <random>
 
-#include <GUISystem.hpp>
 #include <Raytracing.hpp>
 #include <TimeManager.hpp>
 #include <Resources.hpp>
@@ -74,8 +73,6 @@ protected:
 	
 	Scene			_scene;
 
-	GUISystem		_gui;
-
 	// MainCamera
 	bool			_cameraMoved = true;
 	Camera			_camera;
@@ -97,7 +94,7 @@ protected:
 			_mouse_y = 0.0;
 	
 	// Time Management
-	float	_timescale = 0.5;
+	float	_timescale = 1.0;
 	float 	_time = 0.f;
 	float	_frameTime;
 	float	_frameRate;

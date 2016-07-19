@@ -5,6 +5,9 @@
 #include <stb_image_write.hpp>
 #include <glm/gtx/transform.hpp>
 
+#include <imgui.h>
+#include <imgui_impl_glfw_gl3.h>
+
 Application* Application::s_instance = nullptr;
 
 Application::Application() :
@@ -78,6 +81,9 @@ void Application::init(const std::string& windowName)
 	
 	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
+	ImGui_ImplGlfwGL3_Init(_window, false);
+	ImGui::GetIO().MouseDrawCursor = false;
+	
 	glEnable(GL_DEPTH_TEST);
 	
 	_scene.init();
@@ -88,7 +94,9 @@ void Application::init(const std::string& windowName)
 
 void Application::clean()
 {
+	ImGui_ImplGlfwGL3_Shutdown();
 	glfwDestroyWindow(_window);
+	glfwTerminate();
 }
 
 void Application::run_init()
@@ -103,7 +111,7 @@ void Application::update()
 			.append("ms - FPS: ")
 			.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
 			.c_str());
-
+	
 	_cameraMoved = false;
 	if(_controlCamera)
 	{
@@ -185,15 +193,7 @@ void Application::update()
 
 void Application::renderGUI()
 {
-	Context::disable(Capability::CullFace);
-	Context::disable(Capability::DepthTest);
-	Context::enable(Capability::Blend);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
-	_gui.draw(glm::vec2(_resolution));
-	
-	Context::disable(Capability::Blend);
-	Context::enable(Capability::DepthTest);
+	ImGui::Render();
 }
 
 void Application::run()
@@ -214,6 +214,8 @@ void Application::run()
 			_frameTime *= _timescale;
 			if(_frameTime > 1.0/60.0) _frameTime = 1.0/60.0; // In case the _window is moved
 		} else _frameTime = 0.0;
+		
+		ImGui_ImplGlfwGL3_NewFrame();
 	
 		update();
 		
@@ -269,7 +271,12 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 
 void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
 {
-	if(action == GLFW_PRESS && !_gui.handleKey(key, scancode, action, mods))
+	if(!_controlCamera)
+		ImGui_ImplGlfwGL3_KeyCallback(_window, key, scancode, action, mods);
+	if(ImGui::GetIO().WantCaptureKeyboard)
+		return;
+	
+	if(action == GLFW_PRESS)
 	{
 		switch(key)
 		{
@@ -370,17 +377,14 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 
 void Application::char_callback(GLFWwindow* window, unsigned int codepoint)
 {
-	//std::cout << "Received:" << codepoint << std::endl;
-	_gui.handleTextInput(codepoint);
+	if(!_controlCamera)
+		ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
+	if(ImGui::GetIO().WantCaptureKeyboard)
+		return;
 }
 
 Ray Application::getScreenRay(size_t x, size_t y) const
 {
-	/*
-	auto e = _invViewProjection * glm::vec4((2.0f * x) / _resolution.x - 1.0f, -((2.0f * y) / _resolution.y - 1.0f), 0.0f, 1.0f);
-	e /= e.w;
-	auto d = glm::normalize(glm::vec3(e) - _camera.getPosition());
-	*/
 	auto ratio = _resolution.y / _resolution.x;
 	auto d = glm::normalize(((2.0f * x) / _resolution.x - 1.0f) * _camera.getRight() + -ratio * ((2.0f * y) / _resolution.y - 1.0f) * glm::cross(_camera.getRight(), _camera.getDirection()) + _camera.getDirection());
 
@@ -412,56 +416,25 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 	float z = _mouse.z;
 	float w = _mouse.w;
 
-	bool gui_test = action != GLFW_PRESS || !_gui.handleClick({_mouse.x, _resolution.y - _mouse.y}, button);
-	if(gui_test)
+	if(!_controlCamera)
+		ImGui_ImplGlfwGL3_MouseButtonCallback(_window, button, action, mods);
+	if(ImGui::GetIO().WantCaptureMouse)
+		return;
+	
+	if(button == GLFW_MOUSE_BUTTON_1)
 	{
-		if(button == GLFW_MOUSE_BUTTON_1)
+		if(action == GLFW_PRESS)
 		{
-			if(action == GLFW_PRESS)
-			{
-				z = 1.0;
-			} else {
-				z = 0.0;
-			}
-		} else if(button == GLFW_MOUSE_BUTTON_2) {
-			if(action == GLFW_PRESS)
-			{
-				w = 1.0;
-			} else {
-				w = 0.0;
-			}
+			z = 1.0;
+		} else {
+			z = 0.0;
 		}
-
-		/// @todo Remove
-		/// Quick hack for testing
-		if(!_controlCamera)
+	} else if(button == GLFW_MOUSE_BUTTON_2) {
+		if(action == GLFW_PRESS)
 		{
-			if(_selectedLight == nullptr && button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS)
-			{
-				float depth = 1000.0;
-				for(auto& l : _scene.getPointLights())
-				{
-					if(trace(getMouseRay(), Sphere{l.position, l.range}, depth))
-					{
-						_selectedLight = &l;
-					}
-				}
-			} else if(_selectedLight != nullptr && button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
-				auto d = (_projection * _camera.getMatrix() * glm::vec4(_selectedLight->position, 1.0));
-				_selectedLight->position = getMouseProjection(d.z/d.w);
-				_selectedLight = nullptr;
-			}
-			
-			if(button == GLFW_MOUSE_BUTTON_2 && action == GLFW_PRESS)
-			{
-				auto d = (_projection * glm::vec4(0.0, 0.0, -10.0, 1.0));
-				_scene.getPointLights().push_back(PointLight{
-					getMouseProjection(d.z/d.w), 	// Position
-					10.0f,
-					2.0f * glm::vec3(1.0), // Color
-					1.0f
-				});
-			}
+			w = 1.0;
+		} else {
+			w = 0.0;
 		}
 	}
 		
@@ -475,6 +448,8 @@ void Application::mouse_position_callback(GLFWwindow* _window, double xpos, doub
 
 void Application::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
+	if(!_controlCamera)
+		ImGui_ImplGlfwGL3_ScrollCallback(window, xoffset, yoffset);
 }
 
 void Application::drop_callback(GLFWwindow* window, int count, const char ** paths)
