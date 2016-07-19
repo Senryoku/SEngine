@@ -35,6 +35,6 @@ public:
 	
 private:
 	const Mesh*		_mesh = nullptr;	
-	Material			_material;
-	glm::mat4			_modelMatrix;
+	Material		_material;
+	glm::mat4		_modelMatrix;
 };

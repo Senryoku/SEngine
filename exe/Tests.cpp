@@ -323,6 +323,52 @@ public:
 		}
 		ImGui::End();
 		
+		ImGui::Begin("Scene");
+		{
+			if(ImGui::TreeNode(("Objects (" + std::to_string(_scene.getObjects().size()) + ")").c_str()))
+			{
+				for(auto& o : _scene.getObjects())
+				{
+					ImGui::PushID(&o);
+					ImGui::Text("Object");
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode(("Directional Lights (" + std::to_string(_scene.getLights().size()) + ")").c_str()))
+			{
+				for(auto& l : _scene.getLights())
+				{
+					ImGui::PushID(&l);
+					ImGui::PushItemWidth(150);
+					float c[3] = {l->getColor().r, l->getColor().g, l->getColor().b};
+					if(ImGui::InputFloat3("Color", c))
+						l->setColor(glm::vec3{c[0], c[1], c[2]});
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode(("Point Lights (" + std::to_string(_scene.getPointLights().size()) + ")").c_str()))
+			{
+				for(auto& l : _scene.getPointLights())
+				{
+					ImGui::PushID(&l);
+					ImGui::PushItemWidth(150);
+					ImGui::InputFloat3("Position", &l.position.x);
+					ImGui::SameLine();
+					ImGui::InputFloat3("Color", &l.color.r);
+					ImGui::SameLine();
+					ImGui::PushItemWidth(50);
+					ImGui::InputFloat("Range", &l.range);
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+		}
+		ImGui::End();
+		
 		DeferredRenderer::renderGUI();
 	}
 };
