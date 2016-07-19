@@ -58,6 +58,17 @@ INCLUDE_DIRECTORIES(${SenOGL_INCLUDE_DIRS})
 LINK_DIRECTORIES(${SenOGL_LIBRARY_DIRS})
 ADD_DEFINITIONS(${SenOGL_DEFINITIONS})
 
+#dear imgui
+set(IMGUI_ROOT "ext/imgui")
+INCLUDE_DIRECTORIES(${IMGUI_ROOT})
+set(IMGUIGLFW_ROOT "ext/imgui-glfw")
+INCLUDE_DIRECTORIES(${IMGUIGLFW_ROOT})
+set(SOURCE_FILES
+	${IMGUI_ROOT}/imgui.cpp
+	${IMGUI_ROOT}/imgui_draw.cpp
+	${IMGUIGLFW_ROOT}/imgui_impl_glfw_gl3.cpp
+)
+
 # -----------------------------------------------------------------------------------
 
 MACRO(SUBDIRLIST result curdir)

@@ -1,5 +1,9 @@
 #include <sstream>
 #include <iomanip>
+#include <deque>
+
+#include <glm/gtx/transform.hpp>
+#include <imgui.h>
 
 #include <Query.hpp>
 
@@ -8,14 +12,6 @@
 #include <DeferredRenderer.hpp>
 
 #include <MathTools.hpp>
-#include <GUIText.hpp>
-#include <GUIButton.hpp>
-#include <GUICheckbox.hpp>
-#include <GUIEdit.hpp>
-#include <GUIGraph.hpp>
-#include <GUISeparator.hpp>
-
-#include <glm/gtx/transform.hpp>
 
 template <typename T>
 std::string to_string(const T a_value, const int n = 6)
@@ -189,6 +185,7 @@ public:
 				"in/Textures/skybox/posz.png",
 				"in/Textures/skybox/negz.png"});
 		
+		/*
 		auto w = _gui.add(new GUIWindow());
 		w->add(new GUIGraph<float>("GUIPass (ms): ", [&]() -> float { 
 			return _GUITiming.get<GLuint64>() / 1000000.0;
@@ -278,6 +275,7 @@ public:
 		w4->add(new GUIEdit<float>("Ambiant Color R: ", &_ambiant.r));
 		w4->add(new GUISeparator(w4));
 		w4->add(new GUIText("Lights Test"));
+		*/
 	}
 	
 	virtual void update() override
@@ -303,6 +301,57 @@ public:
 	
 		DeferredRenderer::update();
 		_updateTiming.end();
+		
+		{
+			// Plots
+			static float last_update = 2.0;
+			last_update += TimeManager::getInstance().getRealDeltaTime();
+			static std::deque<float> frametimes;
+			static std::deque<float> updatetimes;
+			static std::deque<float> gbuffertimes;
+			static std::deque<float> lighttimes;
+			static std::deque<float> postprocesstimes;
+			static std::deque<float> guitimes;
+			float ms = TimeManager::getInstance().getRealDeltaTime() * 1000;
+			if(last_update > 0.1 || frametimes.empty())
+			{
+				if(frametimes.size() > 50) frametimes.pop_front();
+				frametimes.push_back(ms);
+				if(updatetimes.size() > 50) updatetimes.pop_front();
+				updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
+				if(gbuffertimes.size() > 50) gbuffertimes.pop_front();
+				gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
+				if(lighttimes.size() > 50) lighttimes.pop_front();
+				lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
+				if(postprocesstimes.size() > 50) postprocesstimes.pop_front();
+				postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
+				if(guitimes.size() > 50) guitimes.pop_front();
+				guitimes.push_back(_GUITiming.get<GLuint64>() / 1000000.0);
+				last_update = 0.0;
+			}
+			
+			ImGui::Begin("Statistics");
+			ImGui::Text("%.5f ms/frame (%.1f FPS)", 
+				ms, 
+				1.0 / TimeManager::getInstance().getRealDeltaTime()
+			);
+			auto lamba_data = [](void* data, int idx) {
+				return static_cast<std::deque<float>*>(data)->at(idx);
+			};
+			ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, std::to_string(frametimes.back()).c_str(), 0.0, 20.0); 
+			ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, std::to_string(updatetimes.back()).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, std::to_string(gbuffertimes.back()).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, std::to_string(lighttimes.back()).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, std::to_string(postprocesstimes.back()).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, std::to_string(guitimes.back()).c_str(), 0.0, 10.0);         
+			ImGui::End();
+			
+			ImGui::Begin("Debug");
+			ImGui::Text("Hey!");
+			ImGui::Button("Test Button");
+			ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
+			ImGui::End();
+		}
 	}
 	
 	virtual void renderGBufferPost() override
