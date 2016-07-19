@@ -157,19 +157,23 @@ void DeferredRenderer::render()
 	_GBufferPassTiming.begin(Query::Target::TimeElapsed);
 	renderGBuffer();
 	_GBufferPassTiming.end();
+	_lastGBufferPassTiming = _GBufferPassTiming.get<GLuint64>();
 	
 	_lightPassTiming.begin(Query::Target::TimeElapsed);
 	if(!_debug_buffers)
 		renderLightPass();
 	_lightPassTiming.end();
+	_lastLightPassTiming = _lightPassTiming.get<GLuint64>();
 	
 	_postProcessTiming.begin(Query::Target::TimeElapsed);
 	renderPostProcess();
 	_postProcessTiming.end();
+	_lastPostProcessTiming = _postProcessTiming.get<GLuint64>();
 	
 	_GUITiming.begin(Query::Target::TimeElapsed);
 	renderGUI();
 	_GUITiming.end();
+	_lastGUITiming = _GUITiming.get<GLuint64>();
 }
 
 void DeferredRenderer::setInternalResolution(size_t width, size_t height)

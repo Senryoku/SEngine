@@ -67,6 +67,10 @@ protected:
 	Query		_lightPassTiming;
 	Query		_postProcessTiming;
 	Query		_GUITiming;
+	GLuint64	_lastGBufferPassTiming = 0;
+	GLuint64	_lastLightPassTiming = 0;
+	GLuint64	_lastPostProcessTiming = 0;
+	GLuint64	_lastGUITiming = 0;
 	
 	virtual void initGBuffer(size_t width, size_t height);
 

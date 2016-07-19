@@ -46,8 +46,8 @@ public:
 		
 		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 
-		static float R = 0.95f;
-		static float F0 = 0.15f;
+		float R = 0.95f;
+		float F0 = 0.15f;
 		const auto Paths = {
 			"in/3DModels/sponza/sponza.obj",
 			"in/3DModels/sibenik/sibenik.obj"
@@ -62,8 +62,8 @@ public:
 			for(auto& part : m)
 			{
 				part->createVAO();
-				part->getMaterial().setUniform("R", &R);
-				part->getMaterial().setUniform("F0", &F0);
+				part->getMaterial().setUniform("R", R);
+				part->getMaterial().setUniform("F0", F0);
 				_scene.add(MeshInstance(*part, Matrices.begin()[i]));
 			}
 		}
@@ -184,98 +184,6 @@ public:
 				"in/Textures/skybox/negy.png",
 				"in/Textures/skybox/posz.png",
 				"in/Textures/skybox/negz.png"});
-		
-		/*
-		auto w = _gui.add(new GUIWindow());
-		w->add(new GUIGraph<float>("GUIPass (ms): ", [&]() -> float { 
-			return _GUITiming.get<GLuint64>() / 1000000.0;
-		}, 0.0, 3.0, 7.5));
-		w->add(new GUIGraph<float>("PostProcessPass (ms): ", [&]() -> float {
-			return _postProcessTiming.get<GLuint64>() / 1000000.0;
-		}, 0.0, 3.0, 7.5));
-		w->add(new GUIGraph<float>("LightPass (ms): ", [&]() -> float {
-			return _lightPassTiming.get<GLuint64>() / 1000000.0;
-		}, 0.0, 3.0, 7.5));
-		w->add(new GUIGraph<float>("GBufferPass (ms): ", [&]() -> float {
-			return _GBufferPassTiming.get<GLuint64>() / 1000000.0;
-		}, 0.0, 3.0, 7.5));
-		w->add(new GUIGraph<float>("Update (ms): ", [&]() -> float {
-			return _updateTiming.get<GLuint64>() / 1000000.0;
-		}, 0.0, 15.0, 7.5));
-		w->add(new GUISeparator(w));
-		w->add(new GUIGraph<float>("Frame Time (ms): ", [&]() -> float {
-			return 1000.f * TimeManager::getInstance().getRealDeltaTime();
-		}, 0.0, 20.0, 7.5));
-		w->add(new GUIGraph<float>("FPS: ", [&]() -> float {
-			return TimeManager::getInstance().getInstantFrameRate();
-		}, 0.0, 450.0, 7.5));
-		w->add(new GUIText([&]() -> std::string {
-			return to_string(1000.f * TimeManager::getInstance().getRealDeltaTime(), 1) + "ms - " + 
-						to_string(1.0f/TimeManager::getInstance().getRealDeltaTime(), 0) + " FPS";
-		}));
-		w->add(new GUISeparator(w));
-		w->add(new GUIText("Stats"));
-		
-		auto debug_buffers = _gui.add(new GUIWindow());
-		debug_buffers->add(new GUIButton("Normal", [&] { _framebufferToBlit = Attachment::Color2; }));
-		debug_buffers->add(new GUIButton("Position", [&] { _framebufferToBlit = Attachment::Color1; }));
-		debug_buffers->add(new GUIButton("Color", [&] { _framebufferToBlit = Attachment::Color0; }));
-		debug_buffers->add(new GUICheckbox("Toggle Debug", &_debug_buffers));
-		debug_buffers->add(new GUISeparator(debug_buffers));
-		debug_buffers->add(new GUIText("Debug render buffers"));
-		
-		auto w5 = _gui.add(new GUIWindow());
-		w5->add(new GUIButton("3840*2160", [&] {setInternalResolution(3840, 2160);}));
-		w5->add(new GUIButton("2715*1527", [&] {setInternalResolution(2715, 1527);}));
-		w5->add(new GUIButton("1920*1080", [&] {setInternalResolution(1920, 1080);}));
-		w5->add(new GUIButton("Windows resolution", [&] {setInternalResolution(0, 0);}));
-		w5->add(new GUISeparator(w5));
-		w5->add(new GUIText("Internal Resolution"));
-		
-		auto w2 = _gui.add(new GUIWindow());
-		w2->add(new GUICheckbox("Vsync", [&] {
-			_vsync = !_vsync; 
-			glfwSwapInterval(_vsync); 
-			return _vsync;
-		}, _vsync));
-		w2->add(new GUICheckbox("Fullscreen", [&]() -> bool {
-			setFullscreen(!_fullscreen);
-			return _fullscreen;
-		}, _fullscreen));
-		w2->add(new GUIEdit<float>("AtmosphericDensity : ", &_atmosphericDensity));
-		w2->add(new GUIEdit<int>("VolumeSamples : ", &_volumeSamples));
-		w2->add(new GUIEdit<float>("AORadius : ", &_aoRadius));
-		w2->add(new GUIEdit<float>("AOThresold : ", &_aoThreshold));
-		w2->add(new GUIEdit<int>("AOSamples : ", &_aoSamples));
-		w2->add(new GUIEdit<float>("MinVariance : ", &_minVariance));
-		w2->add(new GUIEdit<float>("Bloom : ", &_bloom));
-		w2->add(new GUIEdit<float>("Exposure : ", &_exposure));
-		w2->add(new GUICheckbox("Toggle Bloom", [&]() -> bool { 
-			_bloom = -_bloom; return _bloom > 0.0;
-		}, _bloom > 0.0));
-		w2->add(new GUICheckbox("Pause", &_paused));
-		w2->add(new GUISeparator(w2));
-		w2->add(new GUIText("Controls"));
-		
-		auto w3 = _gui.add(new GUIWindow());
-		w3->add(new GUIEdit<float>("Fresnel Reflectance : ", &F0));
-		w3->add(new GUIEdit<float>("Roughness : ", &R));
-		w3->add(new GUISeparator(w3));
-		w3->add(new GUIText("Material Test"));
-		
-		auto w4 = _gui.add(new GUIWindow());
-		if(!_scene.getLights().empty())
-		{
-			w4->add(new GUIEdit<float>("L0 Color B: ", &(_scene.getLights()[0]->getColor().b)));
-			w4->add(new GUIEdit<float>("L0 Color G: ", &(_scene.getLights()[0]->getColor().g)));
-			w4->add(new GUIEdit<float>("L0 Color R: ", &(_scene.getLights()[0]->getColor().r)));
-		}
-		w4->add(new GUIEdit<float>("Ambiant Color B: ", &_ambiant.b));
-		w4->add(new GUIEdit<float>("Ambiant Color G: ", &_ambiant.g));
-		w4->add(new GUIEdit<float>("Ambiant Color R: ", &_ambiant.r));
-		w4->add(new GUISeparator(w4));
-		w4->add(new GUIText("Lights Test"));
-		*/
 	}
 	
 	virtual void update() override
@@ -301,57 +209,6 @@ public:
 	
 		DeferredRenderer::update();
 		_updateTiming.end();
-		
-		{
-			// Plots
-			static float last_update = 2.0;
-			last_update += TimeManager::getInstance().getRealDeltaTime();
-			static std::deque<float> frametimes;
-			static std::deque<float> updatetimes;
-			static std::deque<float> gbuffertimes;
-			static std::deque<float> lighttimes;
-			static std::deque<float> postprocesstimes;
-			static std::deque<float> guitimes;
-			float ms = TimeManager::getInstance().getRealDeltaTime() * 1000;
-			if(last_update > 0.1 || frametimes.empty())
-			{
-				if(frametimes.size() > 50) frametimes.pop_front();
-				frametimes.push_back(ms);
-				if(updatetimes.size() > 50) updatetimes.pop_front();
-				updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
-				if(gbuffertimes.size() > 50) gbuffertimes.pop_front();
-				gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
-				if(lighttimes.size() > 50) lighttimes.pop_front();
-				lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
-				if(postprocesstimes.size() > 50) postprocesstimes.pop_front();
-				postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
-				if(guitimes.size() > 50) guitimes.pop_front();
-				guitimes.push_back(_GUITiming.get<GLuint64>() / 1000000.0);
-				last_update = 0.0;
-			}
-			
-			ImGui::Begin("Statistics");
-			ImGui::Text("%.5f ms/frame (%.1f FPS)", 
-				ms, 
-				1.0 / TimeManager::getInstance().getRealDeltaTime()
-			);
-			auto lamba_data = [](void* data, int idx) {
-				return static_cast<std::deque<float>*>(data)->at(idx);
-			};
-			ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, std::to_string(frametimes.back()).c_str(), 0.0, 20.0); 
-			ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, std::to_string(updatetimes.back()).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, std::to_string(gbuffertimes.back()).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, std::to_string(lighttimes.back()).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, std::to_string(postprocesstimes.back()).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, std::to_string(guitimes.back()).c_str(), 0.0, 10.0);         
-			ImGui::End();
-			
-			ImGui::Begin("Debug");
-			ImGui::Text("Hey!");
-			ImGui::Button("Test Button");
-			ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
-			ImGui::End();
-		}
 	}
 	
 	virtual void renderGBufferPost() override
@@ -362,6 +219,111 @@ public:
 		ld.use();
 		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
 		ld.useNone();
+	}
+	
+	virtual void renderGUI() override
+	{	
+		// Plots
+		static float last_update = 2.0;
+		last_update += TimeManager::getInstance().getRealDeltaTime();
+		static std::deque<float> frametimes;
+		static std::deque<float> updatetimes;
+		static std::deque<float> gbuffertimes;
+		static std::deque<float> lighttimes;
+		static std::deque<float> postprocesstimes;
+		static std::deque<float> guitimes;
+		const size_t max_samples = 100;
+		float ms = TimeManager::getInstance().getRealDeltaTime() * 1000;
+		if(last_update > 0.05 || frametimes.empty())
+		{
+			if(frametimes.size() > max_samples) frametimes.pop_front();
+			frametimes.push_back(ms);
+			if(updatetimes.size() > max_samples) updatetimes.pop_front();
+			updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
+			if(gbuffertimes.size() > max_samples) gbuffertimes.pop_front();
+			gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
+			if(lighttimes.size() > max_samples) lighttimes.pop_front();
+			lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
+			if(postprocesstimes.size() > max_samples) postprocesstimes.pop_front();
+			postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
+			if(guitimes.size() > max_samples) guitimes.pop_front();
+			guitimes.push_back(_lastGUITiming / 1000000.0);
+			last_update = 0.0;
+		}
+		
+		ImGui::Begin("Statistics");
+		{
+			ImGui::Text("%.4f ms/frame (%.1f FPS)", 
+				frametimes.back(), 
+				1000.0 / frametimes.back()
+			);
+			auto lamba_data = [](void* data, int idx) {
+				return static_cast<std::deque<float>*>(data)->at(idx);
+			};
+			ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, to_string(frametimes.back(), 4).c_str(), 0.0, 20.0); 
+			ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, to_string(updatetimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, to_string(gbuffertimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
+		}
+		ImGui::End();
+		
+		ImGui::Begin("Debug");
+		{
+			ImGui::Checkbox("Pause", &_paused);
+			ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
+			ImGui::Separator(); 
+			ImGui::Checkbox("Toggle Debug", &_debug_buffers);
+			const char* debugbuffer_items[] = {"Color","Position", "Normal"};
+			const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
+			static int debugbuffer_item_current = 0;
+			if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
+				_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
+		}
+		ImGui::End();
+		
+		ImGui::Begin("Rendering Options");
+		{
+			if(ImGui::Checkbox("Fullscreen", &_fullscreen))
+				setFullscreen(_fullscreen);
+			ImGui::SameLine();
+			if(ImGui::Checkbox("Vsync", &_vsync))
+				glfwSwapInterval(_vsync);
+			const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
+			static int internal_resolution_item_current = 0;
+			if(ImGui::Combo("Internal Resolution", &internal_resolution_item_current, internal_resolution_items, 4))
+			{
+				switch(internal_resolution_item_current)
+				{
+					case 0: setInternalResolution(0, 0); break;
+					case 1: setInternalResolution(1920, 1080); break;
+					case 2: setInternalResolution(2715, 1527); break;
+					case 3: setInternalResolution(3840, 2160); break;
+				}
+			}
+			
+			ImGui::Separator();
+			
+			static bool bloom_toggle = _bloom > 0.0;
+			if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
+				_bloom = -_bloom;
+			ImGui::DragFloat("Bloom", &_bloom, 0.05, 0.0, 5.0);
+			ImGui::DragFloat("Exposure", &_exposure, 0.05, 0.0, 5.0);
+			ImGui::DragFloat("MinVariance (VSM)", &_minVariance, 0.000001, 0.0, 0.00005);
+			ImGui::DragInt("AOSamples", &_aoSamples, 1, 0, 32);
+			ImGui::DragFloat("AOThresold", &_aoThreshold, 0.05, 0.0, 5.0);
+			ImGui::DragFloat("AORadius", &_aoRadius, 1.0, 0.0, 400.0);
+			ImGui::DragInt("VolumeSamples", &_volumeSamples, 1, 0, 64);
+			ImGui::DragFloat("AtmosphericDensity", &_atmosphericDensity, 0.001, 0.0, 0.02);
+		
+			ImGui::Separator();
+
+			ImGui::ColorEdit3("Ambiant Color", &_ambiant.r);
+		}
+		ImGui::End();
+		
+		DeferredRenderer::renderGUI();
 	}
 };
 

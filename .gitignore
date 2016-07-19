@@ -50,3 +50,4 @@ lib/*
 in/*
 out/*
 chrono.bat
+imgui.ini
