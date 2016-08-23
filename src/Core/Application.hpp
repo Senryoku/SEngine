@@ -15,8 +15,6 @@
 #include <Buffer.hpp>
 #include <Blur.hpp>
 
-#include <ECS/World.hpp>
-
 class Application
 {
 public:
