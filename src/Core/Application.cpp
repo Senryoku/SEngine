@@ -77,6 +77,7 @@ void Application::init(const std::string& windowName)
 	glfwSetMouseButtonCallback(_window, s_mouse_button_callback);
 	glfwSetCursorPosCallback(_window, s_mouse_position_callback);
 	glfwSetWindowSizeCallback(_window, s_resize_callback);
+	glfwSetScrollCallback(_window, s_scroll_callback);
 	glfwSetDropCallback(_window, s_drop_callback);
 	
 	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
