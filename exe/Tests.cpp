@@ -13,6 +13,8 @@
 
 #include <MathTools.hpp>
 
+#include <Log.hpp>
+
 template <typename T>
 std::string to_string(const T a_value, const int n = 6)
 {
@@ -366,6 +368,20 @@ public:
 				}
 				ImGui::TreePop();
 			}
+		}
+		ImGui::End();
+		
+		ImGui::Begin("Logs");
+		{
+			const ImVec4 LogColors[3] = {
+				ImVec4{1, 1, 1, 1},
+				ImVec4{1, 1, 0, 1},
+				ImVec4{1, 0, 0, 1}
+			};
+			ImGuiListClipper clipper(Log::_logs.size());
+			while(clipper.Step())
+				for(int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
+					ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
 		}
 		ImGui::End();
 		

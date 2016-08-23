@@ -282,7 +282,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 		{
 			case GLFW_KEY_N:
 			{				
-				std::cout << _camera.getPosition().x << "\t" << _camera.getPosition().y << "\t" << _camera.getPosition().z << std::endl;
+				Log::info(_camera.getPosition().x, "\t", _camera.getPosition().y, "\t", _camera.getPosition().z);
 				break;
 			}
 			case GLFW_KEY_ESCAPE:
@@ -292,9 +292,9 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			}
 			case GLFW_KEY_R:
 			{
-				std::cout << "Reloading shaders..." << std::endl;
+				Log::info("Reloading shaders...");
 				Resources::reloadShaders();
-				std::cout << "Reloading shaders... Done !" << std::endl;
+				Log::info("Reloading shaders... Done !");
 				break;
 			}
 			case GLFW_KEY_SPACE:
@@ -323,7 +323,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 					
 					glfwWindowHint(GLFW_SAMPLES, iMultiSample);
 					
-					std::cout << "Enabled MSAA (GL_SAMPLES : " << iNumSamples << ", GL_SAMPLE_BUFFERS : " << iMultiSample << ")" << std::endl;
+					Log::info("Enabled MSAA (GL_SAMPLES : ", iNumSamples, ", GL_SAMPLE_BUFFERS : ", iMultiSample,")");
 				} else {
 					glDisable(GL_MULTISAMPLE);
 					
@@ -331,7 +331,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 					GLint iNumSamples = 0;
 					glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
 					glGetIntegerv(GL_SAMPLES, &iNumSamples);
-					std::cout << "Disabled MSAA (GL_SAMPLES : " << iNumSamples << ", GL_SAMPLE_BUFFERS : " << iMultiSample << ")" << std::endl;
+					Log::info("Disabled MSAA (GL_SAMPLES : ", iNumSamples, ", GL_SAMPLE_BUFFERS : ", iMultiSample, ")");
 				}
 				break;
 			}
@@ -349,7 +349,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			case GLFW_KEY_L:
 			{
 				const std::string ScreenPath("out/screenshot.png");
-				std::cout << "Saving a screenshot to " << ScreenPath << "..." << std::endl;
+				Log::info("Saving a screenshot to ", ScreenPath, "...");
 				screen(ScreenPath);
 				break;
 			}
@@ -359,7 +359,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 					_camera.speed() += .1;
 				else
 					_camera.speed() += 1;
-				std::cout << "Camera Speed: " << _camera.speed() << std::endl;
+				Log::info("Camera Speed: ", _camera.speed());
 				break;
 			}
 			case GLFW_KEY_KP_SUBTRACT:
@@ -368,7 +368,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 					_camera.speed() -= .1;
 				else
 					_camera.speed() -= 1;
-				std::cout << "Camera Speed: " << _camera.speed() << std::endl;
+				Log::info("Camera Speed: ", _camera.speed());
 				break;
 			}
 		}
@@ -455,5 +455,5 @@ void Application::scroll_callback(GLFWwindow* window, double xoffset, double yof
 void Application::drop_callback(GLFWwindow* window, int count, const char ** paths)
 {
 	for(int i = 0; i < count; ++i)
-		std::cout << "Dropped: " << paths[i] << std::endl;
+		Log::info("Dropped: ", paths[i]);
 }

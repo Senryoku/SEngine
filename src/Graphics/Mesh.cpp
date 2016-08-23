@@ -3,6 +3,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <tiny_obj_loader.h>
+
 #include <Resources.hpp>
 
 //////////////////////// Mesh::Triangle ///////////////////////////
@@ -50,7 +52,7 @@ void Mesh::createVAO()
 
 	_index_buffer.init();
 	_index_buffer.bind();
-	_index_buffer.data(&_triangles[0], sizeof(size_t)*_triangles.size() * 3, Buffer::Usage::StaticDraw);
+	_index_buffer.data(&_triangles[0], sizeof(size_t) * _triangles.size() * 3, Buffer::Usage::StaticDraw);
 	
 	_vao.unbind(); // Unbind first on purpose :)
 	_index_buffer.unbind();
@@ -61,7 +63,7 @@ void Mesh::draw() const
 {
 	if(!_vao)
 	{
-		std::cerr << "Draw call on a uninitialized mesh !" << std::endl;
+		Log::error("Draw call on a uninitialized mesh !");
 		return;
 	}
 	_vao.bind();
@@ -74,7 +76,7 @@ void Mesh::computeNormals()
 	// Here, normals are the average of adjacent triangles' normals
 	// (so we have exactly one normal per vertex)
 	for(auto& v : _vertices)
-		v.normal = glm::vec3();
+		v.normal = glm::vec3{0.0f};
 
 	for(Triangle& t : _triangles)
 	{
@@ -99,44 +101,18 @@ void Mesh::computeBoundingBox()
 {
 	for(const auto& v : _vertices)
 	{
-		_bbox.min = glm::vec3(std::min(_bbox.min.x, v.position.x), 
+		_bbox.min = glm::vec3{std::min(_bbox.min.x, v.position.x), 
 							std::min(_bbox.min.y, v.position.y), 
-							std::min(_bbox.min.z, v.position.z));
-		_bbox.max = glm::vec3(std::max(_bbox.max.x, v.position.x), 
+							std::min(_bbox.min.z, v.position.z)};
+		_bbox.max = glm::vec3{std::max(_bbox.max.x, v.position.x), 
 							std::max(_bbox.max.y, v.position.y), 
-							std::max(_bbox.max.z, v.position.z));
+							std::max(_bbox.max.z, v.position.z)};
 	}
 }
 
 ////////////////////// Static /////////////////////////////////////
 
 #include <RiggedMesh.hpp>
-
-void Mesh::importFaces(aiMesh* assMesh)
-{			
-	aiVector3D* n = assMesh->mNormals;
-	aiVector3D** t = assMesh->mTextureCoords;
-	aiVector3D& minmax = assMesh->mVertices[0];
-	_bbox.min = glm::vec3(minmax.x, minmax.y, minmax.z);
-	_bbox.max = glm::vec3(minmax.x, minmax.y, minmax.z);
-	for(unsigned int i = 0; i < assMesh->mNumVertices; ++i)
-	{
-		aiVector3D& v = assMesh->mVertices[i];
-		getVertices().push_back(Mesh::Vertex(glm::vec3(v.x, v.y, v.z),
-			(n == nullptr) ? glm::vec3() : glm::vec3((*(n + i)).x, (*(n + i)).y, (*(n + i)).z),
-			(t == nullptr || t[0] == nullptr) ? glm::vec2() : glm::vec2(t[0][i].x, t[0][i].y)));
-		
-		_bbox.min = glm::vec3(std::min(_bbox.min.x, v.x), std::min(_bbox.min.y, v.y), std::min(_bbox.min.z, v.z));
-		_bbox.max = glm::vec3(std::max(_bbox.max.x, v.x), std::max(_bbox.max.y, v.y), std::max(_bbox.max.z, v.z));
-	}
-	
-	for(unsigned int i = 0; i < assMesh->mNumFaces; ++i)
-	{
-		aiFace& f = assMesh->mFaces[i];
-		unsigned int* idx = f.mIndices;
-		getTriangles().push_back(Mesh::Triangle(idx[0], idx[1], idx[2]));
-	}
-}
 
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
@@ -145,190 +121,140 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 
 std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 {
-	//std::cout << "Loading " << path << " using assimp..." << std::endl;
-	
 	std::vector<Mesh*> M;
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path.c_str(), 
-												//aiProcess_CalcTangentSpace |
-												aiProcess_Triangulate |
-												aiProcess_JoinIdenticalVertices |
-												aiProcess_SortByPType |
-												aiProcess_GenSmoothNormals | 
-												aiProcess_FlipUVs);
-
-	 // If the import failed, report it
-	if(!scene)
-	{
-		std::cerr << importer.GetErrorString() << std::endl;
-		return M;
-	}
-	
+	Log::info("Loading ", path, "...");
 	std::string rep = path.substr(0, path.find_last_of('/') + 1);
-	
-	if(scene->HasMeshes())
-	{
-		M.resize(scene->mNumMeshes);
-		for(unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; ++meshIdx)
-		{
-			aiMesh* LoadedMesh = scene->mMeshes[meshIdx];
-			
-			std::string name(path);
-			name.append("::" + std::to_string(meshIdx));
-			name.append(scene->mMeshes[meshIdx]->mName.C_Str());
-			while(Resources::isMesh(name))
-			{
-				std::cout << "Warning: Mesh '" << name << "' was already loaded. Re-loading it under the name '";
-				name.append("_");
-				std::cout << name << "'." << std::endl;
-			}
-			
-			//std::cout << "Loading '" << name << "'." << std::endl;
-			
-			if(LoadedMesh->mNumBones > 0)
-			{
-				RiggedMesh* m = new RiggedMesh();
-				Resources::getMeshPtr(name).reset(m);
-				M[meshIdx] = m;
-				
-				m->getVertexBoneData().resize(LoadedMesh->mNumVertices);
-				
-				for(unsigned int i = 0; i < LoadedMesh->mNumBones; i++)
-				{
-					// Bone name: LoadedMesh->mBones[i]->mName.data
-					// OffsetMatrix: LoadedMesh->mBones[i]->mOffsetMatrix));
-					
-					//TODO: Load bones and nodes... ... .... .............
 
-					for (unsigned int j = 0; j < LoadedMesh->mBones[i]->mNumWeights; j++)
-					{
-						unsigned int VertexID = LoadedMesh->mBones[i]->mWeights[j].mVertexId;
-						float Weight = LoadedMesh->mBones[i]->mWeights[j].mWeight;
-						m->getVertexBoneData()[VertexID].add(i, Weight);
-					}
-				}
-				
-				// TODO: Load animations.
-			} else {
-				M[meshIdx] = &Resources::getMesh(name);
-			}
-			M[meshIdx]->getMaterial().setShadingProgram(p);
-			
-			//std::cout << "Material Index: " << LoadedMesh->mMaterialIndex << std::endl;
-			aiMaterial* m = scene->mMaterials[LoadedMesh->mMaterialIndex];
-			
-			aiString Texture;
-			aiColor3D color;
-			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DIFFUSE, 0), Texture) == AI_SUCCESS)
-			{
-				std::string p = rep;
-				p.append(Texture.C_Str());
-				std::replace(p.begin(), p.end(), '\\', '/');
-				//std::cout << "Loading " << p << std::endl;
-				auto& t = Resources::getTexture<Texture2D>(p);
-				if(!t.isValid())
-					t.load(p);
-				if(t.isValid())
-				{
-					M[meshIdx]->getMaterial().setUniform("Texture", t);
-					M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "texture_color");
-				}
-			} else if(m->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS) {
-				M[meshIdx]->getMaterial().setUniform("Color", glm::vec3(color.r, color.g, color.b));
-				M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "uniform_color");
-			}
-			
-			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_NORMALS, 0), Texture) == AI_SUCCESS
-				|| m->Get(AI_MATKEY_TEXTURE(aiTextureType_HEIGHT, 0), Texture) == AI_SUCCESS) // Special case for .obj...
-			{
-				std::string p = rep;
-				p.append(Texture.C_Str());
-				std::replace(p.begin(), p.end(), '\\', '/');
-				//std::cout << "Loading NM " << p << std::endl;
-				auto& t = Resources::getTexture<Texture2D>(p);
-				if(!t.isValid())
-					t.load(p);
-				if(t.isValid())
-				{
-					M[meshIdx]->getMaterial().setUniform("NormalMap", t);
-					M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "normal_mapping");
-				}
-			} else {
-				M[meshIdx]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
-			}
-			
-			/*
-			M[meshIdx]->getMaterial().setUniform("useBumpMap", 0);
-			if(m->Get(AI_MATKEY_TEXTURE(aiTextureType_DISPLACEMENT, 0), Texture) == AI_SUCCESS)
-			{
-				std::string p = rep;
-				p.append(Texture.C_Str());
-				std::replace(p.begin(), p.end(), '\\', '/');
-				std::cout << "Loading BumpMap " << p << std::endl;
-				auto& t = Resources::getTexture<Texture2D>(p);
-				if(!t.isValid())
-					t.load(p);
-				if(t.isValid())
-				{
-					M[meshIdx]->getMaterial().setUniform("BumpMap", t);
-					M[meshIdx]->getMaterial().setUniform("useBumpMap", 1);
-				}
-			}
-			*/
-			
-			M[meshIdx]->importFaces(LoadedMesh);
-		}
-	}
-	
-	//std::cout << "Loading of " << path << " done." << std::endl;
-	
-	return M;
-}
+	// OBJ Loading
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
 
-std::vector<Mesh*> Mesh::loadNoShading(const std::string& path)
-{
-	//std::cout << "Loading " << path << " using assimp..." << std::endl;
-	
-	std::vector<Mesh*> M;
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path.c_str(), 
-												//aiProcess_CalcTangentSpace |
-												aiProcess_Triangulate |
-												aiProcess_JoinIdenticalVertices |
-												aiProcess_SortByPType |
-												aiProcess_GenSmoothNormals | 
-												aiProcess_FlipUVs);
+	std::string err;
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str(), rep.c_str(), true);
 
-	 // If the import failed, report it
-	if(!scene)
-	{
-		std::cerr << importer.GetErrorString() << std::endl;
+	if (!err.empty()) // `err` may contain warning message.
+		Log::error(err);
+
+	if (!ret)
 		return M;
-	}
 	
-	if(scene->HasMeshes())
+	M.resize(shapes.size());
+	for(size_t s = 0; s < shapes.size(); s++)
 	{
-		M.resize(scene->mNumMeshes);
-		for(unsigned int meshIdx = 0; meshIdx < scene->mNumMeshes; ++meshIdx)
+		std::string name{path};
+		name.append("::" + shapes[s].name + "[" + std::to_string(s) + "]");
+		while(Resources::isMesh(name))
 		{
-			aiMesh* LoadedMesh = scene->mMeshes[meshIdx];
-			
-			std::string name(path);
-			name.append("::" + std::to_string(meshIdx));
-			name.append(scene->mMeshes[meshIdx]->mName.C_Str());
-			while(Resources::isMesh(name))
-			{
-				std::cout << "Warning: Mesh '" << name << "' was already loaded. Re-loading it under the name '";
-				name.append("_");
-				std::cout << name << "'." << std::endl;
-			}
-			
-			M[meshIdx] = &Resources::getMesh(name);
-			M[meshIdx]->importFaces(LoadedMesh);
+			Log::warn("Mesh '", name, "' was already loaded. Re-loading it after appending '_' to its name.");
+			name.append("_");
 		}
+		
+		M[s] = &Resources::getMesh(name);
+		M[s]->getMaterial().setShadingProgram(p);
+		
+		for(size_t i = 0; i < shapes[s].mesh.material_ids.size() - 1; ++i)
+			if(shapes[s].mesh.material_ids[i] >= 0 && shapes[s].mesh.material_ids[i + 1] >= 0 && 
+				shapes[s].mesh.material_ids[i] != shapes[s].mesh.material_ids[i + 1])
+			{
+				Log::warn("We're only supporting one material per mesh but '", name, "' uses at least '",
+					materials[shapes[s].mesh.material_ids[i]].name, "' (", shapes[s].mesh.material_ids[i], ") and '",
+					materials[shapes[s].mesh.material_ids[i + 1]].name, "' (", shapes[s].mesh.material_ids[i + 1], ").");
+				break;
+			}
+		const auto& material = materials[shapes[s].mesh.material_ids[0]];
+				
+		if(!material.diffuse_texname.empty())
+		{
+			std::string p = rep;
+			p.append(material.diffuse_texname);
+			std::replace(p.begin(), p.end(), '\\', '/');
+			auto& t = Resources::getTexture<Texture2D>(p);
+			if(!t.isValid())
+				t.load(p);
+			if(t.isValid())
+			{
+				M[s]->getMaterial().setUniform("Texture", t);
+				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "texture_color");
+			} else {
+				Log::error("Texture ", p, " is invalid.");
+			}
+		} else {
+			M[s]->getMaterial().setUniform("Color", glm::vec3{material.diffuse[0], material.diffuse[1], material.diffuse[2]});
+			M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "uniform_color");
+		}
+		
+		std::string normal_map;
+		if(!material.bump_texname.empty()) normal_map = material.bump_texname; // map_bump, bump
+		if(!material.normal_texname.empty()) normal_map = material.normal_texname;
+		
+		if(!normal_map.empty())
+		{
+			std::string p = rep;
+			p.append(normal_map);
+			std::replace(p.begin(), p.end(), '\\', '/');
+			auto& t = Resources::getTexture<Texture2D>(p);
+			if(!t.isValid())
+				t.load(p);
+			if(t.isValid())
+			{
+				M[s]->getMaterial().setUniform("NormalMap", t);
+				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "normal_mapping");
+			} else {
+				Log::error("Texture ", p, " is invalid.");
+			}
+		} else {
+			M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
+		}
+		
+		auto minmax = glm::vec3{
+			attrib.vertices[3 * shapes[s].mesh.indices[0].vertex_index + 0],
+			attrib.vertices[3 * shapes[s].mesh.indices[0].vertex_index + 1],
+			attrib.vertices[3 * shapes[s].mesh.indices[0].vertex_index + 2]
+		};
+		auto min = minmax;
+		auto max = minmax;
+		for(const auto& i : shapes[s].mesh.indices)
+		{
+			glm::vec3 v{
+				attrib.vertices[3 * i.vertex_index + 0],
+				attrib.vertices[3 * i.vertex_index + 1],
+				attrib.vertices[3 * i.vertex_index + 2]
+			};
+			auto n = i.normal_index >= 0 ?
+				glm::vec3{
+					attrib.normals[3 * i.normal_index + 0],
+					attrib.normals[3 * i.normal_index + 1],
+					attrib.normals[3 * i.normal_index + 2]
+				} : 
+				glm::vec3{0.0f};
+			auto t = i.texcoord_index >= 0 ?
+				glm::vec2{
+					attrib.texcoords[2 * i.texcoord_index + 0],
+					1.0f - attrib.texcoords[2 * i.texcoord_index + 1] // !
+				} : 
+				glm::vec2{0.0f};
+			M[s]->getVertices().push_back(Mesh::Vertex{v, n, t});
+			
+			min = glm::vec3(std::min(min.x, v.x), std::min(min.y, v.y), std::min(min.z, v.z));
+			max = glm::vec3(std::max(max.x, v.x), std::max(max.y, v.y), std::max(max.z, v.z));
+		}
+		
+		M[s]->setBoundingBox({min, max});
+		
+		for(size_t i = 0; i < shapes[s].mesh.num_face_vertices.size(); ++i)
+		{
+			assert(shapes[s].mesh.num_face_vertices[i] == 3);
+			M[s]->getTriangles().push_back(Mesh::Triangle{
+				3 * i + 0,
+				3 * i + 1,
+				3 * i + 2
+			});
+		}
+		
+		if(attrib.normals.empty())
+			M[s]->computeNormals();
 	}
-	
-	//std::cout << "Loading of " << path << " done." << std::endl;
 	
 	return M;
 }

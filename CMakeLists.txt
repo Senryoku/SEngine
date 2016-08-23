@@ -47,11 +47,6 @@ ENDIF()
 SET(GLM_INCLUDE_DIR "../glm" CACHE FILEPATH "GLM_INCLUDE_DIR")
 INCLUDE_DIRECTORIES(${GLM_INCLUDE_DIR})
 
-#ASSIMP
-SET(ASSIMP_ROOT_DIR "../assimp" CACHE FILEPATH "ASSIMP_ROOT_DIR")
-INCLUDE_DIRECTORIES(${ASSIMP_ROOT_DIR}/include)
-LINK_DIRECTORIES(${ASSIMP_ROOT_DIR}/lib)
-
 #SENOGL
 find_package(SenOGL REQUIRED)
 INCLUDE_DIRECTORIES(${SenOGL_INCLUDE_DIRS})
@@ -63,10 +58,16 @@ set(IMGUI_ROOT "ext/imgui")
 INCLUDE_DIRECTORIES(${IMGUI_ROOT})
 set(IMGUIGLFW_ROOT "ext/imgui-glfw")
 INCLUDE_DIRECTORIES(${IMGUIGLFW_ROOT})
-set(SOURCE_FILES
+set(SOURCE_FILES ${SOURCE_FILES}
 	${IMGUI_ROOT}/imgui.cpp
 	${IMGUI_ROOT}/imgui_draw.cpp
 	${IMGUIGLFW_ROOT}/imgui_impl_glfw_gl3.cpp
+)
+
+set(TINYOBJLOADER_ROOT "ext/tinyobjloader")
+INCLUDE_DIRECTORIES(${TINYOBJLOADER_ROOT})
+set(SOURCE_FILES ${SOURCE_FILES}
+	${TINYOBJLOADER_ROOT}/tiny_obj_loader.cc
 )
 
 # -----------------------------------------------------------------------------------
@@ -99,7 +100,7 @@ REC_SOURCE(${CMAKE_SOURCE_DIR}/src)
 
 AUX_SOURCE_DIRECTORY(exe/ EXECUTABLES)
 
-list(APPEND CMAKE_CXX_FLAGS "-O2 -std=c++14 -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
 
 add_library(SEngine STATIC ${SOURCE_FILES})
 
@@ -107,7 +108,7 @@ foreach(Exe ${EXECUTABLES})
 	get_filename_component(Target ${Exe} NAME_WE [CACHE])
 	if(NOT TARGET ${Target})
 		add_executable(${Target} ${Exe})
-		target_link_libraries(${Target} SEngine ${SenOGL_LIBRARY} assimp.dll glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
+		target_link_libraries(${Target} SEngine ${SenOGL_LIBRARY} glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
 		MESSAGE(STATUS "Adding rule for ${Target}.")
 	endif(NOT TARGET ${Target})
 endforeach(Exe)

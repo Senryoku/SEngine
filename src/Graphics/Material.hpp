@@ -14,6 +14,8 @@
 #include <Texture2D.hpp>
 #include <Texture3D.hpp>
 
+#include <Log.hpp>
+
 /**
  * Material
  * Association of a Shader program and a set of Uniforms.
@@ -156,7 +158,7 @@ inline void Material::setUniform(const std::string& name, const Texture& value)
 		_uniforms.push_back(std::unique_ptr<GenericUniform>(new Uniform<Texture>(name, Location, _textureCount, value)));
 		++_textureCount;
 	} else {
-		std::cerr << "Material: Uniform " + name + " not found." << std::endl;
+		Log::error("Material: Uniform ", name, " not found.");
 	}
 }
 
@@ -183,7 +185,7 @@ void Material::setUniform(const std::string& name, const T& value)
 		}
 		_uniforms.push_back(std::unique_ptr<GenericUniform>(new Uniform<T>(name, Location, value)));
 	} else {
-		std::cerr << "Warning: Uniform '" + name + "' not found (" << __PRETTY_FUNCTION__ << ")." << std::endl;
+		Log::error("Warning: Uniform '", name, "' not found (", __PRETTY_FUNCTION__, ").");
 	}
 }
 

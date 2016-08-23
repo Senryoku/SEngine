@@ -8,14 +8,11 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp> // glm::value_ptr
 
-#include <assimp/Importer.hpp> 	// C++ importer interface
-#include <assimp/scene.h> 		// Output data structure
-#include <assimp/postprocess.h> // Post processing flags
-
 #include <Buffer.hpp>
 #include <VertexArray.hpp>
 #include <BoundingShape.hpp>
 #include <Material.hpp>
+#include <Log.hpp>
 
 class Mesh
 {
@@ -39,10 +36,10 @@ public:
 	**/
 	struct Vertex
 	{
-		Vertex() {}
+		Vertex() =default;
 		Vertex(glm::vec3 pos,
-				glm::vec3 nor,
-				glm::vec2 tex);
+			glm::vec3 nor,
+			glm::vec2 tex);
 
 		glm::vec3	position;
 		glm::vec3	normal;
@@ -53,14 +50,14 @@ public:
 	~Mesh() =default;
 
 	inline std::vector<Vertex>&			getVertices()		{ return _vertices; }		///< @return Array of Vertices
-	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }	///< @return Array of Triangles
+	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }		///< @return Array of Triangles
 	inline Material& 					getMaterial()		{ return _material; }		///< @return Material
 	
 	inline const std::vector<Vertex>&	getVertices() 		const { return _vertices; }		///< @return Array of Vertices
-	inline const std::vector<Triangle>&	getTriangles()		const { return _triangles; }		///< @return Array of Triangles
+	inline const std::vector<Triangle>&	getTriangles()		const { return _triangles; }	///< @return Array of Triangles
 	inline const Material&				getMaterial()		const { return _material; }		///< @return Material
 	inline const VertexArray& 			getVAO()			const { return _vao; }			///< @return VertexArray Object
-	inline const Buffer& 				getVertexBuffer()	const { return _vertex_buffer; }	///< @return Vertex Buffer
+	inline const Buffer& 				getVertexBuffer()	const { return _vertex_buffer; }///< @return Vertex Buffer
 	inline const Buffer&				getIndexBuffer()	const { return _index_buffer; }	///< @return Index Buffer
 	
 	void computeNormals();
@@ -73,7 +70,6 @@ public:
 	const BoundingBox& getBoundingBox() const		{ return _bbox; }
 
 	static std::vector<Mesh*> load(const std::string& path);
-	static std::vector<Mesh*> loadNoShading(const std::string& path);
 	static std::vector<Mesh*> load(const std::string& path, const Program& p);
 	
 protected:
@@ -87,6 +83,4 @@ protected:
 	Material 				_material; ///< Base (default) Material for this mesh
 	
 	BoundingBox				_bbox;
-	
-	void importFaces(aiMesh* assMesh);
 };

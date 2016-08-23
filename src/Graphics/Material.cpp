@@ -58,7 +58,7 @@ void Material::SubroutineState::update(const Program& p)
 			 
 	if(uniformCount == 0)
 	{
-		std::cerr << "This program have no active subroutine." << std::endl;
+		Log::error("This program have no active subroutine.");
 		return;
 	}
 	
@@ -69,13 +69,13 @@ void Material::SubroutineState::update(const Program& p)
 		GLint uniformLocation = glGetSubroutineUniformLocation(p.getName(), to_underlying(shadertype), s.first.c_str());
 		if(uniformLocation < 0)
 		{
-			std::cerr << "Uniform " << s.first << " not found." << std::endl;
+			Log::error("Uniform ", s.first, " not found.");
 		} else {
 			GLuint r = p.getSubroutineIndex(shadertype, s.second.c_str());
 
 			if(r == GL_INVALID_INDEX)
 			{
-				std::cerr << "Subroutine '" << s.second << "' not found." << std::endl;
+				Log::error("Subroutine '", s.second, "' not found.");
 			} else {
 				activeIndices[uniformLocation] = r;
 			}
