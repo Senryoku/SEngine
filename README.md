@@ -14,5 +14,5 @@ https://youtu.be/NRjylzEVU9w
  * [GL3W](https://github.com/skaslev/gl3w)
  * [SenOGL](https://github.com/Senryoku/SenOGL)
  * [GLM](http://glm.g-truc.net/0.9.7/index.html)
- * [Assimp](http://www.assimp.org/)
+ * [tinyobjloader](https://github.com/syoyo/tinyobjloader)
  * [dear imgui](https://github.com/ocornut/imgui) (included)
