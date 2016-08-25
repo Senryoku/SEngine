@@ -3,6 +3,7 @@
 #include <deque>
 
 #include <glm/gtx/transform.hpp>
+#include <glmext.hpp>
 #include <imgui.h>
 
 #include <Query.hpp>
@@ -51,12 +52,12 @@ public:
 		float R = 0.95f;
 		float F0 = 0.15f;
 		const auto Paths = {
-			"in/3DModels/sponza/sponza.obj",
-			"in/3DModels/sibenik/sibenik.obj"
+			"in/3DModels/sponza/sponza.obj"
+			//,"in/3DModels/sibenik/sibenik.obj"
 		};
 		const auto Matrices = {
-			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04)),
-			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(200.0, 0.0, 0.0)), glm::vec3(3.0))
+			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04))
+			//,glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(200.0, 0.0, 0.0)), glm::vec3(3.0))
 		};
 		for(size_t i = 0; i < Paths.size(); ++i)
 		{
@@ -279,6 +280,20 @@ public:
 		{
 			ImGui::Checkbox("Pause", &_paused);
 			ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
+			if(ImGui::Button("Update shadow maps"))
+			{
+				for(auto l : _scene.getLights())
+				{
+					l->updateMatrices();
+					l->drawShadowMap(_scene.getObjects());
+				}
+				
+				for(auto& l : _scene.getOmniLights())
+				{
+					l.updateMatrices();
+					l.drawShadowMap(_scene.getObjects());
+				}
+			}
 			ImGui::Separator(); 
 			ImGui::Checkbox("Toggle Debug", &_debug_buffers);
 			const char* debugbuffer_items[] = {"Color","Position", "Normal"};
@@ -414,9 +429,12 @@ public:
 				screen_aabb[i] = project(aabb[i]);
 			}
 			// Dummy Window for "on field" widgets
+			ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});
 			ImGui::Begin("SelectedObject", nullptr, ImVec2{static_cast<float>(_width), static_cast<float>(_height)}, 0.0,
 				ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
 			ImDrawList* drawlist = ImGui::GetWindowDrawList();
+			
+			// Bounding Box Gizmo
 			constexpr std::array<size_t, 24> segments{
 				0, 1, 1, 3, 3, 2, 2, 0,
 				4, 5, 5, 7, 7, 6, 6, 4,
@@ -425,6 +443,54 @@ public:
 			for(int i = 0; i < 24; i += 2)
 				drawlist->AddLine(screen_aabb[segments[i]], screen_aabb[segments[i + 1]], 
 					ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, 0.5)));
+			
+			/////////////////////////////////////
+			// Position Gizmo
+			// @todo Debug it, Clean in, Package it 
+			const std::array<glm::vec2, 4> gizmo_points{
+				project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 0.0}),
+				project(_selectedObject->getTransformation().getPosition() + glm::vec3{1.0, 0.0, 0.0}),
+				project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 1.0, 0.0}),
+				project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 1.0})
+			};
+			static bool dragging[3] = {false, false, false};
+			static glm::vec3 origin_position;
+			for(int i = 0; i < 3; ++i)
+			{
+				if(dragging[i] && ImGui::IsMouseDragging(0))
+				{
+					auto newP = glm::vec2{ImGui::GetMousePos()};
+					auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
+					auto newR = getScreenRay(newP.x, newP.y);
+					auto oldR = getScreenRay(oldP.x, oldP.y);
+					Plane pl{_selectedObject->getTransformation().getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
+					float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
+					glm::vec3 p0, p1, n0, n1;
+					trace(newR, pl, d0, p0, n0);
+					trace(oldR, pl, d1, p1, n1);
+					auto newPosition = origin_position;
+					newPosition[i] += p0[i] - p1[i];
+					_selectedObject->getTransformation().setPosition(newPosition);
+				} 
+				if(dragging[i] && ImGui::IsMouseReleased(0))
+				{
+					dragging[i] = false;
+					ImGui::GetIO().WantCaptureMouse = false;
+				}
+				if(ImGui::IsMouseClicked(0) && point_line_distance(glm::vec2{_mouse}, gizmo_points[0], gizmo_points[1 + i]) < 5.0f)
+				{
+					dragging[i] = true;
+					origin_position = _selectedObject->getTransformation().getPosition();
+				}
+			}
+			if(dragging[0] || dragging[1] || dragging[2])
+				ImGui::GetIO().WantCaptureMouse = true;
+			
+			drawlist->AddLine(gizmo_points[0], gizmo_points[1], ImGui::ColorConvertFloat4ToU32(ImVec4(1.0, 0.0, 0.0, dragging[0] ? 1.0 : 0.5)), 2.0);
+			drawlist->AddLine(gizmo_points[0], gizmo_points[2], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 1.0, 0.0, dragging[1] ? 1.0 : 0.5)), 2.0);
+			drawlist->AddLine(gizmo_points[0], gizmo_points[3], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, dragging[2] ? 1.0 : 0.5)), 2.0);
+			////////////////////////////////////////////////////
+			
 			ImGui::End();
 		}
 		
@@ -433,69 +499,69 @@ public:
 		{
 			ImGui::Text("Name: %s", _selectedObject->getMesh().getName().c_str());
 			ImGui::Text("Path: %s", _selectedObject->getMesh().getPath().c_str());
-			glm::vec3 p = _selectedObject->getPosition();
+			glm::vec3 p = _selectedObject->getTransformation().getPosition();
 			if(ImGui::InputFloat3("Position", &p.x))
 			{
-				_selectedObject->setPosition(p);
+				_selectedObject->getTransformation().setPosition(p);
 			}
-			glm::quat r = _selectedObject->getRotation();
+			glm::quat r = _selectedObject->getTransformation().getRotation();
 			if(ImGui::InputFloat4("Rotation", &r.x))
 			{
-				_selectedObject->setRotation(r);
+				_selectedObject->getTransformation().setRotation(r);
 			}
-			glm::vec3 s = _selectedObject->getScale();
+			glm::vec3 s = _selectedObject->getTransformation().getScale();
 			if(ImGui::InputFloat3("Scale", &s.x))
 			{
-				_selectedObject->setScale(s);
+				_selectedObject->getTransformation().setScale(s);
+			}
+			
+			if(ImGui::TreeNode("Material"))
+			{
+				Uniform<glm::vec3>* uniform = _selectedObject->getMaterial().searchUniform<glm::vec3>("Color");
+				if(uniform != nullptr)
+				{
+					// @todo Yes, Color is set on select, so this is stupid :D
+					ImGui::Text("Color: %f, %f, %f", uniform->getValue().x, uniform->getValue().y, uniform->getValue().z);
+				}
+				auto uniform_tex = _selectedObject->getMaterial().searchUniform<Texture>("Texture");
+				if(uniform_tex != nullptr)
+				{
+					ImGui::Text("Has a Texture");
+				}
+				ImGui::TreePop();
 			}
 		} else {
 			ImGui::Text("No object selected.");
 		}
 		ImGui::End();
-		
-		DeferredRenderer::renderGUI();
-	}
-	
-	virtual void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) override
-	{	
-		Application::mouse_button_callback(window, button, action, mods);
-		if(ImGui::GetIO().WantCaptureMouse)
-		return;
 
-		if(!_controlCamera)
+		if(!ImGui::GetIO().WantCaptureMouse)
 		{
-			if(button == GLFW_MOUSE_BUTTON_1)
+			if(ImGui::IsMouseClicked(0))
 			{
-				if(action == GLFW_PRESS)
+				const auto r = getMouseRay();
+				float depth = std::numeric_limits<float>::max();
+				if(_selectedObject)
+					_selectedObject->getMaterial().setUniform("Color", _selectedObjectColor);
+				_selectedObject = nullptr;
+				for(auto& o : _scene.getObjects())
 				{
-					const auto r = getMouseRay();
-					float depth = std::numeric_limits<float>::max();
-					if(_selectedObject)
-						_selectedObject->getMaterial().setUniform("Color", _selectedObjectColor);
-					_selectedObject = nullptr;
-					for(auto& o : _scene.getObjects())
+					if(trace(r, o, depth))
 					{
-						if(trace(r, o, depth))
-						{
-							_selectedObject = &o;
-						}
+						_selectedObject = &o;
 					}
-					if(_selectedObject)
-					{
-						_selectedObjectColor = _selectedObject->getMaterial().getUniform<glm::vec3>("Color");
-						_selectedObject->getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 1.5});
-					}
-				} else {
 				}
-			} else if(button == GLFW_MOUSE_BUTTON_2) {
-				if(action == GLFW_PRESS)
+				if(_selectedObject)
 				{
-				} else {
+					_selectedObjectColor = _selectedObject->getMaterial().getUniform<glm::vec3>("Color");
+					_selectedObject->getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 1.5});
 				}
 			}
 		}
+		
+		DeferredRenderer::renderGUI();
 	}
-	
+		
 protected:
 	MeshInstance*	_selectedObject = nullptr;
 	glm::vec3		_selectedObjectColor;

@@ -30,7 +30,7 @@ public:
 
 private:
 	std::string		_name;
-	GLuint				_location;
+	GLuint			_location;
 };
 
 template<typename T>

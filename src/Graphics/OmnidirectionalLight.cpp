@@ -122,7 +122,7 @@ void OmnidirectionalLight::drawShadowMap(const std::vector<MeshInstance>& object
 	{
 		if(intersect(b.getAABB(), BoundingVolume))
 		{
-			getShadowMapProgram().setUniform("ModelMatrix", b.getModelMatrix());
+			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getModelMatrix());
 			b.getMesh().draw();
 		}
 	}

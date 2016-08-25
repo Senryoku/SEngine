@@ -64,6 +64,9 @@ public:
 	inline T getUniform(const std::string&);
 	
 	template<typename T>
+	inline Uniform<T>* searchUniform(const std::string&);
+	
+	template<typename T>
 	inline void setUniform(const std::string& name, const T& value);
 	
 	inline void setSubroutine(ShaderType stage, const std::string& uniformName, const std::string& functionName);
@@ -178,6 +181,17 @@ T Material::getUniform(const std::string& name)
 	}
 	Log::error("Uniform ", name, " not found.");
 	return T{};
+}
+
+template<typename T>
+Uniform<T>* Material::searchUniform(const std::string& name)
+{
+	for(const auto& u : _uniforms)
+	{
+		if(u.get()->getName() == name)
+			return dynamic_cast<Uniform<T>*>(u.get());
+	}
+	return nullptr;
 }
 
 template<typename T>

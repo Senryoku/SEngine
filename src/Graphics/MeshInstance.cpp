@@ -1,19 +1,17 @@
 #include <MeshInstance.hpp>
 
-MeshInstance::MeshInstance(const Mesh& mesh, const glm::mat4& modelMatrix) :
+MeshInstance::MeshInstance(const Mesh& mesh, const Transformation& t) :
 	_mesh(&mesh),
-	_material(mesh.getMaterial())
+	_material(mesh.getMaterial()),
+	_transformation(t)
 {
-	setModelMatrix(modelMatrix);
-	// mat4 pointers doesn't work anymore ? -.-'
-	_material.setUniform("ModelMatrix", _modelMatrix);
 }
 
 bool MeshInstance::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const
 {
 	const BoundingBox& bbox = _mesh->getBoundingBox();
-	const glm::vec4 a = _modelMatrix * glm::vec4(bbox.min, 1.0);
-	const glm::vec4 b = _modelMatrix * glm::vec4(bbox.max, 1.0);
+	const glm::vec4 a = _transformation.getModelMatrix() * glm::vec4(bbox.min, 1.0);
+	const glm::vec4 b = _transformation.getModelMatrix() * glm::vec4(bbox.max, 1.0);
 
 	std::array<glm::vec4, 8> p = {glm::vec4{a.x, a.y, a.z, 1.0},
 									glm::vec4{a.x, a.y, b.z, 1.0},
