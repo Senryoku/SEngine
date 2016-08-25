@@ -57,7 +57,7 @@ vec4 uniform_color()
 subroutine(color)
 vec4 texture_color()
 {
-	return texture(Texture, texcoord);
+	return vec4(Color, 1.0) * texture(Texture, texcoord);
 }
 
 subroutine(normal)

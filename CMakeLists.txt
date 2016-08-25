@@ -70,6 +70,12 @@ set(SOURCE_FILES ${SOURCE_FILES}
 	${TINYOBJLOADER_ROOT}/tiny_obj_loader.cc
 )
 
+set(TINYGLTFLOADER_ROOT "ext/tinygltfloader")
+INCLUDE_DIRECTORIES(${TINYGLTFLOADER_ROOT})
+set(SOURCE_FILES ${SOURCE_FILES}
+	${TINYGLTFLOADER_ROOT}/tiny_gltf_loader.cc
+)
+
 # -----------------------------------------------------------------------------------
 
 MACRO(SUBDIRLIST result curdir)

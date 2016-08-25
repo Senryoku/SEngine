@@ -4,6 +4,7 @@
 #include <glm/gtx/intersect.hpp>
 
 #include <Mesh.hpp>
+#include <MeshInstance.hpp>
 #include <Plane.hpp>
 
 struct Ray
@@ -20,8 +21,24 @@ struct Ray
 struct Sphere
 {
 	glm::vec3	center;
-	float			radius;
+	float		radius;
 };
+
+inline bool traceSphere(const glm::vec3& origin, const glm::vec3& dir, const glm::vec3& center, float radius);
+inline bool traceSphere(const glm::vec3& origin, const glm::vec3& dir, const glm::vec3& center, float radius, float& depth);
+
+inline bool trace(const Ray& r, const Sphere& s, glm::vec3& p, glm::vec3& n);
+inline bool trace(const Ray& r, const Plane& p, float& d);
+inline bool trace(const Ray& r, const Plane& pl, float& d, glm::vec3& p, glm::vec3& n);
+inline bool trace(const Ray& r, const Sphere& s);
+inline bool trace(const Ray& r, const Sphere& s, float& depth);
+inline bool trace(const Ray& r, const Sphere& s, float& depth, glm::vec3& p, glm::vec3& n);
+inline bool trace(const Ray& r, const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, glm::vec3& p);
+inline bool trace(const Ray& r, const AABB<glm::vec3>& b);
+inline bool trace(const Ray& r, const AABB<glm::vec3>& b, float& t);
+inline bool trace(const Ray& r, const MeshInstance& o, float& t);
+inline bool trace(const Ray& r, const Mesh& m, glm::vec3& p, glm::vec3& n);
+inline bool trace(const Ray& r, const Mesh& m, float& depth, glm::vec3& p, glm::vec3& n);
 
 inline bool traceSphere(const glm::vec3& origin, const glm::vec3& dir, const glm::vec3& center, float radius)
 {	
@@ -47,7 +64,7 @@ inline bool trace(const Ray& r, const Sphere& s, glm::vec3& p, glm::vec3& n)
 	return glm::intersectRaySphere(r.origin, r.direction, s.center, s.radius, p, n);
 }
 
-inline bool trace(Ray r, Plane p, float& d)
+inline bool trace(const Ray& r, const Plane& p, float& d)
 {
 	return glm::intersectRayPlane(r.origin, r.direction, p.getPoint(), p.getNormal(), d);
 }
@@ -139,6 +156,65 @@ inline bool trace(const Ray& r, const AABB<glm::vec3>& b)
     }
  
     return tmax > glm::max(tmin, 0.0f);
+}
+
+inline bool trace(const Ray& r, const AABB<glm::vec3>& b, float& t)
+{
+	const glm::vec3 dir_inv = glm::vec3(1.0) / r.direction;
+    float t1 = (b.min[0] - r.origin[0]) * dir_inv[0];
+    float t2 = (b.max[0] - r.origin[0]) * dir_inv[0];
+ 
+    float tmin = glm::min(t1, t2);
+    float tmax = glm::max(t1, t2);
+ 
+    for (int i = 1; i < 3; ++i)
+    {
+        t1 = (b.min[i] - r.origin[i]) * dir_inv[i];
+        t2 = (b.max[i] - r.origin[i]) * dir_inv[i];
+ 
+        tmin = glm::max(tmin, glm::min(t1, t2));
+        tmax = glm::min(tmax, glm::max(t1, t2));
+    }
+ 
+	float tmp = tmin > 0.0 ? tmin : tmax;
+    if(tmax > glm::max(tmin, 0.0f) && tmp < t)
+	{
+		t = tmp;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+inline bool trace(const Ray& r, const MeshInstance& o, float& t)
+{
+	float tmp_depth = t;
+	if(!trace(r, o.getAABB(), tmp_depth))
+		return false;
+	
+	bool hit = false;
+	glm::vec3 tmp;
+	glm::vec3 triangle[3];
+	for(const auto& tr : o.getMesh().getTriangles())
+	{
+		for(int i = 0; i < 3; ++i)
+			triangle[i] = glm::vec3{o.getModelMatrix() * glm::vec4{o.getMesh().getVertices()[tr.vertices[i]].position, 1.0}};
+		if(glm::intersectRayTriangle(r.origin,
+						r.direction, 
+						triangle[0],
+						triangle[1],
+						triangle[2],
+						tmp))
+		{
+			if(tmp.z > 0.0 && tmp.z < t)
+			{
+				t = tmp.z;
+				hit = true;
+			}
+		}
+	}
+	
+	return hit;
 }
 
 inline bool trace(const Ray& r, const Mesh& m, glm::vec3& p, glm::vec3& n)

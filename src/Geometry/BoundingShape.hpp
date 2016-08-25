@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <glm/glm.hpp>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/type_ptr.hpp> // glm::value_ptr
@@ -70,6 +72,7 @@ public:
 		return ::contains(*this, v);
 	}
 	
+	/// Translate
 	inline AABB<Vector>& operator+=(const Vector& rhs)
 	{
 		min += rhs;
@@ -77,6 +80,7 @@ public:
 		return *this;
 	}
 	
+	/// Intersect
 	inline AABB<Vector>& operator+=(const AABB<Vector>& rhs)
 	{
 		min = glm::min(min, rhs.min);
@@ -84,6 +88,7 @@ public:
 		return *this;
 	}
 	
+	/// Scale
 	inline AABB<Vector>& operator*=(float factor)
 	{
 		Vector tmp = 0.5f * (max + min);
@@ -92,12 +97,28 @@ public:
 		return *this;
 	}
 	
+	/// Scale
 	inline AABB<Vector>& operator*=(const Vector& factors)
 	{
 		Vector tmp = 0.5f * (max + min);
 		min = tmp + (min - tmp) * factors;
 		max = tmp + (max - tmp) * factors;
 		return *this;
+	}
+	
+	/// Computes the 8 points constituting the box
+	inline std::array<Vector, 8> getBounds() const
+	{
+		return {
+			min,
+			Vector{min.x, min.y, max.z},
+			Vector{min.x, max.y, min.z},
+			Vector{min.x, max.y, max.z},
+			Vector{max.x, min.y, min.z},
+			Vector{max.x, min.y, max.z},
+			Vector{max.x, max.y, min.z},
+			max
+		};
 	}
 
 	// Attributes

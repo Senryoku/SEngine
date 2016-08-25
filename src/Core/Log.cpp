@@ -3,7 +3,7 @@
 namespace Log
 {
 
-std::array<std::string, 3>	_log_types = {
+std::array<const char*, 3>	_log_types = {
 	"Info",
 	"Warning",
 	"Error"

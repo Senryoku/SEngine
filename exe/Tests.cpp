@@ -165,14 +165,22 @@ public:
 		s->setAngle(3.14159f * 0.5f);
 		s->updateMatrices();
 		/*
-		_scene.getOmniLights().resize(1);
+		_scene.getOmniLights().resize(2);
 		_scene.getOmniLights()[0].setResolution(2048);
-		_scene.getOmniLights()[0].dynamic = true; /// @todo Doesn't work if not dynamic...
+		_scene.getOmniLights()[0].dynamic = true;
 		_scene.getOmniLights()[0].init();
 		_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0, 25.0, -2.0));
 		_scene.getOmniLights()[0].setColor(glm::vec3(1.5));
 		_scene.getOmniLights()[0].setRange(40.0f);
 		_scene.getOmniLights()[0].updateMatrices();
+		
+		_scene.getOmniLights()[1].setResolution(2048);
+		_scene.getOmniLights()[1].dynamic = true;
+		_scene.getOmniLights()[1].init();
+		_scene.getOmniLights()[1].setPosition(glm::vec3(200.0, -28.0, 0.0));
+		_scene.getOmniLights()[1].setColor(glm::vec3(0.5));
+		_scene.getOmniLights()[1].setRange(150.0f);
+		_scene.getOmniLights()[1].updateMatrices();
 		*/
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
 			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
@@ -193,34 +201,30 @@ public:
 		_updateTiming.begin(Query::Target::TimeElapsed);
 		if(!_paused)
 		{
-			_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  glm::ballRand(0.25f);
-			_scene.getPointLights()[3].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			if(_scene.getPointLights().size() > 6)
+			{
+				_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  glm::ballRand(0.25f);
+				_scene.getPointLights()[3].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+				
+				_scene.getPointLights()[4].position = glm::vec3(-24.7, 5.4, 5.8) +  glm::ballRand(0.25f);
+				_scene.getPointLights()[4].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+				
+				_scene.getPointLights()[5].position = glm::vec3(-24.7, 5.4, -8.7) +  glm::ballRand(0.25f);
+				_scene.getPointLights()[5].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+				
+				_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  glm::ballRand(0.25f);
+				_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
+			}
 			
-			_scene.getPointLights()[4].position = glm::vec3(-24.7, 5.4, 5.8) +  glm::ballRand(0.25f);
-			_scene.getPointLights()[4].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-			
-			_scene.getPointLights()[5].position = glm::vec3(-24.7, 5.4, -8.7) +  glm::ballRand(0.25f);
-			_scene.getPointLights()[5].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-			
-			_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  glm::ballRand(0.25f);
-			_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-		
 			if(!_scene.getOmniLights().empty() && _scene.getOmniLights()[0].dynamic)
 				_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
+			
+			if(_scene.getOmniLights().size() > 1 && _scene.getOmniLights()[1].dynamic)
+				_scene.getOmniLights()[1].setPosition(glm::vec3(200.0 + 50.0 * cos(0.1 * _time), -25.0, 0.0));
 		}
 	
 		DeferredRenderer::update();
 		_updateTiming.end();
-	}
-	
-	virtual void renderGBufferPost() override
-	{
-		Context::disable(Capability::CullFace);
-		auto& ld = Resources::getProgram("LightDraw");
-		ld.setUniform("CameraPosition", _camera.getPosition());
-		ld.use();
-		glDrawArrays(GL_POINTS, 0, _scene.getPointLights().size());
-		ld.useNone();
 	}
 	
 	virtual void renderGUI() override
@@ -292,6 +296,7 @@ public:
 			ImGui::SameLine();
 			if(ImGui::Checkbox("Vsync", &_vsync))
 				glfwSwapInterval(_vsync);
+			ImGui::Text("Window resolution: %d * %d", _width, _height);
 			const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
 			static int internal_resolution_item_current = 0;
 			if(ImGui::Combo("Internal Resolution", &internal_resolution_item_current, internal_resolution_items, 4))
@@ -378,15 +383,122 @@ public:
 				ImVec4{1, 1, 0, 1},
 				ImVec4{1, 0, 0, 1}
 			};
-			ImGuiListClipper clipper(Log::_logs.size());
+			static int log_level_current = 0;
+			ImGui::Combo("Log Level", &log_level_current, Log::_log_types.data(), 3);
+			std::vector<Log::LogLine*> tmp_logs;
+			if(log_level_current > 0)
+				for(auto& l : Log::_logs)
+					if(log_level_current <= l.type)
+						tmp_logs.push_back(&l);
+			
+			ImGui::BeginChild("Logs Lines");
+			ImGuiListClipper clipper(log_level_current > 0 ? tmp_logs.size() : Log::_logs.size());
 			while(clipper.Step())
 				for(int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-					ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
+				{
+					if(log_level_current > 0)
+						ImGui::TextColored(LogColors[tmp_logs[i]->type], "%s", tmp_logs[i]->str().c_str());
+					else
+						ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
+				}
+			ImGui::EndChild();
+		}
+		ImGui::End();
+		
+		if(_selectedObject != nullptr)
+		{
+			auto aabb = _selectedObject->getAABB().getBounds();
+			std::array<ImVec2, 8> screen_aabb;
+			for(int i = 0; i < 8; ++i)
+			{
+				screen_aabb[i] = project(aabb[i]);
+			}
+			// Dummy Window for "on field" widgets
+			ImGui::Begin("SelectedObject", nullptr, ImVec2{static_cast<float>(_width), static_cast<float>(_height)}, 0.0,
+				ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
+			ImDrawList* drawlist = ImGui::GetWindowDrawList();
+			constexpr std::array<size_t, 24> segments{
+				0, 1, 1, 3, 3, 2, 2, 0,
+				4, 5, 5, 7, 7, 6, 6, 4,
+				0, 4, 1, 5, 2, 6, 3, 7
+			};
+			for(int i = 0; i < 24; i += 2)
+				drawlist->AddLine(screen_aabb[segments[i]], screen_aabb[segments[i + 1]], 
+					ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, 0.5)));
+			ImGui::End();
+		}
+		
+		ImGui::Begin("Object Inspector");
+		if(_selectedObject != nullptr)
+		{
+			ImGui::Text("Name: %s", _selectedObject->getMesh().getName().c_str());
+			ImGui::Text("Path: %s", _selectedObject->getMesh().getPath().c_str());
+			glm::vec3 p = _selectedObject->getPosition();
+			if(ImGui::InputFloat3("Position", &p.x))
+			{
+				_selectedObject->setPosition(p);
+			}
+			glm::quat r = _selectedObject->getRotation();
+			if(ImGui::InputFloat4("Rotation", &r.x))
+			{
+				_selectedObject->setRotation(r);
+			}
+			glm::vec3 s = _selectedObject->getScale();
+			if(ImGui::InputFloat3("Scale", &s.x))
+			{
+				_selectedObject->setScale(s);
+			}
+		} else {
+			ImGui::Text("No object selected.");
 		}
 		ImGui::End();
 		
 		DeferredRenderer::renderGUI();
 	}
+	
+	virtual void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) override
+	{	
+		Application::mouse_button_callback(window, button, action, mods);
+		if(ImGui::GetIO().WantCaptureMouse)
+		return;
+
+		if(!_controlCamera)
+		{
+			if(button == GLFW_MOUSE_BUTTON_1)
+			{
+				if(action == GLFW_PRESS)
+				{
+					const auto r = getMouseRay();
+					float depth = std::numeric_limits<float>::max();
+					if(_selectedObject)
+						_selectedObject->getMaterial().setUniform("Color", _selectedObjectColor);
+					_selectedObject = nullptr;
+					for(auto& o : _scene.getObjects())
+					{
+						if(trace(r, o, depth))
+						{
+							_selectedObject = &o;
+						}
+					}
+					if(_selectedObject)
+					{
+						_selectedObjectColor = _selectedObject->getMaterial().getUniform<glm::vec3>("Color");
+						_selectedObject->getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 1.5});
+					}
+				} else {
+				}
+			} else if(button == GLFW_MOUSE_BUTTON_2) {
+				if(action == GLFW_PRESS)
+				{
+				} else {
+				}
+			}
+		}
+	}
+	
+protected:
+	MeshInstance*	_selectedObject = nullptr;
+	glm::vec3		_selectedObjectColor;
 };
 
 int main(int argc, char* argv[])

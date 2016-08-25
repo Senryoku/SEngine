@@ -17,7 +17,7 @@ enum LogType
 	Warning		= 1,
 	Error		= 2
 };
-extern std::array<std::string, 3>	_log_types;
+extern std::array<const char*, 3>	_log_types;
 
 struct LogLine
 {
@@ -27,6 +27,11 @@ struct LogLine
 	std::string cached_full;
 	
 	inline operator std::string()
+	{
+		return str();
+	}
+	
+	inline std::string str()
 	{
 		if(cached_full.empty())
 		{

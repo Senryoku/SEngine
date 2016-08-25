@@ -45,11 +45,15 @@ public:
 	
 	Scene& getScene() { return _scene; }
 	
+	inline bool mouseLeft() const { return _mouse.x > 0.0; }
+	inline bool mouseRight() const { return _mouse.w > 0.0; }
 	Ray getMouseRay() const;
 	Ray getScreenRay(size_t x, size_t y) const;
 	glm::vec3 getMouseProjection(float depth) const;
 	
-	void setFoV(float fov)
+	glm::vec2 project(const glm::vec3&) const;
+	
+	inline void setFoV(float fov)
 	{
 		_fov = fov;
 		update_projection();

@@ -56,7 +56,7 @@ protected:
 	float		_aoRadius = 200.0f;
 	
 	int			_volumeSamples = 0;
-	float		_atmosphericDensity = 0.005f;
+	float		_atmosphericDensity = 0.002f;
 	
 	// Debug
 	bool		_debug_buffers		= false;

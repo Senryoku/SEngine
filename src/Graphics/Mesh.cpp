@@ -151,59 +151,75 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 		}
 		
 		M[s] = &Resources::getMesh(name);
+		M[s]->_name = shapes[s].name;
+		M[s]->_path = path;
 		M[s]->getMaterial().setShadingProgram(p);
 		
-		for(size_t i = 0; i < shapes[s].mesh.material_ids.size() - 1; ++i)
-			if(shapes[s].mesh.material_ids[i] >= 0 && shapes[s].mesh.material_ids[i + 1] >= 0 && 
-				shapes[s].mesh.material_ids[i] != shapes[s].mesh.material_ids[i + 1])
-			{
-				Log::warn("We're only supporting one material per mesh but '", name, "' uses at least '",
-					materials[shapes[s].mesh.material_ids[i]].name, "' (", shapes[s].mesh.material_ids[i], ") and '",
-					materials[shapes[s].mesh.material_ids[i + 1]].name, "' (", shapes[s].mesh.material_ids[i + 1], ").");
-				break;
-			}
-		const auto& material = materials[shapes[s].mesh.material_ids[0]];
-				
-		if(!material.diffuse_texname.empty())
+		if(!materials.empty())
 		{
-			std::string p = rep;
-			p.append(material.diffuse_texname);
-			std::replace(p.begin(), p.end(), '\\', '/');
-			auto& t = Resources::getTexture<Texture2D>(p);
-			if(!t.isValid())
-				t.load(p);
-			if(t.isValid())
+			for(size_t i = 0; i < shapes[s].mesh.material_ids.size() - 1; ++i)
+				if(shapes[s].mesh.material_ids[i] >= 0 && shapes[s].mesh.material_ids[i + 1] >= 0 && 
+					shapes[s].mesh.material_ids[i] != shapes[s].mesh.material_ids[i + 1])
+				{
+					Log::warn("We're only supporting one material per mesh but '", name, "' uses at least '",
+						materials[shapes[s].mesh.material_ids[i]].name, "' (", shapes[s].mesh.material_ids[i], ") and '",
+						materials[shapes[s].mesh.material_ids[i + 1]].name, "' (", shapes[s].mesh.material_ids[i + 1], ").");
+					break;
+				}
+			const auto& material = materials[shapes[s].mesh.material_ids[0]];
+					
+			if(!material.diffuse_texname.empty())
 			{
-				M[s]->getMaterial().setUniform("Texture", t);
-				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "texture_color");
+				std::string p = rep;
+				p.append(material.diffuse_texname);
+				std::replace(p.begin(), p.end(), '\\', '/');
+				auto& t = Resources::getTexture<Texture2D>(p);
+				if(!t.isValid())
+				{
+					Log::info("Loading diffuse texture '", p, "'.");
+					t.load(p);
+				}
+				if(t.isValid())
+				{
+					M[s]->getMaterial().setUniform("Texture", t);
+					M[s]->getMaterial().setUniform("Color", glm::vec3{1.0});
+					M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "texture_color");
+				} else {
+					Log::error("Texture ", p, " is invalid.");
+				}
 			} else {
-				Log::error("Texture ", p, " is invalid.");
+				M[s]->getMaterial().setUniform("Color", glm::vec3{material.diffuse[0], material.diffuse[1], material.diffuse[2]});
+				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "uniform_color");
+			}
+			
+			std::string normal_map;
+			if(!material.bump_texname.empty()) normal_map = material.bump_texname; // map_bump, bump
+			if(!material.normal_texname.empty()) normal_map = material.normal_texname;
+			
+			if(!normal_map.empty())
+			{
+				std::string p = rep;
+				p.append(normal_map);
+				std::replace(p.begin(), p.end(), '\\', '/');
+				auto& t = Resources::getTexture<Texture2D>(p);
+				if(!t.isValid())
+				{
+					Log::info("Loading normal texture '", p, "'.");
+					t.load(p);
+				}
+				if(t.isValid())
+				{
+					M[s]->getMaterial().setUniform("NormalMap", t);
+					M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "normal_mapping");
+				} else {
+					Log::error("Texture ", p, " is invalid.");
+				}
+			} else {
+				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
 			}
 		} else {
-			M[s]->getMaterial().setUniform("Color", glm::vec3{material.diffuse[0], material.diffuse[1], material.diffuse[2]});
+			M[s]->getMaterial().setUniform("Color", glm::vec3{1.0f});
 			M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "uniform_color");
-		}
-		
-		std::string normal_map;
-		if(!material.bump_texname.empty()) normal_map = material.bump_texname; // map_bump, bump
-		if(!material.normal_texname.empty()) normal_map = material.normal_texname;
-		
-		if(!normal_map.empty())
-		{
-			std::string p = rep;
-			p.append(normal_map);
-			std::replace(p.begin(), p.end(), '\\', '/');
-			auto& t = Resources::getTexture<Texture2D>(p);
-			if(!t.isValid())
-				t.load(p);
-			if(t.isValid())
-			{
-				M[s]->getMaterial().setUniform("NormalMap", t);
-				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "normal_mapping");
-			} else {
-				Log::error("Texture ", p, " is invalid.");
-			}
-		} else {
 			M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
 		}
 		

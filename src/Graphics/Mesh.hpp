@@ -53,6 +53,9 @@ public:
 	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }		///< @return Array of Triangles
 	inline Material& 					getMaterial()		{ return _material; }		///< @return Material
 	
+	inline const std::string&			getName()			const { return _name; }			///< @return Name
+	inline const std::string&			getPath()			const { return _path; }			///< @return Path @see _path
+	
 	inline const std::vector<Vertex>&	getVertices() 		const { return _vertices; }		///< @return Array of Vertices
 	inline const std::vector<Triangle>&	getTriangles()		const { return _triangles; }	///< @return Array of Triangles
 	inline const Material&				getMaterial()		const { return _material; }		///< @return Material
@@ -73,6 +76,9 @@ public:
 	static std::vector<Mesh*> load(const std::string& path, const Program& p);
 	
 protected:
+	std::string				_name;	///< Name
+	std::string				_path;	///< Path to the file from where the mesh was loaded (optional)
+
 	std::vector<Vertex>		_vertices;
 	std::vector<Triangle>	_triangles;
 	

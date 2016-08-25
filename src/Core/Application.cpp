@@ -405,6 +405,19 @@ glm::vec3 Application::getMouseProjection(float depth) const
 	return glm::vec3(o);
 }
 
+glm::vec2 Application::project(const glm::vec3& v) const
+{
+	auto t = _camera.getMatrix() * glm::vec4{v, 1.0};
+	if(t.z > 0.0) // Truncate is point is behind camera
+		t.z = 0.0;
+	t = _projection * t;
+	auto r = glm::vec2{t.x, -t.y} / t.w;
+	r = 0.5f * (r + 1.0f);
+	r.x *= _width;
+	r.y *= _height;
+	return r;
+}
+
 void Application::update_projection()
 {
 	float inRad = _fov * glm::pi<float>()/180.f;
@@ -412,7 +425,7 @@ void Application::update_projection()
 	_invProjection = glm::inverse(_projection);
 }
 
-void Application::mouse_button_callback(GLFWwindow* _window, int button, int action, int mods)
+void Application::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {	
 	float z = _mouse.z;
 	float w = _mouse.w;
@@ -442,7 +455,7 @@ void Application::mouse_button_callback(GLFWwindow* _window, int button, int act
 	_mouse = glm::vec4(_mouse.x, _mouse.y, z, w);
 }
 
-void Application::mouse_position_callback(GLFWwindow* _window, double xpos, double ypos)
+void Application::mouse_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
 	_mouse = glm::vec4(xpos, ypos, _mouse.z, _mouse.w);
 }

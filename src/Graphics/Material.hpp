@@ -61,8 +61,11 @@ public:
 	// Generic Uniform setting
 	
 	template<typename T>
+	inline T getUniform(const std::string&);
+	
+	template<typename T>
 	inline void setUniform(const std::string& name, const T& value);
-
+	
 	inline void setSubroutine(ShaderType stage, const std::string& uniformName, const std::string& functionName);
 	
 	inline void use() const;
@@ -164,6 +167,18 @@ inline void Material::setUniform(const std::string& name, const Texture& value)
 
 ////////////////////////////////////////////////////////////////
 // Generic Uniform setting
+
+template<typename T>
+T Material::getUniform(const std::string& name)
+{
+	for(const auto& u : _uniforms)
+	{
+		if(u.get()->getName() == name)
+			return dynamic_cast<Uniform<T>*>(u.get())->getValue();
+	}
+	Log::error("Uniform ", name, " not found.");
+	return T{};
+}
 
 template<typename T>
 void Material::setUniform(const std::string& name, const T& value)
