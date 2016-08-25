@@ -405,9 +405,9 @@ glm::vec3 Application::getMouseProjection(float depth) const
 	return glm::vec3(o);
 }
 
-glm::vec2 Application::project(const glm::vec3& v) const
+glm::vec2 Application::project(const glm::vec4& v) const
 {
-	auto t = _camera.getMatrix() * glm::vec4{v, 1.0};
+	auto t = _camera.getMatrix() * v;
 	if(t.z > 0.0) // Truncate is point is behind camera
 		t.z = 0.0;
 	t = _projection * t;

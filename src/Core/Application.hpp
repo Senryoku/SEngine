@@ -51,7 +51,8 @@ public:
 	Ray getScreenRay(size_t x, size_t y) const;
 	glm::vec3 getMouseProjection(float depth) const;
 	
-	glm::vec2 project(const glm::vec3&) const;
+	glm::vec2 project(const glm::vec4&) const;
+	inline glm::vec2 project(const glm::vec3& v) const { return project(glm::vec4{v, 1.0}); };
 	
 	inline void setFoV(float fov)
 	{

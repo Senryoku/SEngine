@@ -21,8 +21,8 @@ void _log(LogType lt)
 {
 	std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	if(_logs.size() > BufferSize)
-		_logs.pop_front();
-	_logs.push_back(LogLine{
+		_logs.pop_back();
+	_logs.push_front(LogLine{
 		now,
 		lt,
 		_log_line.str()
