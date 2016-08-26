@@ -8,6 +8,11 @@ The main optimisation is the use of a compute shader to divise the computation o
 Quick video:
 https://youtu.be/NRjylzEVU9w
 
+# TODO
+ * Split meshes with multiple materials into differents objects
+ * Write true object model (ECS ?) and get rid of MeshInstance (or make it a component)
+ * A true Scene manager... (and an octree)
+
 # Dependencies
 
  * [GLFW](http://www.glfw.org/)

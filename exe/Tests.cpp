@@ -25,88 +25,11 @@ std::string to_string(const T a_value, const int n = 6)
     out << std::setprecision(n) << a_value;
     return out.str();
 }
-/*
-bool Slider3D(const char* label, const ImVec2& size_arg)
-{
-	ImGuiContext* g = ImGui::GetCurrentContext();
-    ImGuiWindow* window = ImGui::GetCurrentWindow();
-    const ImGuiID id = window->GetID(label);
-	
-	const std::array<glm::vec2, 2> gizmo_points{
-		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 0.0}),
-		project(_selectedObject->getTransformation().getPosition() + glm::vec3{1.0, 0.0, 0.0})
-	}
-	
-	bool hovered = point_line_distance(glm::vec2{_mouse}, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
-	ImGui::SetHoveredID(id);
-	ImGui::SetActiveID(id, window); // Hold on ID
-	
-	bool held = false;
-    if(g->ActiveId == id)
-    {
-        if(g->IO.MouseDown[0])
-        {
-            held = true;
-        }
-        else
-        {
-            if (hovered && (flags & ImGuiButtonFlags_PressedOnClickRelease))
-                if (!((flags & ImGuiButtonFlags_Repeat) && g.IO.MouseDownDurationPrev[0] >= g.IO.KeyRepeatDelay))  // Repeat mode trumps <on release>
-                    pressed = true;
-            SetActiveID(0);
-        }
-	}
 
-	/*
-	const std::array<glm::vec2, 4> gizmo_points{
-		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 0.0}),
-		project(_selectedObject->getTransformation().getPosition() + glm::vec3{1.0, 0.0, 0.0}),
-		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 1.0, 0.0}),
-		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 1.0})
-	};
-	static bool dragging[3] = {false, false, false};
-	static glm::vec3 origin_position;
-	for(int i = 0; i < 3; ++i)
-	{
-		if(dragging[i] && ImGui::IsMouseDragging(0))
-		{
-			auto newP = glm::vec2{ImGui::GetMousePos()};
-			auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
-			auto newR = getScreenRay(newP.x, newP.y);
-			auto oldR = getScreenRay(oldP.x, oldP.y);
-			Plane pl{_selectedObject->getTransformation().getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
-			float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
-			glm::vec3 p0, p1, n0, n1;
-			trace(newR, pl, d0, p0, n0);
-			trace(oldR, pl, d1, p1, n1);
-			auto newPosition = origin_position;
-			newPosition[i] += p0[i] - p1[i];
-			_selectedObject->getTransformation().setPosition(newPosition);
-		} 
-		if(dragging[i] && ImGui::IsMouseReleased(0))
-		{
-			dragging[i] = false;
-			ImGui::GetIO().WantCaptureMouse = false;
-		}
-		if(ImGui::IsMouseClicked(0) && point_line_distance(glm::vec2{_mouse}, gizmo_points[0], gizmo_points[1 + i]) < 5.0f)
-		{
-			dragging[i] = true;
-			origin_position = _selectedObject->getTransformation().getPosition();
-		}
-	}
-	if(dragging[0] || dragging[1] || dragging[2])
-		ImGui::GetIO().WantCaptureMouse = true;
-	
-	drawlist->AddLine(gizmo_points[0], gizmo_points[1], ImGui::ColorConvertFloat4ToU32(ImVec4(1.0, 0.0, 0.0, dragging[0] ? 1.0 : 0.5)), 2.0);
-	drawlist->AddLine(gizmo_points[0], gizmo_points[2], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 1.0, 0.0, dragging[1] ? 1.0 : 0.5)), 2.0);
-	drawlist->AddLine(gizmo_points[0], gizmo_points[3], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, dragging[2] ? 1.0 : 0.5)), 2.0);
-	
-}
-*/
-class Test : public DeferredRenderer
+class Editor : public DeferredRenderer
 {
 public:
-	Test(int argc, char* argv[]) : 
+	Editor(int argc, char* argv[]) : 
 		DeferredRenderer(argc, argv)
 	{
 	}
@@ -148,62 +71,6 @@ public:
 				_scene.add(MeshInstance(*part, Matrices.begin()[i]));
 			}
 		}
-
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(42.8, 7.1, -1.5), 	// Position
-			10.0f,
-			glm::vec3(2.0), // Color
-			0.0f
-		});
-
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(42.0, 23.1, 16.1), 	// Position
-			15.0f,
-			glm::vec3(2.0), // Color
-			0.0f
-		});
-
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(-50.0, 22.8, -18.6), 	// Position
-			20.0f,
-			glm::vec3(2.0), // Color
-			0.0f
-		});
-		
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(19.5, 5.4, 5.8), 	// Position
-			5.0f,
-			glm::vec3(0.8, 0.1, 0.2), // Color
-			0.0f
-		});
-		
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(-24.7, 5.4, 5.8), 	// Position
-			5.0f,
-			glm::vec3(0.8, 0.1, 0.2), // Color
-			0.0f
-		});
-		
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(-24.7, 5.4, -8.7), 	// Position
-			5.0f,
-			glm::vec3(0.8, 0.1, 0.2), // Color
-			0.0f
-		});
-		
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(19.5, 5.4, -8.7), 	// Position
-			5.0f,
-			glm::vec3(0.8, 0.1, 0.2), // Color
-			0.0f
-		});
-		
-		_scene.getPointLights().push_back(PointLight{
-			glm::vec3(-47.0, 4.5, -1.5), 	// Position
-			20.0f,
-			glm::vec3(1.8), // Color
-			0.0f
-		});
 		
 		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
@@ -273,37 +140,6 @@ public:
 				"in/Textures/skybox/negy.png",
 				"in/Textures/skybox/posz.png",
 				"in/Textures/skybox/negz.png"});
-	}
-	
-	virtual void update() override
-	{
-		_updateTiming.begin(Query::Target::TimeElapsed);
-		if(!_paused)
-		{
-			if(_scene.getPointLights().size() > 6)
-			{
-				_scene.getPointLights()[3].position = glm::vec3(19.5, 5.4, 5.8) +  glm::ballRand(0.25f);
-				_scene.getPointLights()[3].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-				
-				_scene.getPointLights()[4].position = glm::vec3(-24.7, 5.4, 5.8) +  glm::ballRand(0.25f);
-				_scene.getPointLights()[4].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-				
-				_scene.getPointLights()[5].position = glm::vec3(-24.7, 5.4, -8.7) +  glm::ballRand(0.25f);
-				_scene.getPointLights()[5].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-				
-				_scene.getPointLights()[6].position = glm::vec3(19.5, 5.4, -8.7) +  glm::ballRand(0.25f);
-				_scene.getPointLights()[6].color = glm::vec3(0.8, 0.28, 0.2) * (4.0f + 0.75f * rand<float>());
-			}
-			
-			if(!_scene.getOmniLights().empty() && _scene.getOmniLights()[0].dynamic)
-				_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0 + 15.0 * cos(_time), 25.0, -2.0));
-			
-			if(_scene.getOmniLights().size() > 1 && _scene.getOmniLights()[1].dynamic)
-				_scene.getOmniLights()[1].setPosition(glm::vec3(200.0 + 50.0 * cos(0.1 * _time), -25.0, 0.0));
-		}
-	
-		DeferredRenderer::update();
-		_updateTiming.end();
 	}
 	
 	virtual void renderGUI() override
@@ -432,7 +268,8 @@ public:
 				for(auto& o : _scene.getObjects())
 				{
 					ImGui::PushID(&o);
-					ImGui::Text("Object");
+					if(ImGui::Button(o.getMesh().getName().c_str()))
+						selectObject(&o);
 					ImGui::PopID();
 				}
 				ImGui::TreePop();
@@ -624,27 +461,18 @@ public:
 			ImGui::Text("No object selected.");
 		}
 		ImGui::End();
-
+		
 		if(!ImGui::GetIO().WantCaptureMouse)
 		{
 			if(ImGui::IsMouseClicked(0))
 			{
 				const auto r = getMouseRay();
 				float depth = std::numeric_limits<float>::max();
-				if(_selectedObject)
-					_selectedObject->getMaterial().setUniform("Color", _selectedObjectColor);
-				_selectedObject = nullptr;
+				deselectObject();
 				for(auto& o : _scene.getObjects())
 				{
 					if(trace(r, o, depth))
-					{
-						_selectedObject = &o;
-					}
-				}
-				if(_selectedObject)
-				{
-					_selectedObjectColor = _selectedObject->getMaterial().getUniform<glm::vec3>("Color");
-					_selectedObject->getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 1.5});
+						selectObject(&o);
 				}
 			}
 		}
@@ -655,11 +483,27 @@ public:
 protected:
 	MeshInstance*	_selectedObject = nullptr;
 	glm::vec3		_selectedObjectColor;
+
+	void deselectObject()
+	{
+		if(_selectedObject)
+			_selectedObject->getMaterial().setUniform("Color", _selectedObjectColor);
+		_selectedObject = nullptr;
+	}
+	
+	void selectObject(MeshInstance* o)
+	{
+		if(_selectedObject != nullptr)
+			deselectObject();
+		_selectedObject = o;
+		_selectedObjectColor = _selectedObject->getMaterial().getUniform<glm::vec3>("Color");
+		_selectedObject->getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 1.5});
+	}
 };
 
 int main(int argc, char* argv[])
 {
-	Test _app(argc, argv);
+	Editor _app(argc, argv);
 	_app.init();	
 	_app.run();
 }
