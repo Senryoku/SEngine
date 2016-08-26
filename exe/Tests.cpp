@@ -5,6 +5,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glmext.hpp>
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <Query.hpp>
 
@@ -24,7 +25,84 @@ std::string to_string(const T a_value, const int n = 6)
     out << std::setprecision(n) << a_value;
     return out.str();
 }
+/*
+bool Slider3D(const char* label, const ImVec2& size_arg)
+{
+	ImGuiContext* g = ImGui::GetCurrentContext();
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    const ImGuiID id = window->GetID(label);
+	
+	const std::array<glm::vec2, 2> gizmo_points{
+		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 0.0}),
+		project(_selectedObject->getTransformation().getPosition() + glm::vec3{1.0, 0.0, 0.0})
+	}
+	
+	bool hovered = point_line_distance(glm::vec2{_mouse}, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
+	ImGui::SetHoveredID(id);
+	ImGui::SetActiveID(id, window); // Hold on ID
+	
+	bool held = false;
+    if(g->ActiveId == id)
+    {
+        if(g->IO.MouseDown[0])
+        {
+            held = true;
+        }
+        else
+        {
+            if (hovered && (flags & ImGuiButtonFlags_PressedOnClickRelease))
+                if (!((flags & ImGuiButtonFlags_Repeat) && g.IO.MouseDownDurationPrev[0] >= g.IO.KeyRepeatDelay))  // Repeat mode trumps <on release>
+                    pressed = true;
+            SetActiveID(0);
+        }
+	}
 
+	/*
+	const std::array<glm::vec2, 4> gizmo_points{
+		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 0.0}),
+		project(_selectedObject->getTransformation().getPosition() + glm::vec3{1.0, 0.0, 0.0}),
+		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 1.0, 0.0}),
+		project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 1.0})
+	};
+	static bool dragging[3] = {false, false, false};
+	static glm::vec3 origin_position;
+	for(int i = 0; i < 3; ++i)
+	{
+		if(dragging[i] && ImGui::IsMouseDragging(0))
+		{
+			auto newP = glm::vec2{ImGui::GetMousePos()};
+			auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
+			auto newR = getScreenRay(newP.x, newP.y);
+			auto oldR = getScreenRay(oldP.x, oldP.y);
+			Plane pl{_selectedObject->getTransformation().getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
+			float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
+			glm::vec3 p0, p1, n0, n1;
+			trace(newR, pl, d0, p0, n0);
+			trace(oldR, pl, d1, p1, n1);
+			auto newPosition = origin_position;
+			newPosition[i] += p0[i] - p1[i];
+			_selectedObject->getTransformation().setPosition(newPosition);
+		} 
+		if(dragging[i] && ImGui::IsMouseReleased(0))
+		{
+			dragging[i] = false;
+			ImGui::GetIO().WantCaptureMouse = false;
+		}
+		if(ImGui::IsMouseClicked(0) && point_line_distance(glm::vec2{_mouse}, gizmo_points[0], gizmo_points[1 + i]) < 5.0f)
+		{
+			dragging[i] = true;
+			origin_position = _selectedObject->getTransformation().getPosition();
+		}
+	}
+	if(dragging[0] || dragging[1] || dragging[2])
+		ImGui::GetIO().WantCaptureMouse = true;
+	
+	drawlist->AddLine(gizmo_points[0], gizmo_points[1], ImGui::ColorConvertFloat4ToU32(ImVec4(1.0, 0.0, 0.0, dragging[0] ? 1.0 : 0.5)), 2.0);
+	drawlist->AddLine(gizmo_points[0], gizmo_points[2], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 1.0, 0.0, dragging[1] ? 1.0 : 0.5)), 2.0);
+	drawlist->AddLine(gizmo_points[0], gizmo_points[3], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, dragging[2] ? 1.0 : 0.5)), 2.0);
+	
+}
+*/
 class Test : public DeferredRenderer
 {
 public:
@@ -276,6 +354,8 @@ public:
 		}
 		ImGui::End();
 		
+		ImGui::ShowMetricsWindow();
+		
 		ImGui::Begin("Debug");
 		{
 			ImGui::Checkbox("Pause", &_paused);
@@ -447,48 +527,58 @@ public:
 			/////////////////////////////////////
 			// Position Gizmo
 			// @todo Debug it, Clean in, Package it 
+			ImGuiContext* g = ImGui::GetCurrentContext();
+			ImGuiWindow* window = ImGui::GetCurrentWindow();
+	
 			const std::array<glm::vec2, 4> gizmo_points{
 				project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 0.0}),
 				project(_selectedObject->getTransformation().getPosition() + glm::vec3{1.0, 0.0, 0.0}),
 				project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 1.0, 0.0}),
 				project(_selectedObject->getTransformation().getPosition() + glm::vec3{0.0, 0.0, 1.0})
 			};
-			static bool dragging[3] = {false, false, false};
-			static glm::vec3 origin_position;
+			
+			static const char* labels[3] = {"PositionGizmoX", "PositionGizmoY", "PositionGizmoZ"};
 			for(int i = 0; i < 3; ++i)
 			{
-				if(dragging[i] && ImGui::IsMouseDragging(0))
+				const ImGuiID id = window->GetID(labels[i]);
+				const auto mouse = glm::vec2{ImGui::GetMousePos()};
+				
+				bool hovered = point_line_distance(mouse, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
+				if(hovered)
+					ImGui::SetHoveredID(id);
+				bool active = id == g->ActiveId;
+			
+				if(active && ImGui::IsMouseDragging(0))
 				{
-					auto newP = glm::vec2{ImGui::GetMousePos()};
-					auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
-					auto newR = getScreenRay(newP.x, newP.y);
-					auto oldR = getScreenRay(oldP.x, oldP.y);
+					const auto newP = mouse;
+					const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
+					ImGui::ResetMouseDragDelta(0);
+					const auto newR = getScreenRay(newP.x, newP.y);
+					const auto oldR = getScreenRay(oldP.x, oldP.y);
 					Plane pl{_selectedObject->getTransformation().getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
 					float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
 					glm::vec3 p0, p1, n0, n1;
 					trace(newR, pl, d0, p0, n0);
 					trace(oldR, pl, d1, p1, n1);
-					auto newPosition = origin_position;
+					auto newPosition = _selectedObject->getTransformation().getPosition();
 					newPosition[i] += p0[i] - p1[i];
 					_selectedObject->getTransformation().setPosition(newPosition);
+					
+					//ImGui::SetActiveID(id, window);
+					ImGui::GetIO().WantCaptureMouse = true;
 				} 
-				if(dragging[i] && ImGui::IsMouseReleased(0))
+				if(active && ImGui::IsMouseReleased(0))
 				{
-					dragging[i] = false;
-					ImGui::GetIO().WantCaptureMouse = false;
+					ImGui::SetActiveID(0, window);
 				}
-				if(ImGui::IsMouseClicked(0) && point_line_distance(glm::vec2{_mouse}, gizmo_points[0], gizmo_points[1 + i]) < 5.0f)
+				if(ImGui::IsMouseClicked(0) && hovered)
 				{
-					dragging[i] = true;
-					origin_position = _selectedObject->getTransformation().getPosition();
+					ImGui::SetActiveID(id, window);
+					ImGui::GetIO().WantCaptureMouse = true;
 				}
+				drawlist->AddLine(gizmo_points[0], gizmo_points[i + 1], 
+					ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);
 			}
-			if(dragging[0] || dragging[1] || dragging[2])
-				ImGui::GetIO().WantCaptureMouse = true;
-			
-			drawlist->AddLine(gizmo_points[0], gizmo_points[1], ImGui::ColorConvertFloat4ToU32(ImVec4(1.0, 0.0, 0.0, dragging[0] ? 1.0 : 0.5)), 2.0);
-			drawlist->AddLine(gizmo_points[0], gizmo_points[2], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 1.0, 0.0, dragging[1] ? 1.0 : 0.5)), 2.0);
-			drawlist->AddLine(gizmo_points[0], gizmo_points[3], ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, dragging[2] ? 1.0 : 0.5)), 2.0);
 			////////////////////////////////////////////////////
 			
 			ImGui::End();
