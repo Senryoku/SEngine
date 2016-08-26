@@ -9,9 +9,15 @@ Quick video:
 https://youtu.be/NRjylzEVU9w
 
 # TODO
+## Major
  * Split meshes with multiple materials into differents objects
  * Write true object model (ECS ?) and get rid of MeshInstance (or make it a component)
  * A true Scene manager... (and an octree)
+ * Choose/Develop a scene file format and use it (gltf ? https://github.com/KhronosGroup/glTF)
+ * Write a editor for this format.
+ * Decouple the renderer from the application ? (related to the previous point)
+## Minor
+ * Better Gizmos (particularly rotation, which is really unclear atm)
 
 # Dependencies
 
