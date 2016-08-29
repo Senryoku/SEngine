@@ -38,6 +38,11 @@ public:
 	{
 		DeferredRenderer::run_init();
 		
+		auto& Simple = Resources::loadProgram("Simple",
+			Resources::load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
+			Resources::load<FragmentShader>("src/GLSL/fs.glsl")
+		);
+		
 		auto& LightDraw = Resources::loadProgram("LightDraw",
 			Resources::load<VertexShader>("src/GLSL/Debug/light_vs.glsl"),
 			Resources::load<GeometryShader>("src/GLSL/Debug/light_gs.glsl"),
@@ -48,6 +53,7 @@ public:
 		_camera.setPosition(glm::vec3(0.0, 15.0, -20.0));
 		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
 		
+		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 
 		float R = 0.95f;
@@ -340,6 +346,18 @@ public:
 		if(_selectedObject != nullptr)
 		{
 			auto& transform = _selectedObject->getTransformation();
+			
+			Context::disable(Capability::DepthTest);
+			Context::enable(Capability::Blend);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			Program& blend = Resources::getProgram("Simple");
+			blend.use();
+			blend.setUniform("Color", _selectedObjectColor);
+			blend.setUniform("ModelMatrix", transform.getModelMatrix());
+			_selectedObject->getMesh().draw();
+			Program::useNone();
+			Context::disable(Capability::Blend);
+			
 			auto aabb = _selectedObject->getAABB().getBounds();
 			std::array<ImVec2, 8> screen_aabb;
 			for(int i = 0; i < 8; ++i)
@@ -418,8 +436,7 @@ public:
 					ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);
 			}
 			////////////////////////////////////////////////////
-			
-			
+				
 			const std::array<glm::vec2, 4> rot_gizmo_points{
 				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
 				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
@@ -478,6 +495,23 @@ public:
 					ImGui::GetIO().WantCaptureMouse = true;
 				}
 				
+				const size_t circle_precision = 21;
+				glm::vec3 circle[circle_precision];
+				auto g = glm::cross(plane_normals[i], plane_normals[(i+2)%3]);
+				for(size_t p = 0; p < circle_precision; ++p)
+					circle[p] = glm::vec3{transform.getRotation() * glm::vec4{
+							glm::normalize(
+								plane_normals[(i+2)%3] + 
+								(static_cast<float>(p) / circle_precision - 0.5f) * g
+							)
+						, 1.0}};
+				for(size_t p = 0; p < circle_precision - 1; ++p)
+				{
+					drawlist->AddLine(project(transform.getPosition() + circle[p]), 
+						project(transform.getPosition() + circle[p + 1]),
+						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
+				}
+
 				drawlist->AddCircle(rot_gizmo_points[i + 1], 10.0,
 					ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
 			}
@@ -486,6 +520,8 @@ public:
 		}
 		
 		ImGui::Begin("Object Inspector");
+		ImGui::InputFloat4("Highlight color", &_selectedObjectColor.x);
+		ImGui::Separator();
 		if(_selectedObject != nullptr)
 		{
 			auto& transform = _selectedObject->getTransformation();
@@ -512,7 +548,6 @@ public:
 				Uniform<glm::vec3>* uniform = _selectedObject->getMaterial().searchUniform<glm::vec3>("Color");
 				if(uniform != nullptr)
 				{
-					// @todo Yes, Color is set on select, so this is stupid :D
 					ImGui::Text("Color: %f, %f, %f", uniform->getValue().x, uniform->getValue().y, uniform->getValue().z);
 				}
 				auto uniform_tex = _selectedObject->getMaterial().searchUniform<Texture>("Texture");
@@ -547,12 +582,10 @@ public:
 		
 protected:
 	MeshInstance*	_selectedObject = nullptr;
-	glm::vec3		_selectedObjectColor;
+	glm::vec4		_selectedObjectColor = glm::vec4{0.0, 0.0, 1.0, 0.10};
 
 	void deselectObject()
 	{
-		if(_selectedObject)
-			_selectedObject->getMaterial().setUniform("Color", _selectedObjectColor);
 		_selectedObject = nullptr;
 	}
 	
@@ -561,8 +594,6 @@ protected:
 		if(_selectedObject != nullptr)
 			deselectObject();
 		_selectedObject = o;
-		_selectedObjectColor = _selectedObject->getMaterial().getUniform<glm::vec3>("Color");
-		_selectedObject->getMaterial().setUniform("Color", glm::vec3{0.5, 0.5, 1.5});
 	}
 };
 
