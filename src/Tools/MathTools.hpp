@@ -9,20 +9,6 @@
 constexpr double pi() { return std::atan(1)*4; }
 
 /**
- * @param val
- * @param min
- * @param max
- * @return Clamped value between min and max
-**/
-template<typename ScalarType>
-ScalarType clamp(ScalarType val, ScalarType min, ScalarType max)
-{
-	if(val < min) return min;
-	else if(val > max) return max;
-	return val;
-}
-
-/**
  * Kind of a generic mod
 **/
 template<typename ScalarType>
@@ -88,10 +74,25 @@ T sqr(T a)
 	return a * a;
 }
 
+namespace stdext {
+/**
+ * @param val
+ * @param min
+ * @param max
+ * @return Clamped value between min and max
+**/
+template<typename ScalarType>
+ScalarType clamp(ScalarType val, ScalarType min, ScalarType max)
+{
+	if(val < min) return min;
+	else if(val > max) return max;
+	return val;
+}
+
 template<typename T>
 T max(std::initializer_list<T> args)
 {
-	T r = std::numeric_limits<T>::min();
+	T r = std::numeric_limits<T>::lowest();
 	for(const auto& v: args)
 		r = std::max(v, r);
 	return r;
@@ -104,4 +105,6 @@ T min(std::initializer_list<T> args)
 	for(const auto& v: args)
 		r = std::min(v, r);
 	return r;
+}
+
 }

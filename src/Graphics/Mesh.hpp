@@ -12,6 +12,7 @@
 #include <VertexArray.hpp>
 #include <BoundingShape.hpp>
 #include <Material.hpp>
+#include <Transformation.hpp>
 #include <Log.hpp>
 
 class Mesh
@@ -64,6 +65,7 @@ public:
 	inline const Buffer&				getIndexBuffer()	const { return _index_buffer; }	///< @return Index Buffer
 	
 	void computeNormals();
+	Transformation resetPivot();
 	
 	virtual void createVAO();
 	void draw() const;

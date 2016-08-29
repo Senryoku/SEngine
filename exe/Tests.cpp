@@ -71,10 +71,11 @@ public:
 			auto m = Mesh::load(Paths.begin()[i]);
 			for(auto& part : m)
 			{
+				auto t = part->resetPivot();
 				part->createVAO();
 				part->getMaterial().setUniform("R", R);
 				part->getMaterial().setUniform("F0", F0);
-				_scene.add(MeshInstance(*part, Matrices.begin()[i]));
+				_scene.add(MeshInstance(*part, Matrices.begin()[i] * t.getModelMatrix()));
 			}
 		}
 		
@@ -153,27 +154,22 @@ public:
 		// Plots
 		static float last_update = 2.0;
 		last_update += TimeManager::getInstance().getRealDeltaTime();
-		static std::deque<float> frametimes;
-		static std::deque<float> updatetimes;
-		static std::deque<float> gbuffertimes;
-		static std::deque<float> lighttimes;
-		static std::deque<float> postprocesstimes;
-		static std::deque<float> guitimes;
-		const size_t max_samples = 100;
-		float ms = TimeManager::getInstance().getRealDeltaTime() * 1000;
+		static std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
+		constexpr size_t max_samples = 100;
+		const float ms = TimeManager::getInstance().getRealDeltaTime() * 1000;
 		if(last_update > 0.05 || frametimes.empty())
 		{
-			if(frametimes.size() > max_samples) frametimes.pop_front();
+			if(frametimes.size() > max_samples)			frametimes.pop_front();
+			if(updatetimes.size() > max_samples)		updatetimes.pop_front();
+			if(gbuffertimes.size() > max_samples)		gbuffertimes.pop_front();
+			if(lighttimes.size() > max_samples)			lighttimes.pop_front();
+			if(postprocesstimes.size() > max_samples)	postprocesstimes.pop_front();
+			if(guitimes.size() > max_samples)			guitimes.pop_front();
 			frametimes.push_back(ms);
-			if(updatetimes.size() > max_samples) updatetimes.pop_front();
 			updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
-			if(gbuffertimes.size() > max_samples) gbuffertimes.pop_front();
 			gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
-			if(lighttimes.size() > max_samples) lighttimes.pop_front();
 			lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
-			if(postprocesstimes.size() > max_samples) postprocesstimes.pop_front();
 			postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
-			if(guitimes.size() > max_samples) guitimes.pop_front();
 			guitimes.push_back(_lastGUITiming / 1000000.0);
 			last_update = 0.0;
 		}
@@ -349,7 +345,7 @@ public:
 			
 			Context::disable(Capability::DepthTest);
 			Context::enable(Capability::Blend);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			Context::blendFunc(Factor::SrcAlpha, Factor::OneMinusSrcAlpha);
 			Program& blend = Resources::getProgram("Simple");
 			blend.use();
 			blend.setUniform("Color", _selectedObjectColor);
@@ -436,7 +432,8 @@ public:
 					ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);
 			}
 			////////////////////////////////////////////////////
-				
+			
+			// Rotation Gizmo
 			const std::array<glm::vec2, 4> rot_gizmo_points{
 				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
 				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
@@ -520,7 +517,7 @@ public:
 		}
 		
 		ImGui::Begin("Object Inspector");
-		ImGui::InputFloat4("Highlight color", &_selectedObjectColor.x);
+		ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
 		ImGui::Separator();
 		if(_selectedObject != nullptr)
 		{
@@ -548,13 +545,20 @@ public:
 				Uniform<glm::vec3>* uniform = _selectedObject->getMaterial().searchUniform<glm::vec3>("Color");
 				if(uniform != nullptr)
 				{
-					ImGui::Text("Color: %f, %f, %f", uniform->getValue().x, uniform->getValue().y, uniform->getValue().z);
+					float col[3] = {uniform->getValue().x, uniform->getValue().y, uniform->getValue().z};
+					if(ImGui::ColorEdit3("Color", col))
+						uniform->setValue(glm::vec3{col[0], col[1], col[2]});
 				}
 				auto uniform_tex = _selectedObject->getMaterial().searchUniform<Texture>("Texture");
 				if(uniform_tex != nullptr)
 				{
 					ImGui::Text("Has a Texture");
 				}
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode("Mesh"))
+			{
 				ImGui::TreePop();
 			}
 		} else {

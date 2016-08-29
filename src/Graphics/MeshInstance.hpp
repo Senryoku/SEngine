@@ -25,11 +25,18 @@ public:
 	
 	inline AABB<glm::vec3> getAABB() const
 	{
-		const BoundingBox& bbox = _mesh->getBoundingBox();
-		return AABB<glm::vec3>{
-			glm::vec3{_transformation.getModelMatrix() * glm::vec4{bbox.min, 1.0}},
-			glm::vec3{_transformation.getModelMatrix() * glm::vec4{bbox.max, 1.0}}
-		};
+		// Will not yield a perfectly fit AABB (one would have to process every vertex to get it), 
+		// but a correct one, meaning it will contain the entire transformed model.
+		auto bbox = _mesh->getBoundingBox().getBounds();
+		auto min = glm::vec3{std::numeric_limits<float>::max()};
+		auto max = glm::vec3{std::numeric_limits<float>::lowest()};
+		for(auto v : bbox)
+		{	
+			v = _transformation(v);
+			min = glm::min(min, v);
+			max = glm::max(max, v);
+		}
+		return AABB<glm::vec3>{min, max};
 	}
 	
 private:

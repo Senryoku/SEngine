@@ -36,6 +36,18 @@ Mesh::Mesh() :
 {
 }
 
+Transformation Mesh::resetPivot()
+{
+	glm::vec3 pivot = 0.5f * (_bbox.max + _bbox.min);
+	pivot.y = _bbox.min.y;
+	
+	for(auto& v : _vertices)
+		v.position -= pivot;
+	computeBoundingBox();
+	
+	return Transformation(pivot);
+}
+
 void Mesh::createVAO()
 {
 	_vao.init();
@@ -99,14 +111,12 @@ void Mesh::computeNormals()
 
 void Mesh::computeBoundingBox()
 {
+	_bbox.min = glm::vec3{std::numeric_limits<float>::max()};
+	_bbox.max = glm::vec3{std::numeric_limits<float>::lowest()};
 	for(const auto& v : _vertices)
 	{
-		_bbox.min = glm::vec3{std::min(_bbox.min.x, v.position.x), 
-							std::min(_bbox.min.y, v.position.y), 
-							std::min(_bbox.min.z, v.position.z)};
-		_bbox.max = glm::vec3{std::max(_bbox.max.x, v.position.x), 
-							std::max(_bbox.max.y, v.position.y), 
-							std::max(_bbox.max.z, v.position.z)};
+		_bbox.min = glm::min(_bbox.min, v.position);
+		_bbox.max = glm::max(_bbox.max, v.position);
 	}
 }
 

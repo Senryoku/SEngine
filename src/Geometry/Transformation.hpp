@@ -12,7 +12,7 @@ class Transformation
 public:
 	Transformation(const glm::mat4& m = glm::mat4{1.0f});
 	Transformation(const glm::vec3& p, 
-		const glm::quat& r = glm::quat{0.0f, 0.0f, 0.0f, 1.0f}, 
+		const glm::quat& r = glm::quat{}, 
 		const glm::vec3& scale = glm::vec3{1.0f});
 	Transformation(const Transformation&) =default;
 	
@@ -51,6 +51,22 @@ public:
 	inline void setScale(float s)
 	{
 		setScale(glm::vec3{s, s, s});
+	}
+	
+	inline glm::vec4 apply(const glm::vec4& v) const
+	{
+		return _modelMatrix * v;
+	}
+	
+	inline glm::vec3 apply(const glm::vec3& v) const
+	{
+		return glm::vec3{apply(glm::vec4{v, 1.0f})};
+	}
+	
+	template<typename T>
+	inline T operator()(const T& v) const
+	{
+		return apply(v);
 	}
 
 private:
