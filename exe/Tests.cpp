@@ -60,7 +60,9 @@ public:
 
 		auto entity_test = create_entity();
 		entity_test.add<int>(10);
+		Log::info("get_component_type_idx<int>(): ", get_component_type_idx<int>());
 		entity_test.add<float>(3.0f);
+		Log::info("get_component_type_idx<float>(): ", get_component_type_idx<float>());
 		
 		float R = 0.95f;
 		float F0 = 0.15f;
