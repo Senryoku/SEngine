@@ -250,6 +250,8 @@ public:
 					case 3: setInternalResolution(3840, 2160); break;
 				}
 			}
+			if(ImGui::DragFloat("FoV", &_fov, 1.0, 40.0, 110.0))
+				setFoV(_fov);
 			
 			ImGui::Separator();
 			
