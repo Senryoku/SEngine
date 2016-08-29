@@ -12,7 +12,7 @@ public:
 	virtual void init() override;
 	virtual void bind() const override;
 	virtual void unbind() const override;
-	virtual void drawShadowMap(const std::vector<MeshInstance>& objects) const override;
+	virtual void drawShadowMap(const std::vector<MeshRenderer>& objects) const override;
 	
 	/**
 	 * @return Direction of the light

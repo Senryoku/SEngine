@@ -1,13 +1,13 @@
-#include <MeshInstance.hpp>
+#include <MeshRenderer.hpp>
 
-MeshInstance::MeshInstance(const Mesh& mesh, const Transformation& t) :
+MeshRenderer::MeshRenderer(const Mesh& mesh, const Transformation& t) :
 	_mesh(&mesh),
 	_material(mesh.getMaterial()),
 	_transformation(t)
 {
 }
 
-bool MeshInstance::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const
+bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const
 {
 	const BoundingBox& bbox = _mesh->getBoundingBox();
 	const glm::vec4 a = _transformation.getModelMatrix() * glm::vec4(bbox.min, 1.0);

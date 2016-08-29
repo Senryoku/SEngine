@@ -3,10 +3,10 @@
 #include <Mesh.hpp>
 #include <Transformation.hpp>
 
-class MeshInstance
+class MeshRenderer
 {
 public:
-	MeshInstance(const Mesh& mesh, const Transformation& t = Transformation{});
+	MeshRenderer(const Mesh& mesh, const Transformation& t = Transformation{});
 	
 	void draw() const
 	{

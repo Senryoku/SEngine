@@ -75,7 +75,7 @@ public:
 				part->createVAO();
 				part->getMaterial().setUniform("R", R);
 				part->getMaterial().setUniform("F0", F0);
-				_scene.add(MeshInstance(*part, Matrices.begin()[i] * t.getModelMatrix()));
+				_scene.add(MeshRenderer(*part, Matrices.begin()[i] * t.getModelMatrix()));
 			}
 		}
 		
@@ -585,7 +585,7 @@ public:
 	}
 		
 protected:
-	MeshInstance*	_selectedObject = nullptr;
+	MeshRenderer*	_selectedObject = nullptr;
 	glm::vec4		_selectedObjectColor = glm::vec4{0.0, 0.0, 1.0, 0.10};
 
 	void deselectObject()
@@ -593,7 +593,7 @@ protected:
 		_selectedObject = nullptr;
 	}
 	
-	void selectObject(MeshInstance* o)
+	void selectObject(MeshRenderer* o)
 	{
 		if(_selectedObject != nullptr)
 			deselectObject();

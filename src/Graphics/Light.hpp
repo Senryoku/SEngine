@@ -6,7 +6,7 @@
 #include <Frustum.hpp>
 #include <Texture2D.hpp>
 #include <Framebuffer.hpp>
-#include <MeshInstance.hpp>
+#include <MeshRenderer.hpp>
 #include <Shaders.hpp>
 
 /**
@@ -111,7 +111,7 @@ public:
 	/**
 	 * Draws passed objects to this light's shadow map
 	**/
-	virtual void drawShadowMap(const std::vector<MeshInstance>& objects) const =0;
+	virtual void drawShadowMap(const std::vector<MeshRenderer>& objects) const =0;
 	
 	// Static
 	

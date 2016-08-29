@@ -110,7 +110,7 @@ void OmnidirectionalLight::unbind() const
 	getShadowBuffer().unbind();
 }
 
-void OmnidirectionalLight::drawShadowMap(const std::vector<MeshInstance>& objects) const
+void OmnidirectionalLight::drawShadowMap(const std::vector<MeshRenderer>& objects) const
 {
 	//getShadowMap().set(Texture::Parameter::BaseLevel, 0);
 	

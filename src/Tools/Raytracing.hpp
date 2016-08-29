@@ -4,7 +4,7 @@
 #include <glm/gtx/intersect.hpp>
 
 #include <Mesh.hpp>
-#include <MeshInstance.hpp>
+#include <MeshRenderer.hpp>
 #include <Plane.hpp>
 
 struct Ray
@@ -36,7 +36,7 @@ inline bool trace(const Ray& r, const Sphere& s, float& depth, glm::vec3& p, glm
 inline bool trace(const Ray& r, const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, glm::vec3& p);
 inline bool trace(const Ray& r, const AABB<glm::vec3>& b);
 inline bool trace(const Ray& r, const AABB<glm::vec3>& b, float& t);
-inline bool trace(const Ray& r, const MeshInstance& o, float& t);
+inline bool trace(const Ray& r, const MeshRenderer& o, float& t);
 inline bool trace(const Ray& r, const Mesh& m, glm::vec3& p, glm::vec3& n);
 inline bool trace(const Ray& r, const Mesh& m, float& depth, glm::vec3& p, glm::vec3& n);
 
@@ -186,7 +186,7 @@ inline bool trace(const Ray& r, const AABB<glm::vec3>& b, float& t)
 	}
 }
 
-inline bool trace(const Ray& r, const MeshInstance& o, float& t)
+inline bool trace(const Ray& r, const MeshRenderer& o, float& t)
 {
 	float tmp_depth = t;
 	if(!trace(r, o.getAABB(), tmp_depth))

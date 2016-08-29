@@ -3,7 +3,7 @@
 #include <DirectionalLight.hpp>
 #include <OmnidirectionalLight.hpp>
 #include <PointLight.hpp>
-#include <MeshInstance.hpp>
+#include <MeshRenderer.hpp>
 #include <Skybox.hpp>
 
 /**
@@ -26,8 +26,8 @@ public:
 		_pointLightBuffer.bind(1);
 	}
 	
-	std::vector<MeshInstance>& getObjects()  { return _objects; }
-	const std::vector<MeshInstance>& getObjects() const { return _objects; }
+	std::vector<MeshRenderer>& getObjects()  { return _objects; }
+	const std::vector<MeshRenderer>& getObjects() const { return _objects; }
 	
 	const std::vector<DirectionalLight*>& getLights() const { return _lights; }
 	
@@ -93,7 +93,7 @@ public:
 		}
 	}
 	
-	MeshInstance& add(const MeshInstance& m)
+	MeshRenderer& add(const MeshRenderer& m)
 	{
 		_objects.push_back(m);
 		return _objects.back();
@@ -102,7 +102,7 @@ public:
 	Skybox& getSkybox() { return _skybox; }
 	
 private:
-	std::vector<MeshInstance>	_objects;
+	std::vector<MeshRenderer>	_objects;
 	
 	bool								_dirtyLights = true;
 	std::vector<DirectionalLight*>		_lights;

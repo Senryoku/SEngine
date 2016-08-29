@@ -6,7 +6,7 @@
 #include <Frustum.hpp>
 #include <CubeMap.hpp>
 #include <Framebuffer.hpp>
-#include <MeshInstance.hpp>
+#include <MeshRenderer.hpp>
 #include <Shaders.hpp>
 
 /**
@@ -138,7 +138,7 @@ public:
 	/**
 	 * Draws passed objects to this light's shadow map
 	**/
-	void drawShadowMap(const std::vector<MeshInstance>& objects) const;
+	void drawShadowMap(const std::vector<MeshRenderer>& objects) const;
 	
 	// Static
 	
