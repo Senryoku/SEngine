@@ -17,6 +17,8 @@
 
 #include <Log.hpp>
 
+#include <Entity.hpp>
+
 template <typename T>
 std::string to_string(const T a_value, const int n = 6)
 {
@@ -56,6 +58,10 @@ public:
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
 
+		auto entity_test = create_entity();
+		entity_test.add<int>(10);
+		entity_test.add<float>(3.0f);
+		
 		float R = 0.95f;
 		float F0 = 0.15f;
 		const auto Paths = {
