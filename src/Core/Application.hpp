@@ -40,10 +40,11 @@ public:
 	static T rand();
 	
 	void setFullscreen(bool val = true);
+	void setMSAA(bool val = true);
 
 	virtual void screen(const std::string& path) const;
 	
-	Scene& getScene() { return _scene; }
+	inline Scene& getScene() { return _scene; }
 	
 	inline bool mouseLeft() const { return _mouse.x > 0.0; }
 	inline bool mouseRight() const { return _mouse.w > 0.0; }

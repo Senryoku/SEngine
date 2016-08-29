@@ -34,7 +34,7 @@ void Skybox::loadCubeMap(const std::array<std::string, 6>& Paths)
 	_cubeMap.load(Paths);
 }
 	
-void Skybox::draw(const glm::mat4& p, const glm::mat4& mv)
+void Skybox::draw(const glm::mat4& p, const glm::mat4& mv) const
 {
 	Program& P = Resources::getProgram("SkyboxProgram");
 	if(!P)
@@ -62,7 +62,7 @@ void Skybox::draw(const glm::mat4& p, const glm::mat4& mv)
 	Context::enable(Capability::DepthTest);
 }
 
-void Skybox::cubedraw()
+void Skybox::cubedraw() const
 {
 	Program& P = Resources::getProgram("CubeSkyboxProgram");
 	if(!P)

@@ -41,6 +41,7 @@ template<typename ShaderType>
 ShaderType& load(const std::string& name, const std::string& path)
 {
 	auto& s = Resources::getShader<ShaderType>(name);
+	if(s) return s; // Already loaded.
 	s.loadFromFile(path);
 	s.compile();
 	if(!s)
@@ -55,6 +56,7 @@ template<typename ... ShaderTypes>
 Program& loadProgram(const std::string& name, ShaderTypes& ... shaders)
 {
 	auto& p = Resources::getProgram(name);
+	if(p) return p; // Already loaded.
 	p.attach_chain(shaders...);
 	p.link();
 	if(!p)

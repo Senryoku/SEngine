@@ -14,92 +14,29 @@ class Scene
 public:
 	Scene() =default;
 	
-	~Scene()
-	{
-		for(auto p : _lights)
-			delete p;
-	}
+	~Scene();
 	
-	void init()
-	{
-		_pointLightBuffer.init();
-		_pointLightBuffer.bind(1);
-	}
+	void init();
 	
-	std::vector<MeshRenderer>& getObjects()  { return _objects; }
-	const std::vector<MeshRenderer>& getObjects() const { return _objects; }
-	
-	const std::vector<DirectionalLight*>& getLights() const { return _lights; }
-	
-	std::vector<DirectionalLight*>& getLights() { _dirtyLights = true; return _lights; }
-	std::vector<OmnidirectionalLight>& getOmniLights() { _dirtyLights = true; return _omniLights; }
+	inline std::vector<MeshRenderer>& getObjects()  { return _objects; }
+	inline const std::vector<MeshRenderer>& getObjects() const { return _objects; }
+	inline const std::vector<DirectionalLight*>& getLights() const { return _lights; }
+	inline std::vector<DirectionalLight*>& getLights() { _dirtyLights = true; return _lights; }
+	inline std::vector<OmnidirectionalLight>& getOmniLights() { _dirtyLights = true; return _omniLights; }
+	inline const UniformBuffer& getPointLightBuffer() const { return _pointLightBuffer; }
 	
 	template<typename T>
-	inline T* add(T* dl)
-	{
-		getLights().push_back(dl);
-		return dl;
-	}
+	inline T* add(T* dl);
 	
-	std::vector<PointLight>& getPointLights()
-	{
-		_dirtyPointLights = true;
-		return _pointLights;
-	}
-	
-	const UniformBuffer& getPointLightBuffer() const { return _pointLightBuffer; }
-	
-	void updatePointLightBuffer()
-	{
-		_pointLightBuffer.data(_pointLights.data(), _pointLights.size() * sizeof(PointLight), Buffer::Usage::DynamicDraw);
-		_dirtyPointLights = false;
-	}
+	inline std::vector<PointLight>& getPointLights();
+	inline void updatePointLightBuffer();
 
-	void updateLights()
-	{
-		for(size_t i = 0; i < _lights.size(); ++i)
-		{
-			if(_dirtyLights)
-			{
-				_lights[i]->getGPUBuffer().bind(i + 2);
-				_lights[i]->updateMatrices();
-			}
-		}
-		for(size_t i = 0; i < _omniLights.size(); ++i)
-		{
-			if(_dirtyLights)
-			{
-				_omniLights[i].getGPUBuffer().bind(i + 12);
-				_omniLights[i].updateMatrices();
-			}
-		}
-		_dirtyLights = false;
-	}
+	void updateLights();
+	void update();
+	void draw(const glm::mat4& p, const glm::mat4& v) const;
 	
-	void draw(const glm::mat4& p, const glm::mat4& v)
-	{
-		if(_skybox)
-			_skybox.draw(p, v);
-
-		updateLights();
-
-		if(_dirtyPointLights)
-			updatePointLightBuffer();
-
-		for(const auto& o : _objects)
-		{
-			if(o.isVisible(p, v))
-				o.draw();
-		}
-	}
-	
-	MeshRenderer& add(const MeshRenderer& m)
-	{
-		_objects.push_back(m);
-		return _objects.back();
-	}
-	
-	Skybox& getSkybox() { return _skybox; }
+	inline MeshRenderer& add(const MeshRenderer& m);
+	inline Skybox& getSkybox() { return _skybox; }
 	
 private:
 	std::vector<MeshRenderer>	_objects;
@@ -114,3 +51,28 @@ private:
 	
 	Skybox							_skybox;
 };
+	
+template<typename T>
+inline T* Scene::add(T* dl)
+{
+	getLights().push_back(dl);
+	return dl;
+}
+
+inline std::vector<PointLight>& Scene::getPointLights()
+{
+	_dirtyPointLights = true;
+	return _pointLights;
+}
+
+inline void Scene::updatePointLightBuffer()
+{
+	_pointLightBuffer.data(_pointLights.data(), _pointLights.size() * sizeof(PointLight), Buffer::Usage::DynamicDraw);
+	_dirtyPointLights = false;
+}
+	
+inline MeshRenderer& Scene::add(const MeshRenderer& m)
+{
+	_objects.push_back(m);
+	return _objects.back();
+}

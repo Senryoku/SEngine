@@ -132,8 +132,6 @@ protected:
 	
 	// Static
 	static Program* 		s_depthProgram;	///< Program used to draw the shadow map
-    static VertexShader*	s_depthVS;		///< VertexShader used to draw the shadow map
-    static FragmentShader*	s_depthFS;		///< FragmentShader used to draw the shadow map
 };
 
 // Inlined functions

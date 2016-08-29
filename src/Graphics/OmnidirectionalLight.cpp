@@ -100,12 +100,10 @@ void OmnidirectionalLight::bind() const
 	for(int i = 0; i < 6; ++i)
 		getShadowMapProgram().setUniform("Projections[" + std::to_string(i) +"]", _projection * CubeFaceMatrix[i]);
 	getShadowMapProgram().use();
-	Context::enable(Capability::CullFace);
 }
 
 void OmnidirectionalLight::unbind() const
 {
-	Context::disable(Capability::CullFace);
 	Program::useNone();
 	getShadowBuffer().unbind();
 }
@@ -117,6 +115,7 @@ void OmnidirectionalLight::drawShadowMap(const std::vector<MeshRenderer>& object
 	BoundingSphere BoundingVolume(_position, _range);
 	
 	bind();
+	Context::disable(Capability::CullFace);
 	
 	for(auto& b : objects)
 	{
@@ -138,32 +137,10 @@ void OmnidirectionalLight::initPrograms()
 {
 	if(s_depthProgram == nullptr)
 	{
-		s_depthProgram = &Resources::getProgram("OmnidirectionalLight_Depth");
-		s_depthVS = &Resources::getShader<VertexShader>("OmnidirectionalLight_DepthVS");
-		s_depthGS = &Resources::getShader<GeometryShader>("OmnidirectionalLight_DepthGS");
-		s_depthFS = &Resources::getShader<FragmentShader>("OmnidirectionalLight_DepthFS");
-	}
-	
-	if(s_depthProgram != nullptr && !s_depthProgram->isValid())
-	{
-		if(!*s_depthVS)
-		{
-			s_depthVS->loadFromFile("src/GLSL/cubedepth_vs.glsl");
-			s_depthVS->compile();
-		}
-		if(!*s_depthGS)
-		{
-			s_depthGS->loadFromFile("src/GLSL/cubedepth_gs.glsl");
-			s_depthGS->compile();
-		}
-		if(!*s_depthFS)
-		{
-			s_depthFS->loadFromFile("src/GLSL/lineardepth_fs.glsl");
-			s_depthFS->compile();
-		}
-		s_depthProgram->attach(*s_depthVS);
-		s_depthProgram->attach(*s_depthGS);
-		s_depthProgram->attach(*s_depthFS);
-		s_depthProgram->link();
+		s_depthProgram = &Resources::loadProgram("OmnidirectionalLight_Depth",
+			Resources::load<VertexShader>("src/GLSL/cubedepth_vs.glsl"),
+			Resources::load<GeometryShader>("src/GLSL/cubedepth_gs.glsl"),
+			Resources::load<FragmentShader>("src/GLSL/lineardepth_fs.glsl")
+		);
 	}
 }

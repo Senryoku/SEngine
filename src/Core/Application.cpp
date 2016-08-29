@@ -85,7 +85,7 @@ void Application::init(const std::string& windowName)
 	ImGui_ImplGlfwGL3_Init(_window, false);
 	ImGui::GetIO().MouseDrawCursor = false;
 	
-	glEnable(GL_DEPTH_TEST);
+	Context::enable(Capability::DepthTest);
 	
 	_scene.init();
 	
@@ -166,24 +166,9 @@ void Application::update()
 	_gpuCameraData = {_camera.getMatrix(), _projection};
 	_camera_buffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
 	_camera_buffer.unbind();
-	
-	/// Shadow map update
+
 	if(!_paused || _time == 0.0f)
-	{
-		for(auto l : _scene.getLights())
-			if(l->dynamic) // Updates shadow maps if needed
-			{
-				l->updateMatrices();
-				l->drawShadowMap(_scene.getObjects());
-			}
-		
-		for(auto& l : _scene.getOmniLights())
-			if(l.dynamic) // Updates shadow maps if needed
-			{
-				l.updateMatrices();
-				l.drawShadowMap(_scene.getObjects());
-			}
-	}
+		_scene.update();
 	
 	if(_selectedLight)
 	{
@@ -264,10 +249,27 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 	_width = width;
 	_height = height;
 
-	glViewport(0, 0, _width, _height);
+	Context::viewport(0, 0, _width, _height);
 	_resolution = glm::vec3(_width, _height, 0.0);
 	
 	update_projection();
+}
+
+void Application::setMSAA(bool val)
+{
+	if(val)
+		Context::enable(Capability::Multisample);
+	else
+		Context::disable(Capability::Multisample);
+	
+	GLint iMultiSample = 0;
+	GLint iNumSamples = 0;
+	glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
+	glGetIntegerv(GL_SAMPLES, &iNumSamples);
+	
+	glfwWindowHint(GLFW_SAMPLES, iMultiSample);
+	
+	Log::info(val ? "Enabled" : "Disabled", " MSAA (GL_SAMPLES : ", iNumSamples, ", GL_SAMPLE_BUFFERS : ", iMultiSample,")");
 }
 
 void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
@@ -313,27 +315,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			case GLFW_KEY_X:
 			{
 				_msaa = ! _msaa;
-				if(_msaa)
-				{
-					glEnable(GL_MULTISAMPLE);
-					
-					GLint iMultiSample = 0;
-					GLint iNumSamples = 0;
-					glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
-					glGetIntegerv(GL_SAMPLES, &iNumSamples);
-					
-					glfwWindowHint(GLFW_SAMPLES, iMultiSample);
-					
-					Log::info("Enabled MSAA (GL_SAMPLES : ", iNumSamples, ", GL_SAMPLE_BUFFERS : ", iMultiSample,")");
-				} else {
-					glDisable(GL_MULTISAMPLE);
-					
-					GLint iMultiSample = 0;
-					GLint iNumSamples = 0;
-					glGetIntegerv(GL_SAMPLE_BUFFERS, &iMultiSample);
-					glGetIntegerv(GL_SAMPLES, &iNumSamples);
-					Log::info("Disabled MSAA (GL_SAMPLES : ", iNumSamples, ", GL_SAMPLE_BUFFERS : ", iMultiSample, ")");
-				}
+				setMSAA(_msaa);
 				break;
 			}
 			case GLFW_KEY_ENTER:

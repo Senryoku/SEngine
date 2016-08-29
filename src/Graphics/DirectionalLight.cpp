@@ -48,12 +48,10 @@ void DirectionalLight::bind() const
 	getShadowBuffer().clear(BufferBit::All);
 	getShadowMapProgram().setUniform("DepthVP", getMatrix());
 	getShadowMapProgram().use();
-	Context::enable(Capability::CullFace);
 }
 
 void DirectionalLight::unbind() const
 {
-	Context::disable(Capability::CullFace);
 	Program::useNone();
 	getShadowBuffer().unbind();
 }
@@ -64,6 +62,7 @@ void DirectionalLight::drawShadowMap(const std::vector<MeshRenderer>& objects) c
 	
 	bind();
 	getShadowMap().bind();
+	Context::disable(Capability::CullFace);
 	
 	for(auto& b : objects)
 		if(b.isVisible(getProjectionMatrix(), getViewMatrix()))
@@ -85,19 +84,9 @@ void DirectionalLight::initPrograms()
 {
 	if(s_depthProgram == nullptr)
 	{
-		s_depthProgram = &Resources::getProgram("Light_Depth");
-		s_depthVS = &Resources::getShader<VertexShader>("Light_DepthVS");
-		s_depthFS = &Resources::getShader<FragmentShader>("Light_DepthFS");
-	}
-	
-	if(s_depthProgram != nullptr && !s_depthProgram->isValid())
-	{
-		s_depthVS->loadFromFile("src/GLSL/depth_vs.glsl");
-		s_depthVS->compile();
-		s_depthFS->loadFromFile("src/GLSL/depth_fs.glsl");
-		s_depthFS->compile();
-		s_depthProgram->attach(*s_depthVS);
-		s_depthProgram->attach(*s_depthFS);
-		s_depthProgram->link();
+		s_depthProgram = &Resources::loadProgram("Light_Depth",
+			Resources::load<VertexShader>("src/GLSL/depth_vs.glsl"),
+			Resources::load<FragmentShader>("src/GLSL/depth_fs.glsl")
+		);
 	}
 }

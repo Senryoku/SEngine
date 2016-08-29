@@ -14,8 +14,8 @@ public:
 	Skybox(const CubeMap& cubemap);
 	~Skybox() =default;
 	
-	void draw(const glm::mat4& p, const glm::mat4& mv);
-	void cubedraw();
+	void draw(const glm::mat4& p, const glm::mat4& mv) const;
+	void cubedraw() const;
 	void loadCubeMap(const std::array<std::string, 6>& Paths);
 	
 	CubeMap& getCubemap() { return _cubeMap; }
@@ -28,6 +28,6 @@ private:
 	static void init();
 	
 	static VertexArray		s_vao;
-	static Buffer				s_vertex_buffer;
-	static Buffer				s_index_buffer;
+	static Buffer			s_vertex_buffer;
+	static Buffer			s_index_buffer;
 };
