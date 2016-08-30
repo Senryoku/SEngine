@@ -18,6 +18,13 @@ public:
 			id = invalid_component_idx;
 	}
 	
+	Entity(EntityID eid) :
+		_id(eid)
+	{
+		for(auto& cid : _components)
+			cid = invalid_component_idx;
+	}
+	
 	~Entity()
 	{
 		/// @todo Find a way to call the destructor of a component?
@@ -37,7 +44,7 @@ public:
 	}
 	
 	template<typename T, typename ...Args>
-	inline T& add(Args ...args)
+	inline T& add(Args&& ...args)
 	{
 		if(_components[get_component_type_idx<T>()] != invalid_component_idx)
 		{
@@ -61,12 +68,23 @@ private:
 extern EntityID				next_entity_id;
 extern std::vector<Entity>	entities;
 
-inline Entity create_entity()
+inline Entity& create_entity()
 {
-	if(next_entity_id <= entities.size())
-		entities.resize(std::max(static_cast<size_t>(64), entities.size()) * 2);
+	// Allocating if necessary
+	if(next_entity_id + 1 >= entities.size())
+		entities.resize(std::max(static_cast<size_t>(64), entities.size() * 2));
+	
 	auto r = next_entity_id++;
+	// Searching for the next id
 	while(entities[next_entity_id].is_valid())
 		++next_entity_id;
+
+	// Constructing and returning the entity
+	entities[r] = Entity{r};
 	return entities[r];
+}
+
+inline void destroy_entity(EntityID id)
+{
+	/// @todo
 }

@@ -5,6 +5,7 @@
 #include <PointLight.hpp>
 #include <MeshRenderer.hpp>
 #include <Skybox.hpp>
+#include <Component.hpp>
 
 /**
  * @todo Octree
@@ -36,7 +37,6 @@ public:
 	void update();
 	void draw(const glm::mat4& p, const glm::mat4& v) const;
 	
-	inline MeshRenderer& add(const MeshRenderer& m);
 	inline Skybox& getSkybox() { return _skybox; }
 	
 private:
@@ -70,10 +70,4 @@ inline void Scene::updatePointLightBuffer()
 {
 	_pointLightBuffer.data(_pointLights.data(), _pointLights.size() * sizeof(PointLight), Buffer::Usage::DynamicDraw);
 	_dirtyPointLights = false;
-}
-	
-inline MeshRenderer& Scene::add(const MeshRenderer& m)
-{
-	_objects.push_back(m);
-	return _objects.back();
 }

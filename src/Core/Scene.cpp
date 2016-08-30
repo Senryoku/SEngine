@@ -33,19 +33,19 @@ void Scene::updateLights()
 	}
 	_dirtyLights = false;
 	
-	// Update Shadow maps
+	// Update Shadow maps @todo System
 	for(auto l : getLights())
 		if(l->dynamic) // Only if asked to
 		{
 			l->updateMatrices();
-			l->drawShadowMap(getObjects());
+			l->drawShadowMap(ComponentIterator<MeshRenderer>{});
 		}
 	
 	for(auto& l : getOmniLights())
 		if(l.dynamic)
 		{
 			l.updateMatrices();
-			l.drawShadowMap(getObjects());
+			l.drawShadowMap(ComponentIterator<MeshRenderer>{});
 		}
 }
 
@@ -62,9 +62,14 @@ void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
 	if(_skybox)
 		_skybox.draw(p, v);
 
-	for(const auto& o : _objects)
+ 	// for(const auto& o : _objects)
+	// {
+		// if(o.isVisible(p, v))
+			// o.draw();
+	// }
+	for(size_t i = 0; i < components<MeshRenderer>.size(); ++i)
 	{
-		if(o.isVisible(p, v))
-			o.draw();
+		if(valid_components<MeshRenderer>[i] && components<MeshRenderer>[i].isVisible(p, v))
+			components<MeshRenderer>[i].draw();
 	}
 }

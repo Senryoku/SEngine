@@ -8,6 +8,7 @@
 #include <Framebuffer.hpp>
 #include <MeshRenderer.hpp>
 #include <Shaders.hpp>
+#include <Component.hpp>
 
 /**
  * ShadowCastingLight
@@ -111,7 +112,7 @@ public:
 	/**
 	 * Draws passed objects to this light's shadow map
 	**/
-	virtual void drawShadowMap(const std::vector<MeshRenderer>& objects) const =0;
+	virtual void drawShadowMap(const ComponentIterator<MeshRenderer>& objects) const =0;
 	
 	// Static
 	

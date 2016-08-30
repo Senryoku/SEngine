@@ -56,13 +56,7 @@ public:
 		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
 		
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
-		LightDraw.bindUniformBlock("Camera", _camera_buffer); 
-
-		auto entity_test = create_entity();
-		entity_test.add<int>(10);
-		Log::info("get_component_type_idx<int>(): ", get_component_type_idx<int>());
-		entity_test.add<float>(3.0f);
-		Log::info("get_component_type_idx<float>(): ", get_component_type_idx<float>());
+		LightDraw.bindUniformBlock("Camera", _camera_buffer);
 		
 		float R = 0.95f;
 		float F0 = 0.15f;
@@ -83,7 +77,8 @@ public:
 				part->createVAO();
 				part->getMaterial().setUniform("R", R);
 				part->getMaterial().setUniform("F0", F0);
-				_scene.add(MeshRenderer(*part, Matrices.begin()[i] * t.getModelMatrix()));
+				auto entity = create_entity();
+				entity.add<MeshRenderer>(*part, Matrices.begin()[i] * t.getModelMatrix());
 			}
 		}
 		
@@ -144,10 +139,10 @@ public:
 		_scene.getOmniLights()[1].updateMatrices();
 		*/
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
-			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
+			_scene.getLights()[i]->drawShadowMap(ComponentIterator<MeshRenderer>{});
 		
 		for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
-			_scene.getOmniLights()[i].drawShadowMap(_scene.getObjects());
+			_scene.getOmniLights()[i].drawShadowMap(ComponentIterator<MeshRenderer>{});
 
 		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
 				"in/Textures/skybox/negx.png",
@@ -211,13 +206,13 @@ public:
 				for(auto l : _scene.getLights())
 				{
 					l->updateMatrices();
-					l->drawShadowMap(_scene.getObjects());
+					l->drawShadowMap(ComponentIterator<MeshRenderer>{});
 				}
 				
 				for(auto& l : _scene.getOmniLights())
 				{
 					l.updateMatrices();
-					l.drawShadowMap(_scene.getObjects());
+					l.drawShadowMap(ComponentIterator<MeshRenderer>{});
 				}
 			}
 			ImGui::Separator(); 
@@ -275,9 +270,13 @@ public:
 		
 		ImGui::Begin("Scene");
 		{
-			if(ImGui::TreeNode(("Objects (" + std::to_string(_scene.getObjects().size()) + ")").c_str()))
+			// if(ImGui::TreeNode(("Entities (" + std::to_string(entities.size()) + ")").c_str()))
+			// {
+				//for(auto& o : entities)
+			// }
+			if(ImGui::TreeNode(("MeshRenderers (" + std::to_string(components<MeshRenderer>.size()) + ")").c_str()))
 			{
-				for(auto& o : _scene.getObjects())
+				for(auto& o : ComponentIterator<MeshRenderer>{})
 				{
 					ImGui::PushID(&o);
 					if(ImGui::Button(o.getMesh().getName().c_str()))
@@ -583,7 +582,7 @@ public:
 				const auto r = getMouseRay();
 				float depth = std::numeric_limits<float>::max();
 				deselectObject();
-				for(auto& o : _scene.getObjects())
+				for(auto& o : ComponentIterator<MeshRenderer>{})
 				{
 					if(trace(r, o, depth))
 						selectObject(&o);

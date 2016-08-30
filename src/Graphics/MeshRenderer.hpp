@@ -6,6 +6,7 @@
 class MeshRenderer
 {
 public:
+	MeshRenderer() =default;
 	MeshRenderer(const Mesh& mesh, const Transformation& t = Transformation{});
 	
 	void draw() const

@@ -138,7 +138,8 @@ public:
 	/**
 	 * Draws passed objects to this light's shadow map
 	**/
-	void drawShadowMap(const std::vector<MeshRenderer>& objects) const;
+	template<template<typename> typename C>
+	void drawShadowMap(const C<MeshRenderer>& objects) const;
 	
 	// Static
 	
@@ -178,4 +179,30 @@ inline const Program& OmnidirectionalLight::getShadowMapProgram()
 {
 	assert(s_depthProgram != nullptr);
 	return *s_depthProgram;
+}
+
+template<template<typename> typename C>
+void OmnidirectionalLight::drawShadowMap(const C<MeshRenderer>& objects) const
+{
+	//getShadowMap().set(Texture::Parameter::BaseLevel, 0);
+	
+	BoundingSphere BoundingVolume(_position, _range);
+	
+	bind();
+	Context::disable(Capability::CullFace);
+	
+	for(auto& b : objects)
+	{
+		if(intersect(b.getAABB(), BoundingVolume))
+		{
+			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getModelMatrix());
+			b.getMesh().draw();
+		}
+	}
+		
+	unbind();
+	
+	//getShadowMap().generateMipmaps();
+	/// @todo Good blur for Cubemaps
+	//getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
 }

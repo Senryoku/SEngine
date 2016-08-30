@@ -107,31 +107,6 @@ void OmnidirectionalLight::unbind() const
 	Program::useNone();
 	getShadowBuffer().unbind();
 }
-
-void OmnidirectionalLight::drawShadowMap(const std::vector<MeshRenderer>& objects) const
-{
-	//getShadowMap().set(Texture::Parameter::BaseLevel, 0);
-	
-	BoundingSphere BoundingVolume(_position, _range);
-	
-	bind();
-	Context::disable(Capability::CullFace);
-	
-	for(auto& b : objects)
-	{
-		if(intersect(b.getAABB(), BoundingVolume))
-		{
-			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getModelMatrix());
-			b.getMesh().draw();
-		}
-	}
-		
-	unbind();
-	
-	//getShadowMap().generateMipmaps();
-	/// @todo Good blur for Cubemaps
-	//getShadowMap().set(Texture::Parameter::BaseLevel, downsampling);
-}
 	
 void OmnidirectionalLight::initPrograms()
 {

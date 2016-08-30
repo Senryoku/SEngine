@@ -56,7 +56,7 @@ void DirectionalLight::unbind() const
 	getShadowBuffer().unbind();
 }
 
-void DirectionalLight::drawShadowMap(const std::vector<MeshRenderer>& objects) const
+void DirectionalLight::drawShadowMap(const ComponentIterator<MeshRenderer>& objects) const
 {
 	getShadowMap().set(Texture::Parameter::BaseLevel, 0);
 	
