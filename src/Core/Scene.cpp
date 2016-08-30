@@ -1,5 +1,7 @@
 #include <Scene.hpp>
 
+#include <ComponentValidation.hpp>
+
 Scene::~Scene()
 {
 	for(auto p : _lights)
@@ -55,6 +57,9 @@ void Scene::update()
 		updateLights();
 	if(_dirtyPointLights)
 		updatePointLightBuffer();
+	
+	/// @todo Move elsewhere?
+	deletion_pass<MeshRenderer>();
 }
 
 void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
@@ -62,14 +67,9 @@ void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
 	if(_skybox)
 		_skybox.draw(p, v);
 
- 	// for(const auto& o : _objects)
-	// {
-		// if(o.isVisible(p, v))
-			// o.draw();
-	// }
-	for(size_t i = 0; i < components<MeshRenderer>.size(); ++i)
+	for(const auto& it : ComponentIterator<MeshRenderer>{})
 	{
-		if(valid_components<MeshRenderer>[i] && components<MeshRenderer>[i].isVisible(p, v))
-			components<MeshRenderer>[i].draw();
+		if(it.isVisible(p, v))
+			it.draw();
 	}
 }

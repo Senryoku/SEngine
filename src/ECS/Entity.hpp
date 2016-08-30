@@ -1,25 +1,28 @@
 #pragma once
 
 #include <array>
+#include <string>
 #include <limits>
 
 #include <Component.hpp>
-
-using EntityID = std::size_t;
 	
 class Entity
 {
-public:
-	constexpr static EntityID InvalidID = std::numeric_limits<EntityID>::max();
-	
+public:	
 	Entity()
 	{
 		for(auto& id : _components)
 			id = invalid_component_idx;
 	}
 	
+	Entity(const Entity&) =delete;
+	Entity(Entity&&) =default;
+	Entity& operator=(const Entity&) =delete;
+	Entity& operator=(Entity&&) =default;
+	
 	Entity(EntityID eid) :
-		_id(eid)
+		_id{eid},
+		_name{std::to_string(eid)}
 	{
 		for(auto& cid : _components)
 			cid = invalid_component_idx;
@@ -27,41 +30,61 @@ public:
 	
 	~Entity()
 	{
-		/// @todo Find a way to call the destructor of a component?
-		/*
 		if(is_valid())
 			for(auto id : _components)
 				if(id != invalid_component_idx)
-					//delete_component<>(id);
-		*/
+					mark_for_deletion(id);
+		_id = invalid_entity;
+		_name = "";
+	}
+	
+	inline std::string get_name() const { return _name; }
+
+	inline EntityID get_id() const { return _id; }
+	
+	template<typename T>
+	inline bool has()
+	{
+		return _components[get_component_type_idx<T>()] != invalid_component_idx;
 	}
 	
 	template<typename T>
 	inline T& get()
 	{
-		assert(_components[get_component_type_idx<T>()] != invalid_component_idx);
-		return components<T>[_components[get_component_type_idx<T>()]];
+		assert(has<T>());
+		return impl::components<T>[_components[get_component_type_idx<T>()]];
 	}
 	
 	template<typename T, typename ...Args>
 	inline T& add(Args&& ...args)
 	{
-		if(_components[get_component_type_idx<T>()] != invalid_component_idx)
+		assert(_id != invalid_entity);
+		if(has<T>())
 		{
-			components<T>[_components[get_component_type_idx<T>()]] = T{std::forward<Args>(args)...};
+			impl::components<T>[_components[get_component_type_idx<T>()]] = T{std::forward<Args>(args)...};
 		} else {
-			_components[get_component_type_idx<T>()] = add_component<T>(std::forward<Args>(args)...);
+			_components[get_component_type_idx<T>()] = add_component<T>(_id, std::forward<Args>(args)...);
+			assert(has<T>());
 		}
-		return components<T>[_components[get_component_type_idx<T>()]];
+		return impl::components<T>[_components[get_component_type_idx<T>()]];
+	}
+	
+	template<typename T>
+	inline void rem()
+	{
+		assert(has<T>());
+		mark_for_deletion(_components[get_component_type_idx<T>()]);
+		_components[get_component_type_idx<T>()] = invalid_component_idx;
 	}
 	
 	inline bool is_valid() const
 	{
-		return _id != InvalidID;
+		return _id != invalid_entity;
 	}
 	
-private:
-	EntityID										_id = InvalidID;
+//private:
+	EntityID										_id = invalid_entity;
+	std::string										_name;
 	std::array<ComponentID, max_component_types>	_components;
 };
 
@@ -80,11 +103,13 @@ inline Entity& create_entity()
 		++next_entity_id;
 
 	// Constructing and returning the entity
-	entities[r] = Entity{r};
+	::new(&entities[r]) Entity{r};
 	return entities[r];
 }
 
 inline void destroy_entity(EntityID id)
 {
-	/// @todo
+	entities[id].~Entity();
+	if(id < next_entity_id)
+		next_entity_id = id;
 }

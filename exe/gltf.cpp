@@ -16,6 +16,8 @@
 
 #include <Log.hpp>
 
+#include <Component.hpp>
+
 template <typename T>
 std::string to_string(const T a_value, const int n = 6)
 {
@@ -77,10 +79,10 @@ public:
 		}
 		
 		for(size_t i = 0; i < _scene.getLights().size(); ++i)
-			_scene.getLights()[i]->drawShadowMap(_scene.getObjects());
+			_scene.getLights()[i]->drawShadowMap(ComponentIterator<MeshRenderer>{});
 		
 		for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
-			_scene.getOmniLights()[i].drawShadowMap(_scene.getObjects());
+			_scene.getOmniLights()[i].drawShadowMap(ComponentIterator<MeshRenderer>{});
 	}
 		
 	virtual void renderGUI() override
@@ -187,9 +189,9 @@ public:
 		
 		ImGui::Begin("Scene");
 		{
-			if(ImGui::TreeNode(("Objects (" + std::to_string(_scene.getObjects().size()) + ")").c_str()))
+			if(ImGui::TreeNode("MeshRenderers"))
 			{
-				for(auto& o : _scene.getObjects())
+				for(auto& o : ComponentIterator<MeshRenderer>{})
 				{
 					ImGui::PushID(&o);
 					ImGui::Text("Object");

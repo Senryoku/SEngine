@@ -77,7 +77,7 @@ public:
 				part->createVAO();
 				part->getMaterial().setUniform("R", R);
 				part->getMaterial().setUniform("F0", F0);
-				auto entity = create_entity();
+				auto& entity = create_entity();
 				entity.add<MeshRenderer>(*part, Matrices.begin()[i] * t.getModelMatrix());
 			}
 		}
@@ -274,7 +274,7 @@ public:
 			// {
 				//for(auto& o : entities)
 			// }
-			if(ImGui::TreeNode(("MeshRenderers (" + std::to_string(components<MeshRenderer>.size()) + ")").c_str()))
+			if(ImGui::TreeNode("MeshRenderers"))
 			{
 				for(auto& o : ComponentIterator<MeshRenderer>{})
 				{
@@ -282,6 +282,27 @@ public:
 					if(ImGui::Button(o.getMesh().getName().c_str()))
 						selectObject(&o);
 					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode("Entities"))
+			{
+				for(auto& e : entities)
+				{
+					if(e.is_valid() && ImGui::TreeNode(e.get_name().c_str())) /// @todo Move to object inspector
+					{
+						ImGui::PushID(&e);
+						if(e.has<MeshRenderer>() && ImGui::TreeNode("MeshRenderer"))
+						{
+							auto& mr = e.get<MeshRenderer>();
+							if(ImGui::Button(mr.getMesh().getName().c_str()))
+								selectObject(&mr);
+							ImGui::TreePop();
+						}
+						ImGui::PopID();
+						ImGui::TreePop();
+					}
 				}
 				ImGui::TreePop();
 			}
