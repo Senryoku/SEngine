@@ -78,7 +78,9 @@ public:
 				part->getMaterial().setUniform("R", R);
 				part->getMaterial().setUniform("F0", F0);
 				auto& entity = create_entity();
-				entity.add<MeshRenderer>(*part, Matrices.begin()[i] * t.getModelMatrix());
+				entity.set_name(part->getName());
+				entity.add<Transformation>(Matrices.begin()[i] * t.getModelMatrix());
+				entity.add<MeshRenderer>(*part, entity);
 			}
 		}
 		
@@ -270,39 +272,19 @@ public:
 		
 		ImGui::Begin("Scene");
 		{
-			// if(ImGui::TreeNode(("Entities (" + std::to_string(entities.size()) + ")").c_str()))
-			// {
-				//for(auto& o : entities)
-			// }
-			if(ImGui::TreeNode("MeshRenderers"))
-			{
-				for(auto& o : ComponentIterator<MeshRenderer>{})
-				{
-					ImGui::PushID(&o);
-					if(ImGui::Button(o.getMesh().getName().c_str()))
-						selectObject(&o);
-					ImGui::PopID();
-				}
-				ImGui::TreePop();
-			}
-			
 			if(ImGui::TreeNode("Entities"))
 			{
 				for(auto& e : entities)
 				{
-					if(e.is_valid() && ImGui::TreeNode(e.get_name().c_str())) /// @todo Move to object inspector
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+					if(e.is_valid())
 					{
 						ImGui::PushID(&e);
-						if(e.has<MeshRenderer>() && ImGui::TreeNode("MeshRenderer"))
-						{
-							auto& mr = e.get<MeshRenderer>();
-							if(ImGui::Button(mr.getMesh().getName().c_str()))
-								selectObject(&mr);
-							ImGui::TreePop();
-						}
+						if(ImGui::SmallButton(e.get_name().c_str()))
+							selectObject(&e);
 						ImGui::PopID();
-						ImGui::TreePop();
 					}
+					ImGui::PopStyleColor();
 				}
 				ImGui::TreePop();
 			}
@@ -371,179 +353,188 @@ public:
 		
 		if(_selectedObject != nullptr)
 		{
-			auto& transform = _selectedObject->getTransformation();
-			
-			Context::disable(Capability::DepthTest);
-			Context::enable(Capability::Blend);
-			Context::blendFunc(Factor::SrcAlpha, Factor::OneMinusSrcAlpha);
-			Program& blend = Resources::getProgram("Simple");
-			blend.use();
-			blend.setUniform("Color", _selectedObjectColor);
-			blend.setUniform("ModelMatrix", transform.getModelMatrix());
-			_selectedObject->getMesh().draw();
-			Program::useNone();
-			Context::disable(Capability::Blend);
-			
-			auto aabb = _selectedObject->getAABB().getBounds();
-			std::array<ImVec2, 8> screen_aabb;
-			for(int i = 0; i < 8; ++i)
+			if(_selectedObject->has<Transformation>())
 			{
-				screen_aabb[i] = project(aabb[i]);
-			}
-			// Dummy Window for "on field" widgets
-			ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});
-			ImGui::Begin("SelectedObject", nullptr, ImVec2{static_cast<float>(_width), static_cast<float>(_height)}, 0.0,
-				ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
-			
-			ImGuiContext* g = ImGui::GetCurrentContext();
-			ImGuiWindow* window = ImGui::GetCurrentWindow();
-			const auto mouse = glm::vec2{ImGui::GetMousePos()};
-			ImDrawList* drawlist = ImGui::GetWindowDrawList();
-			
-			// Bounding Box Gizmo
-			constexpr std::array<size_t, 24> segments{
-				0, 1, 1, 3, 3, 2, 2, 0,
-				4, 5, 5, 7, 7, 6, 6, 4,
-				0, 4, 1, 5, 2, 6, 3, 7
-			};
-			for(int i = 0; i < 24; i += 2)
-				drawlist->AddLine(screen_aabb[segments[i]], screen_aabb[segments[i + 1]], 
-					ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, 0.5)));
-			
-			/////////////////////////////////////
-			// Position Gizmo
-			// @todo Debug it, Clean in, Package it 
-	
-			const std::array<glm::vec2, 4> gizmo_points{
-				project(transform.getPosition() + glm::vec3{0.0, 0.0, 0.0}),
-				project(transform.getPosition() + glm::vec3{1.0, 0.0, 0.0}),
-				project(transform.getPosition() + glm::vec3{0.0, 1.0, 0.0}),
-				project(transform.getPosition() + glm::vec3{0.0, 0.0, 1.0})
-			};
-			
-			static const char* labels[3] = {"PositionGizmoX", "PositionGizmoY", "PositionGizmoZ"};
-			for(int i = 0; i < 3; ++i)
-			{
-				const ImGuiID id = window->GetID(labels[i]);
-				bool hovered = point_line_distance(mouse, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
-				if(hovered)
-					ImGui::SetHoveredID(id);
-				bool active = id == g->ActiveId;
-			
-				if(active && ImGui::IsMouseDragging(0))
-				{
-					const auto newP = mouse;
-					const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
-					ImGui::ResetMouseDragDelta(0);
-					const auto newR = getScreenRay(newP.x, newP.y);
-					const auto oldR = getScreenRay(oldP.x, oldP.y);
-					Plane pl{transform.getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
-					float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
-					glm::vec3 p0, p1, n0, n1;
-					trace(newR, pl, d0, p0, n0);
-					trace(oldR, pl, d1, p1, n1);
-					auto newPosition = transform.getPosition();
-					newPosition[i] += p0[i] - p1[i];
-					transform.setPosition(newPosition);
-					
-					//ImGui::SetActiveID(id, window);
-					ImGui::GetIO().WantCaptureMouse = true;
-				} 
-				if(active && ImGui::IsMouseReleased(0))
-				{
-					ImGui::SetActiveID(0, window);
-				}
-				if(ImGui::IsMouseClicked(0) && hovered)
-				{
-					ImGui::SetActiveID(id, window);
-					ImGui::GetIO().WantCaptureMouse = true;
-				}
-				drawlist->AddLine(gizmo_points[0], gizmo_points[i + 1], 
-					ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);
-			}
-			////////////////////////////////////////////////////
-			
-			// Rotation Gizmo
-			const std::array<glm::vec2, 4> rot_gizmo_points{
-				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
-				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
-				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 1.0, 0.0, 1.0f}}),
-				project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0f}})
-			};
-			
-			static const char* rot_labels[3] = {"RotationGizmoX", "RotationGizmoY", "RotationGizmoZ"};
-			const std::array<glm::vec3, 3> plane_normals = {
-				glm::vec3{0.0, 1.0, 0.0},
-				glm::vec3{0.0, 0.0, 1.0},
-				glm::vec3{1.0, 0.0, 0.0},
-			};
-			for(int i = 0; i < 3; ++i)
-			{
-				const ImGuiID id = window->GetID(rot_labels[i]);
-				bool hovered = glm::distance(mouse, rot_gizmo_points[1 + i]) < 10.0f;
-				if(hovered)
-					ImGui::SetHoveredID(id);
-				bool active = id == g->ActiveId;
+				auto& transform = _selectedObject->get<Transformation>();
 				
-				if(active && ImGui::IsMouseDragging(0))
+				// Dummy Window for "on field" widgets
+				ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});
+				ImGui::Begin("SelectedObject", nullptr, ImVec2{static_cast<float>(_width), static_cast<float>(_height)}, 0.0,
+					ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
+				
+				ImGuiContext* g = ImGui::GetCurrentContext();
+				ImGuiWindow* window = ImGui::GetCurrentWindow();
+				const auto mouse = glm::vec2{ImGui::GetMousePos()};
+				ImDrawList* drawlist = ImGui::GetWindowDrawList();
+				
+				if(_selectedObject->has<MeshRenderer>())
 				{
-					const auto newP = mouse;
-					const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
-					ImGui::ResetMouseDragDelta(0);
-					const auto newR = getScreenRay(newP.x, newP.y);
-					const auto oldR = getScreenRay(oldP.x, oldP.y);
-					Plane pl{transform.getPosition(), 
-						(glm::dot(plane_normals[i], _camera.getDirection()) < 0.0 ? 1.0f : -1.0f) * plane_normals[i]};
-					float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
-					glm::vec3 p0, p1, n0, n1;
-					trace(newR, pl, d0, p0, n0);
-					trace(oldR, pl, d1, p1, n1);
-					
-					auto v1 = p1 - transform.getPosition();
-					auto v2 = p0 - transform.getPosition();
-					auto a = glm::cross(v1, v2);
-					
-					glm::quat q(a);
-					q.w = glm::sqrt((glm::length2(v1) * glm::length2(v2)) + glm::dot(v1, v2));
-					q = glm::normalize(q);
-					
-					transform.setRotation(transform.getRotation() * q);
-					
-					//ImGui::SetActiveID(id, window);
-					ImGui::GetIO().WantCaptureMouse = true;
-				} 
-				if(active && ImGui::IsMouseReleased(0))
-				{
-					ImGui::SetActiveID(0, window);
-				}
-				if(ImGui::IsMouseClicked(0) && hovered)
-				{
-					ImGui::SetActiveID(id, window);
-					ImGui::GetIO().WantCaptureMouse = true;
+					auto& mr = _selectedObject->get<MeshRenderer>();
+					Context::disable(Capability::DepthTest);
+					Context::enable(Capability::Blend);
+					Context::blendFunc(Factor::SrcAlpha, Factor::OneMinusSrcAlpha);
+					Program& blend = Resources::getProgram("Simple");
+					blend.use();
+					blend.setUniform("Color", _selectedObjectColor);
+					blend.setUniform("ModelMatrix", transform.getModelMatrix());
+					mr.getMesh().draw();
+					Program::useNone();
+					Context::disable(Capability::Blend);
+				
+					auto aabb = mr.getAABB().getBounds();
+					std::array<ImVec2, 8> screen_aabb;
+					for(int i = 0; i < 8; ++i)
+					{
+						screen_aabb[i] = project(aabb[i]);
+					}
+					// Bounding Box Gizmo
+					constexpr std::array<size_t, 24> segments{
+						0, 1, 1, 3, 3, 2, 2, 0,
+						4, 5, 5, 7, 7, 6, 6, 4,
+						0, 4, 1, 5, 2, 6, 3, 7
+					};
+					for(int i = 0; i < 24; i += 2)
+						drawlist->AddLine(screen_aabb[segments[i]], screen_aabb[segments[i + 1]], 
+							ImGui::ColorConvertFloat4ToU32(ImVec4(0.0, 0.0, 1.0, 0.5)));
 				}
 				
-				const size_t circle_precision = 21;
-				glm::vec3 circle[circle_precision];
-				auto g = glm::cross(plane_normals[i], plane_normals[(i+2)%3]);
-				for(size_t p = 0; p < circle_precision; ++p)
-					circle[p] = glm::vec3{transform.getRotation() * glm::vec4{
-							glm::normalize(
-								plane_normals[(i+2)%3] + 
-								(static_cast<float>(p) / circle_precision - 0.5f) * g
-							)
-						, 1.0}};
-				for(size_t p = 0; p < circle_precision - 1; ++p)
+				/////////////////////////////////////
+				// Position Gizmo
+				// @todo Debug it, Clean in, Package it 
+		
+				const std::array<glm::vec2, 4> gizmo_points{
+					project(transform.getPosition() + glm::vec3{0.0, 0.0, 0.0}),
+					project(transform.getPosition() + glm::vec3{1.0, 0.0, 0.0}),
+					project(transform.getPosition() + glm::vec3{0.0, 1.0, 0.0}),
+					project(transform.getPosition() + glm::vec3{0.0, 0.0, 1.0})
+				};
+				
+				static const char* labels[3] = {"PositionGizmoX", "PositionGizmoY", "PositionGizmoZ"};
+				for(int i = 0; i < 3; ++i)
 				{
-					drawlist->AddLine(project(transform.getPosition() + circle[p]), 
-						project(transform.getPosition() + circle[p + 1]),
+					const ImGuiID id = window->GetID(labels[i]);
+					bool hovered = point_line_distance(mouse, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
+					if(hovered)
+						ImGui::SetHoveredID(id);
+					bool active = id == g->ActiveId;
+				
+					if(active && ImGui::IsMouseDragging(0))
+					{
+						const auto newP = mouse;
+						const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
+						ImGui::ResetMouseDragDelta(0);
+						const auto newR = getScreenRay(newP.x, newP.y);
+						const auto oldR = getScreenRay(oldP.x, oldP.y);
+						Plane pl{transform.getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
+						float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
+						glm::vec3 p0, p1, n0, n1;
+						trace(newR, pl, d0, p0, n0);
+						trace(oldR, pl, d1, p1, n1);
+						auto newPosition = transform.getPosition();
+						newPosition[i] += p0[i] - p1[i];
+						transform.setPosition(newPosition);
+						
+						//ImGui::SetActiveID(id, window);
+						ImGui::GetIO().WantCaptureMouse = true;
+					} 
+					if(active && ImGui::IsMouseReleased(0))
+					{
+						ImGui::SetActiveID(0, window);
+					}
+					if(ImGui::IsMouseClicked(0) && hovered)
+					{
+						ImGui::SetActiveID(id, window);
+						ImGui::GetIO().WantCaptureMouse = true;
+					}
+					drawlist->AddLine(gizmo_points[0], gizmo_points[i + 1], 
+						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);
+				}
+				////////////////////////////////////////////////////
+				
+				// Rotation Gizmo
+				const std::array<glm::vec2, 4> rot_gizmo_points{
+					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
+					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
+					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 1.0, 0.0, 1.0f}}),
+					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0f}})
+				};
+				
+				static const char* rot_labels[3] = {"RotationGizmoX", "RotationGizmoY", "RotationGizmoZ"};
+				const std::array<glm::vec3, 3> plane_normals = {
+					glm::vec3{transform.getRotation() * glm::vec4{0.0, 1.0, 0.0, 1.0}},
+					glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0}},
+					glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0}},
+				};
+				for(int i = 0; i < 3; ++i)
+				{
+					const ImGuiID id = window->GetID(rot_labels[i]);
+					bool hovered = glm::distance(mouse, rot_gizmo_points[1 + i]) < 10.0f;
+					if(hovered)
+						ImGui::SetHoveredID(id);
+					bool active = id == g->ActiveId;
+					
+					if(active && ImGui::IsMouseDragging(0))
+					{
+						const auto newP = mouse;
+						const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
+						ImGui::ResetMouseDragDelta(0);
+						const auto newR = getScreenRay(newP.x, newP.y);
+						const auto oldR = getScreenRay(oldP.x, oldP.y);
+						Plane pl{transform.getPosition(), 
+							(glm::dot(plane_normals[i], _camera.getDirection()) < 0.0 ? 1.0f : -1.0f) * plane_normals[i]};
+						float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
+						glm::vec3 p0, p1, n0, n1;
+						trace(newR, pl, d0, p0, n0);
+						trace(oldR, pl, d1, p1, n1);
+						
+						auto v1 = p1 - transform.getPosition();
+						auto v2 = p0 - transform.getPosition();
+						v1 = glm::vec3{glm::inverse(transform.getRotation()) * glm::vec4{v1, 1.0}};
+						v2 = glm::vec3{glm::inverse(transform.getRotation()) * glm::vec4{v2, 1.0}};
+						auto a = glm::cross(v1, v2);
+						
+						glm::quat q(a);
+						q.w = glm::sqrt((glm::length2(v1) * glm::length2(v2)) + glm::dot(v1, v2));
+						q = glm::normalize(q);
+						
+						transform.setRotation(transform.getRotation() * q);
+						
+						//ImGui::SetActiveID(id, window);
+						ImGui::GetIO().WantCaptureMouse = true;
+					} 
+					if(active && ImGui::IsMouseReleased(0))
+					{
+						ImGui::SetActiveID(0, window);
+					}
+					if(ImGui::IsMouseClicked(0) && hovered)
+					{
+						ImGui::SetActiveID(id, window);
+						ImGui::GetIO().WantCaptureMouse = true;
+					}
+					
+					const size_t circle_precision = 21;
+					glm::vec3 circle[circle_precision];
+					auto g = glm::cross(plane_normals[i], plane_normals[(i+2)%3]);
+					for(size_t p = 0; p < circle_precision; ++p)
+						circle[p] = glm::vec3{glm::vec4{
+								glm::normalize(
+									plane_normals[(i+2)%3] + 
+									(static_cast<float>(p) / circle_precision - 0.5f) * g
+								)
+							, 1.0}};
+					for(size_t p = 0; p < circle_precision - 1; ++p)
+					{
+						drawlist->AddLine(project(transform.getPosition() + circle[p]), 
+							project(transform.getPosition() + circle[p + 1]),
+							ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
+					}
+
+					drawlist->AddCircle(rot_gizmo_points[i + 1], 10.0,
 						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
 				}
-
-				drawlist->AddCircle(rot_gizmo_points[i + 1], 10.0,
-					ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
+				
+				ImGui::End();
 			}
-			
-			ImGui::End();
 		}
 		
 		ImGui::Begin("Object Inspector");
@@ -551,45 +542,61 @@ public:
 		ImGui::Separator();
 		if(_selectedObject != nullptr)
 		{
-			auto& transform = _selectedObject->getTransformation();
-			ImGui::Text("Name: %s", _selectedObject->getMesh().getName().c_str());
-			ImGui::Text("Path: %s", _selectedObject->getMesh().getPath().c_str());
-			glm::vec3 p = transform.getPosition();
-			if(ImGui::InputFloat3("Position", &p.x))
+			ImGui::Text("Name: %s", _selectedObject->get_name().c_str());
+			if(_selectedObject->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				transform.setPosition(p);
-			}
-			glm::quat r = transform.getRotation();
-			if(ImGui::InputFloat4("Rotation", &r.x))
-			{
-				transform.setRotation(r);
-			}
-			glm::vec3 s = transform.getScale();
-			if(ImGui::InputFloat3("Scale", &s.x))
-			{
-				transform.setScale(s);
-			}
-			
-			if(ImGui::TreeNode("Material"))
-			{
-				Uniform<glm::vec3>* uniform = _selectedObject->getMaterial().searchUniform<glm::vec3>("Color");
-				if(uniform != nullptr)
+				auto& transform = _selectedObject->get<Transformation>();
+				glm::vec3 p = transform.getPosition();
+				if(ImGui::InputFloat3("Position", &p.x))
 				{
-					float col[3] = {uniform->getValue().x, uniform->getValue().y, uniform->getValue().z};
-					if(ImGui::ColorEdit3("Color", col))
-						uniform->setValue(glm::vec3{col[0], col[1], col[2]});
+					transform.setPosition(p);
 				}
-				auto uniform_tex = _selectedObject->getMaterial().searchUniform<Texture>("Texture");
-				if(uniform_tex != nullptr)
+				glm::quat r = transform.getRotation();
+				if(ImGui::InputFloat4("Rotation", &r.x))
 				{
-					ImGui::Text("Has a Texture");
+					transform.setRotation(r);
+				}
+				glm::vec3 s = transform.getScale();
+				if(ImGui::InputFloat3("Scale", &s.x))
+				{
+					transform.setScale(s);
 				}
 				ImGui::TreePop();
 			}
 			
-			if(ImGui::TreeNode("Mesh"))
+			if(_selectedObject->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
 			{
+				auto& mr = _selectedObject->get<MeshRenderer>();
+				if(ImGui::TreeNode("Mesh"))
+				{
+					ImGui::Text("Name: %s", mr.getMesh().getName().c_str());
+					ImGui::Text("Path: %s", mr.getMesh().getPath().c_str());
+					ImGui::TreePop();
+				}
+				
+				if(ImGui::TreeNode("Material"))
+				{
+					Uniform<glm::vec3>* uniform = mr.getMaterial().searchUniform<glm::vec3>("Color");
+					if(uniform != nullptr)
+					{
+						float col[3] = {uniform->getValue().x, uniform->getValue().y, uniform->getValue().z};
+						if(ImGui::ColorEdit3("Color", col))
+							uniform->setValue(glm::vec3{col[0], col[1], col[2]});
+					}
+					auto uniform_tex = mr.getMaterial().searchUniform<Texture>("Texture");
+					if(uniform_tex != nullptr)
+					{
+						ImGui::Text("Has a Texture");
+					}
+					ImGui::TreePop();
+				}
 				ImGui::TreePop();
+			}
+			
+			if(ImGui::Button("Delete Entity"))
+			{
+				destroy_entity(_selectedObject->get_id());
+				deselectObject();
 			}
 		} else {
 			ImGui::Text("No object selected.");
@@ -606,7 +613,7 @@ public:
 				for(auto& o : ComponentIterator<MeshRenderer>{})
 				{
 					if(trace(r, o, depth))
-						selectObject(&o);
+						selectObject(&entities[get_owner<MeshRenderer>(o)]);
 				}
 			}
 		}
@@ -615,7 +622,7 @@ public:
 	}
 		
 protected:
-	MeshRenderer*	_selectedObject = nullptr;
+	Entity*			_selectedObject = nullptr;
 	glm::vec4		_selectedObjectColor = glm::vec4{0.0, 0.0, 1.0, 0.10};
 
 	void deselectObject()
@@ -623,7 +630,7 @@ protected:
 		_selectedObject = nullptr;
 	}
 	
-	void selectObject(MeshRenderer* o)
+	void selectObject(Entity* o)
 	{
 		if(_selectedObject != nullptr)
 			deselectObject();

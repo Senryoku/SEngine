@@ -4,6 +4,7 @@
 #include <list>
 #include <limits>
 #include <cassert>
+#include <iterator>
 
 using ComponentID = std::size_t;
 using EntityID = std::size_t;
@@ -35,6 +36,17 @@ inline bool is_valid(ComponentID idx)
 	return impl::component_owner<T>[idx] != invalid_entity;
 }
 
+template<typename T>
+inline EntityID get_owner(ComponentID idx)
+{
+	return impl::component_owner<T>[idx];
+}
+
+template<typename T>
+inline EntityID get_owner(const T& c)
+{
+	return impl::component_owner<T>[std::distance(&*impl::components<T>.cbegin(), &c)];
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Component Types Managment
@@ -82,7 +94,9 @@ inline void mark_for_deletion(ComponentID idx)
 template<typename T>
 inline void delete_component(ComponentID idx)
 {
-	impl::components<T>[idx].~T();
+	// To call the component destructor here, we should forbid the destructor calls at exit
+	// (via std::vector) and manage them ourselves...
+	//impl::components<T>[idx].~T();
 	impl::component_owner<T>[idx] = invalid_entity;
 }
 

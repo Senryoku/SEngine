@@ -16,7 +16,14 @@ public:
 	}
 	
 	Entity(const Entity&) =delete;
-	Entity(Entity&&) =default;
+	Entity(Entity&& old) :
+		_id{old._id},
+		_name{old._name},
+		_components{old._components}
+	{	
+		old.invalidate();
+	}
+	
 	Entity& operator=(const Entity&) =delete;
 	Entity& operator=(Entity&&) =default;
 	
@@ -31,14 +38,14 @@ public:
 	~Entity()
 	{
 		if(is_valid())
-			for(auto id : _components)
+			for(auto& id : _components)
 				if(id != invalid_component_idx)
 					mark_for_deletion(id);
-		_id = invalid_entity;
-		_name = "";
+		invalidate();
 	}
 	
 	inline std::string get_name() const { return _name; }
+	inline void set_name(const std::string& n) { _name = n; }
 
 	inline EntityID get_id() const { return _id; }
 	
@@ -53,6 +60,13 @@ public:
 	{
 		assert(has<T>());
 		return impl::components<T>[_components[get_component_type_idx<T>()]];
+	}
+	
+	template<typename T>
+	inline T& get_id()
+	{
+		assert(has<T>());
+		return _components[get_component_type_idx<T>()];
 	}
 	
 	template<typename T, typename ...Args>
@@ -82,10 +96,19 @@ public:
 		return _id != invalid_entity;
 	}
 	
-//private:
+private:
 	EntityID										_id = invalid_entity;
 	std::string										_name;
 	std::array<ComponentID, max_component_types>	_components;
+	
+	void invalidate()
+	{
+		if(is_valid())
+			for(auto& id : _components)
+				id = invalid_component_idx;
+		_id = invalid_entity;
+		_name = "";
+	}
 };
 
 extern EntityID				next_entity_id;

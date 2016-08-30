@@ -17,17 +17,14 @@ void Scene::init()
 void Scene::updateLights()
 {
 	// Updates GPU Buffer
-	for(size_t i = 0; i < _lights.size(); ++i)
+	if(_dirtyLights)
 	{
-		if(_dirtyLights)
+		for(size_t i = 0; i < _lights.size(); ++i)
 		{
 			_lights[i]->getGPUBuffer().bind(i + 2);
 			_lights[i]->updateMatrices();
 		}
-	}
-	for(size_t i = 0; i < _omniLights.size(); ++i)
-	{
-		if(_dirtyLights)
+		for(size_t i = 0; i < _omniLights.size(); ++i)
 		{
 			_omniLights[i].getGPUBuffer().bind(i + 12);
 			_omniLights[i].updateMatrices();
@@ -59,6 +56,7 @@ void Scene::update()
 		updatePointLightBuffer();
 	
 	/// @todo Move elsewhere?
+	deletion_pass<Transformation>();
 	deletion_pass<MeshRenderer>();
 }
 

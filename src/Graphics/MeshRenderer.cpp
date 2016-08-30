@@ -1,17 +1,21 @@
 #include <MeshRenderer.hpp>
 
-MeshRenderer::MeshRenderer(const Mesh& mesh, const Transformation& t) :
+MeshRenderer::MeshRenderer(const Mesh& mesh, const Entity& e) :
 	_mesh(&mesh),
 	_material(mesh.getMaterial()),
-	_transformation(t)
+	_entity(e.get_id())
 {
 }
 
 bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const
 {
+	assert(_mesh != nullptr);
+	assert(_entity != invalid_entity);
+	
+	/// @todo Use MeshRenderer's bounding box
 	const BoundingBox& bbox = _mesh->getBoundingBox();
-	const glm::vec4 a = _transformation.getModelMatrix() * glm::vec4(bbox.min, 1.0);
-	const glm::vec4 b = _transformation.getModelMatrix() * glm::vec4(bbox.max, 1.0);
+	const glm::vec4 a = getTransformation().getModelMatrix() * glm::vec4(bbox.min, 1.0);
+	const glm::vec4 b = getTransformation().getModelMatrix() * glm::vec4(bbox.max, 1.0);
 
 	std::array<glm::vec4, 8> p = {glm::vec4{a.x, a.y, a.z, 1.0},
 									glm::vec4{a.x, a.y, b.z, 1.0},

@@ -2,40 +2,43 @@
 
 #include <Mesh.hpp>
 #include <Transformation.hpp>
+#include <Entity.hpp>
 
 class MeshRenderer
 {
 public:
 	MeshRenderer() =default;
-	MeshRenderer(const Mesh& mesh, const Transformation& t = Transformation{});
+	MeshRenderer(const Mesh& mesh, const Entity& e);
 	
 	inline void draw() const;
 	
 	inline Material& getMaterial() { return _material; }
 	inline const Mesh& getMesh() const { return *_mesh; }
 	
-	inline Transformation& getTransformation() { return _transformation; }
-	inline const Transformation& getTransformation() const { return _transformation; }
+	inline const Transformation& getTransformation() const { return entities[_entity].get<Transformation>(); }
 	
 	bool isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const;
 	
 	inline AABB<glm::vec3> getAABB() const;
 	
 private:
-	const Mesh*		_mesh = nullptr;	
-	Material		_material;
-	Transformation	_transformation;
+	const Mesh*				_mesh = nullptr;	
+	Material				_material;
+	EntityID				_entity = invalid_entity;
 };
 
 inline void MeshRenderer::draw() const
 {
+	assert(_mesh != nullptr);
+	assert(_entity != invalid_entity);
 	_material.use();
-	setUniform("ModelMatrix", _transformation.getModelMatrix()); // @todo Should be in the material...
+	setUniform("ModelMatrix", getTransformation().getModelMatrix()); // @todo Should be in the material...
 	_mesh->draw();
 }
 
 inline AABB<glm::vec3> MeshRenderer::getAABB() const
 {
+	assert(_mesh != nullptr);
 	// Will not yield a perfectly fit AABB (one would have to process every vertex to get it), 
 	// but a correct one, meaning it will contain the entire transformed model.
 	auto bbox = _mesh->getBoundingBox().getBounds();
@@ -43,7 +46,7 @@ inline AABB<glm::vec3> MeshRenderer::getAABB() const
 	auto max = glm::vec3{std::numeric_limits<float>::lowest()};
 	for(auto v : bbox)
 	{	
-		v = _transformation(v);
+		v = getTransformation()(v);
 		min = glm::min(min, v);
 		max = glm::max(max, v);
 	}
