@@ -5,15 +5,16 @@
 
 #include <glm/glm.hpp>
 
-#include <Singleton.hpp>
 #include <MathTools.hpp>
 
-/// @todo static ?
-
-class RandomHelper : public Singleton<RandomHelper>
+/**
+ * @todo static ?
+ * @todo remove!
+**/
+class RandomHelper
 {
 public:
-	std::mt19937										generator;
+	std::mt19937							generator;
 	std::uniform_real_distribution<double>	distribution0_1;
 	
 	RandomHelper() :
@@ -52,3 +53,18 @@ public:
 		return r;
 	}
 };
+
+template<typename T>
+T rand()
+{
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	static std::uniform_real_distribution<T> uniform_dist(0, 1);
+	return uniform_dist(gen);
+}
+	
+template<>
+inline glm::vec3 rand<glm::vec3>()
+{
+	return glm::sphericalRand(1.0f);
+}
