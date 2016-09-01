@@ -1,27 +1,37 @@
 #include <TimeManager.hpp>
 
-TimeManager::TimeManager() :
-	_timerate(1.f),
-	_cachedRealDeltaTime(s_minTimeFrame),
-	_cachedDeltaTime(_timerate * s_minTimeFrame),
-	_lastUpdate(now())
+namespace TimeManager
 {
+
+namespace impl
+{
+
+Real					_runtime = 0.f;
+Real					_timerate = 1.0f;
+Real					_cachedRealDeltaTime = MinTimeFrame;
+Real					_cachedDeltaTime = _timerate * MinTimeFrame;
+
+TimePoint				_lastUpdate = now();
+
+std::vector<Callback>	_callbacks;
+
 }
 
-void TimeManager::update()
+void update()
 {   
+	using namespace impl;
 	TimePoint tmp = now();
     _cachedRealDeltaTime = Seconds(tmp - _lastUpdate).count();
 	_lastUpdate = tmp;
 	
     // Clamping
-    if(_cachedRealDeltaTime < s_minTimeFrame)
+    if(_cachedRealDeltaTime < MinTimeFrame)
     {
 		// FPS are way too high ! Assuming a minimum frame time...
-        _cachedRealDeltaTime = s_minTimeFrame;
-    } else if(_cachedRealDeltaTime > s_maxTimeFrame) {
+        _cachedRealDeltaTime = MinTimeFrame;
+    } else if(_cachedRealDeltaTime > MaxTimeFrame) {
         // FPS are too low, we can't stand this !
-        _cachedRealDeltaTime = s_maxTimeFrame;
+        _cachedRealDeltaTime = MaxTimeFrame;
     }
 	
 	_cachedDeltaTime = getTimerate() * getRealDeltaTime();
@@ -29,4 +39,6 @@ void TimeManager::update()
 	
 	for(auto& f : _callbacks)
 		f(_runtime, _cachedRealDeltaTime);
+}
+
 }

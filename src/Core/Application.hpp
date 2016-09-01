@@ -36,9 +36,6 @@ public:
 	
 	virtual void renderGUI();
 	
-	template<typename T>
-	static T rand();
-	
 	void setFullscreen(bool val = true);
 	void setMSAA(bool val = true);
 
@@ -95,6 +92,7 @@ protected:
 	GPUViewProjection	_gpuCameraData;
 	UniformBuffer		_camera_buffer;
 
+	bool 	_menu = false;
 	bool 	_controlCamera = true;
 	double 	_mouse_x = 0.0, 
 			_mouse_y = 0.0;
@@ -152,18 +150,3 @@ protected:
 	static void s_drop_callback(GLFWwindow* window, int count, const char ** paths)
 	{ getInstance().drop_callback(window, count, paths); }
 };
-
-template<typename T>
-T Application::rand()
-{
-	static std::random_device rd;
-	static std::mt19937 gen(rd());
-	static std::uniform_real_distribution<T> uniform_dist(0, 1);
-	return uniform_dist(gen);
-}
-	
-template<>
-inline glm::vec3 Application::rand<glm::vec3>()
-{
-	return glm::sphericalRand(1.0f);
-}

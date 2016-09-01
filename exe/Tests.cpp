@@ -157,12 +157,44 @@ public:
 	
 	virtual void renderGUI() override
 	{	
+		static bool	win_imgui_stats = false,
+					win_stats = false,
+					win_debug = false,
+					win_rendering = false,
+					win_scene = true,
+					win_logs = false,
+					win_inspect = true;
+		
+		// Menu
+		if(_menu)
+			if(ImGui::BeginMainMenuBar())
+			{
+				if(ImGui::BeginMenu("File"))
+				{
+					if(ImGui::MenuItem("Exit", "Alt+F4"))
+						glfwSetWindowShouldClose(_window, GL_TRUE);
+					ImGui::EndMenu();
+				}
+				if(ImGui::BeginMenu("Windows"))
+				{
+					if(ImGui::MenuItem("Debug Options")) win_debug = !win_debug;
+					if(ImGui::MenuItem("Rendering Options")) win_rendering = !win_rendering;
+					if(ImGui::MenuItem("Scene")) win_scene = !win_scene;
+					if(ImGui::MenuItem("Entity Inspector")) win_inspect = !win_inspect;
+					if(ImGui::MenuItem("Logs")) win_logs = !win_logs;
+					if(ImGui::MenuItem("Statistics")) win_stats = !win_stats;
+					if(ImGui::MenuItem("ImGui Statistics")) win_imgui_stats = !win_imgui_stats;
+					ImGui::EndMenu();
+				}
+				ImGui::EndMainMenuBar();
+			}
+	
 		// Plots
 		static float last_update = 2.0;
-		last_update += TimeManager::getInstance().getRealDeltaTime();
+		last_update += TimeManager::getRealDeltaTime();
 		static std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
 		constexpr size_t max_samples = 100;
-		const float ms = TimeManager::getInstance().getRealDeltaTime() * 1000;
+		const float ms = TimeManager::getRealDeltaTime() * 1000;
 		if(last_update > 0.05 || frametimes.empty())
 		{
 			if(frametimes.size() > max_samples)			frametimes.pop_front();
@@ -180,177 +212,193 @@ public:
 			last_update = 0.0;
 		}
 		
-		ImGui::Begin("Statistics");
-		{
-			ImGui::Text("%.4f ms/frame (%.1f FPS)", 
-				frametimes.back(), 
-				1000.0 / frametimes.back()
-			);
-			auto lamba_data = [](void* data, int idx) {
-				return static_cast<std::deque<float>*>(data)->at(idx);
-			};
-			ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, to_string(frametimes.back(), 4).c_str(), 0.0, 20.0); 
-			ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, to_string(updatetimes.back(), 4).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, to_string(gbuffertimes.back(), 4).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
-			ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
-		}
-		ImGui::End();
+		if(win_imgui_stats)
+			ImGui::ShowMetricsWindow();
 		
-		ImGui::ShowMetricsWindow();
-		
-		ImGui::Begin("Debug");
+		if(win_stats)
 		{
-			ImGui::Checkbox("Pause", &_paused);
-			ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
-			if(ImGui::Button("Update shadow maps"))
+			if(ImGui::Begin("Statistics", &win_stats))
 			{
-				for(auto l : _scene.getLights())
+				ImGui::Text("%.4f ms/frame (%.1f FPS)", 
+					frametimes.back(), 
+					1000.0 / frametimes.back()
+				);
+				auto lamba_data = [](void* data, int idx) {
+					return static_cast<std::deque<float>*>(data)->at(idx);
+				};
+				ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, to_string(frametimes.back(), 4).c_str(), 0.0, 20.0); 
+				ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, to_string(updatetimes.back(), 4).c_str(), 0.0, 10.0);    
+				ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, to_string(gbuffertimes.back(), 4).c_str(), 0.0, 10.0);    
+				ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
+				ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
+				ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
+			}
+			ImGui::End();
+		}
+		
+		if(win_debug)
+		{
+			if(ImGui::Begin("Debug Options", &win_debug))
+			{
+				ImGui::Checkbox("Pause", &_paused);
+				ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
+				if(ImGui::Button("Update shadow maps"))
 				{
-					l->updateMatrices();
-					l->drawShadowMap(ComponentIterator<MeshRenderer>{});
+					for(auto l : _scene.getLights())
+					{
+						l->updateMatrices();
+						l->drawShadowMap(ComponentIterator<MeshRenderer>{});
+					}
+					
+					for(auto& l : _scene.getOmniLights())
+					{
+						l.updateMatrices();
+						l.drawShadowMap(ComponentIterator<MeshRenderer>{});
+					}
+				}
+				ImGui::Separator(); 
+				ImGui::Checkbox("Toggle Debug", &_debug_buffers);
+				const char* debugbuffer_items[] = {"Color","Position", "Normal"};
+				const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
+				static int debugbuffer_item_current = 0;
+				if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
+					_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
+			}
+			ImGui::End();
+		}
+		
+		if(win_rendering)
+		{
+			ImGui::Begin("Rendering Options", &win_rendering);
+			{
+				if(ImGui::Checkbox("Fullscreen", &_fullscreen))
+					setFullscreen(_fullscreen);
+				ImGui::SameLine();
+				if(ImGui::Checkbox("Vsync", &_vsync))
+					glfwSwapInterval(_vsync);
+				ImGui::Text("Window resolution: %d * %d", _width, _height);
+				const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
+				static int internal_resolution_item_current = 0;
+				if(ImGui::Combo("Internal Resolution", &internal_resolution_item_current, internal_resolution_items, 4))
+				{
+					switch(internal_resolution_item_current)
+					{
+						case 0: setInternalResolution(0, 0); break;
+						case 1: setInternalResolution(1920, 1080); break;
+						case 2: setInternalResolution(2715, 1527); break;
+						case 3: setInternalResolution(3840, 2160); break;
+					}
+				}
+				if(ImGui::DragFloat("FoV", &_fov, 1.0, 40.0, 110.0))
+					setFoV(_fov);
+				
+				ImGui::Separator();
+				
+				static bool bloom_toggle = _bloom > 0.0;
+				if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
+					_bloom = -_bloom;
+				ImGui::DragFloat("Bloom", &_bloom, 0.05, 0.0, 5.0);
+				ImGui::DragFloat("Exposure", &_exposure, 0.05, 0.0, 5.0);
+				ImGui::DragFloat("MinVariance (VSM)", &_minVariance, 0.000001, 0.0, 0.00005);
+				ImGui::DragInt("AOSamples", &_aoSamples, 1, 0, 32);
+				ImGui::DragFloat("AOThresold", &_aoThreshold, 0.05, 0.0, 5.0);
+				ImGui::DragFloat("AORadius", &_aoRadius, 1.0, 0.0, 400.0);
+				ImGui::DragInt("VolumeSamples", &_volumeSamples, 1, 0, 64);
+				ImGui::DragFloat("AtmosphericDensity", &_atmosphericDensity, 0.001, 0.0, 0.02);
+			
+				ImGui::Separator();
+
+				ImGui::ColorEdit3("Ambiant Color", &_ambiant.r);
+			}
+			ImGui::End();
+		}
+		
+		if(win_scene)
+		{
+			ImGui::Begin("Scene", &win_scene);
+			{
+				if(ImGui::TreeNode("Entities"))
+				{
+					for(auto& e : entities)
+					{
+						ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+						if(e.is_valid())
+						{
+							ImGui::PushID(&e);
+							if(ImGui::SmallButton(e.get_name().c_str()))
+								selectObject(&e);
+							ImGui::PopID();
+						}
+						ImGui::PopStyleColor();
+					}
+					ImGui::TreePop();
 				}
 				
-				for(auto& l : _scene.getOmniLights())
+				if(ImGui::TreeNode(("Directional Lights (" + std::to_string(_scene.getLights().size()) + ")").c_str()))
 				{
-					l.updateMatrices();
-					l.drawShadowMap(ComponentIterator<MeshRenderer>{});
-				}
-			}
-			ImGui::Separator(); 
-			ImGui::Checkbox("Toggle Debug", &_debug_buffers);
-			const char* debugbuffer_items[] = {"Color","Position", "Normal"};
-			const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
-			static int debugbuffer_item_current = 0;
-			if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
-				_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
-		}
-		ImGui::End();
-		
-		ImGui::Begin("Rendering Options");
-		{
-			if(ImGui::Checkbox("Fullscreen", &_fullscreen))
-				setFullscreen(_fullscreen);
-			ImGui::SameLine();
-			if(ImGui::Checkbox("Vsync", &_vsync))
-				glfwSwapInterval(_vsync);
-			ImGui::Text("Window resolution: %d * %d", _width, _height);
-			const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
-			static int internal_resolution_item_current = 0;
-			if(ImGui::Combo("Internal Resolution", &internal_resolution_item_current, internal_resolution_items, 4))
-			{
-				switch(internal_resolution_item_current)
-				{
-					case 0: setInternalResolution(0, 0); break;
-					case 1: setInternalResolution(1920, 1080); break;
-					case 2: setInternalResolution(2715, 1527); break;
-					case 3: setInternalResolution(3840, 2160); break;
-				}
-			}
-			if(ImGui::DragFloat("FoV", &_fov, 1.0, 40.0, 110.0))
-				setFoV(_fov);
-			
-			ImGui::Separator();
-			
-			static bool bloom_toggle = _bloom > 0.0;
-			if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
-				_bloom = -_bloom;
-			ImGui::DragFloat("Bloom", &_bloom, 0.05, 0.0, 5.0);
-			ImGui::DragFloat("Exposure", &_exposure, 0.05, 0.0, 5.0);
-			ImGui::DragFloat("MinVariance (VSM)", &_minVariance, 0.000001, 0.0, 0.00005);
-			ImGui::DragInt("AOSamples", &_aoSamples, 1, 0, 32);
-			ImGui::DragFloat("AOThresold", &_aoThreshold, 0.05, 0.0, 5.0);
-			ImGui::DragFloat("AORadius", &_aoRadius, 1.0, 0.0, 400.0);
-			ImGui::DragInt("VolumeSamples", &_volumeSamples, 1, 0, 64);
-			ImGui::DragFloat("AtmosphericDensity", &_atmosphericDensity, 0.001, 0.0, 0.02);
-		
-			ImGui::Separator();
-
-			ImGui::ColorEdit3("Ambiant Color", &_ambiant.r);
-		}
-		ImGui::End();
-		
-		ImGui::Begin("Scene");
-		{
-			if(ImGui::TreeNode("Entities"))
-			{
-				for(auto& e : entities)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-					if(e.is_valid())
+					for(auto& l : _scene.getLights())
 					{
-						ImGui::PushID(&e);
-						if(ImGui::SmallButton(e.get_name().c_str()))
-							selectObject(&e);
+						ImGui::PushID(&l);
+						ImGui::PushItemWidth(150);
+						float c[3] = {l->getColor().r, l->getColor().g, l->getColor().b};
+						if(ImGui::InputFloat3("Color", c))
+							l->setColor(glm::vec3{c[0], c[1], c[2]});
 						ImGui::PopID();
 					}
-					ImGui::PopStyleColor();
+					ImGui::TreePop();
 				}
-				ImGui::TreePop();
-			}
-			
-			if(ImGui::TreeNode(("Directional Lights (" + std::to_string(_scene.getLights().size()) + ")").c_str()))
-			{
-				for(auto& l : _scene.getLights())
+				
+				if(ImGui::TreeNode(("Point Lights (" + std::to_string(_scene.getPointLights().size()) + ")").c_str()))
 				{
-					ImGui::PushID(&l);
-					ImGui::PushItemWidth(150);
-					float c[3] = {l->getColor().r, l->getColor().g, l->getColor().b};
-					if(ImGui::InputFloat3("Color", c))
-						l->setColor(glm::vec3{c[0], c[1], c[2]});
-					ImGui::PopID();
+					for(auto& l : _scene.getPointLights())
+					{
+						ImGui::PushID(&l);
+						ImGui::PushItemWidth(150);
+						ImGui::InputFloat3("Position", &l.position.x);
+						ImGui::SameLine();
+						ImGui::InputFloat3("Color", &l.color.r);
+						ImGui::SameLine();
+						ImGui::PushItemWidth(50);
+						ImGui::InputFloat("Range", &l.range);
+						ImGui::PopID();
+					}
+					ImGui::TreePop();
 				}
-				ImGui::TreePop();
 			}
-			
-			if(ImGui::TreeNode(("Point Lights (" + std::to_string(_scene.getPointLights().size()) + ")").c_str()))
-			{
-				for(auto& l : _scene.getPointLights())
-				{
-					ImGui::PushID(&l);
-					ImGui::PushItemWidth(150);
-					ImGui::InputFloat3("Position", &l.position.x);
-					ImGui::SameLine();
-					ImGui::InputFloat3("Color", &l.color.r);
-					ImGui::SameLine();
-					ImGui::PushItemWidth(50);
-					ImGui::InputFloat("Range", &l.range);
-					ImGui::PopID();
-				}
-				ImGui::TreePop();
-			}
+			ImGui::End();
 		}
-		ImGui::End();
 		
-		ImGui::Begin("Logs");
+		if(win_logs)
 		{
-			const ImVec4 LogColors[3] = {
-				ImVec4{1, 1, 1, 1},
-				ImVec4{1, 1, 0, 1},
-				ImVec4{1, 0, 0, 1}
-			};
-			static int log_level_current = 0;
-			ImGui::Combo("Log Level", &log_level_current, Log::_log_types.data(), 3);
-			std::vector<Log::LogLine*> tmp_logs;
-			if(log_level_current > 0)
-				for(auto& l : Log::_logs)
-					if(log_level_current <= l.type)
-						tmp_logs.push_back(&l);
-			
-			ImGui::BeginChild("Logs Lines");
-			ImGuiListClipper clipper(log_level_current > 0 ? tmp_logs.size() : Log::_logs.size());
-			while(clipper.Step())
-				for(int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-				{
-					if(log_level_current > 0)
-						ImGui::TextColored(LogColors[tmp_logs[i]->type], "%s", tmp_logs[i]->str().c_str());
-					else
-						ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
-				}
-			ImGui::EndChild();
+			ImGui::Begin("Logs", &win_logs);
+			{
+				const ImVec4 LogColors[3] = {
+					ImVec4{1, 1, 1, 1},
+					ImVec4{1, 1, 0, 1},
+					ImVec4{1, 0, 0, 1}
+				};
+				static int log_level_current = 0;
+				ImGui::Combo("Log Level", &log_level_current, Log::_log_types.data(), 3);
+				std::vector<Log::LogLine*> tmp_logs;
+				if(log_level_current > 0)
+					for(auto& l : Log::_logs)
+						if(log_level_current <= l.type)
+							tmp_logs.push_back(&l);
+				
+				ImGui::BeginChild("Logs Lines");
+				ImGuiListClipper clipper(log_level_current > 0 ? tmp_logs.size() : Log::_logs.size());
+				while(clipper.Step())
+					for(int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
+					{
+						if(log_level_current > 0)
+							ImGui::TextColored(LogColors[tmp_logs[i]->type], "%s", tmp_logs[i]->str().c_str());
+						else
+							ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
+					}
+				ImGui::EndChild();
+			}
+			ImGui::End();
 		}
-		ImGui::End();
 		
 		if(_selectedObject != nullptr)
 		{
@@ -538,132 +586,147 @@ public:
 			}
 		}
 		
-		ImGui::Begin("Object Inspector");
-		ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
-		ImGui::Separator();
-		if(_selectedObject != nullptr)
+		if(win_inspect)
 		{
-			ImGui::Text("Name: %s", _selectedObject->get_name().c_str());
-			if(_selectedObject->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+			if(ImGui::Begin("Entity Inspector", &win_inspect))
 			{
-				auto& transform = _selectedObject->get<Transformation>();
-				
-				glm::vec3 p = transform.getPosition();
-				if(ImGui::InputFloat3("Position", &p.x))
-					transform.setPosition(p);
-				ImGui::SameLine();
-				if(ImGui::Button("Reset##Position"))
-					transform.setPosition(glm::vec3{0.0f});
-				
-				glm::quat r = transform.getRotation();
-				if(ImGui::InputFloat4("Rotation", &r.x))
-					transform.setRotation(r);
-				ImGui::SameLine();
-				if(ImGui::Button("Reset##Rotation"))
-					transform.setRotation(glm::quat{});
-				
-				glm::vec3 s = transform.getScale();
-				if(ImGui::InputFloat3("Scale", &s.x))
-					transform.setScale(s);
-				ImGui::SameLine();
-				if(ImGui::Button("Reset##Scale"))
-					transform.setScale(glm::vec3{1.0f});
-				
-				ImGui::TreePop();
-			}
-			
-			if(_selectedObject->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
-			{
-				auto& mr = _selectedObject->get<MeshRenderer>();
-				if(ImGui::TreeNode("Mesh"))
+				ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
+				ImGui::Separator();
+				if(_selectedObject != nullptr)
 				{
-					ImGui::Text("Name: %s", mr.getMesh().getName().c_str());
-					ImGui::Text("Path: %s", mr.getMesh().getPath().c_str());
+					ImGui::Text("Name: %s", _selectedObject->get_name().c_str());
+					if(_selectedObject->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						auto& transform = _selectedObject->get<Transformation>();
+						
+						glm::vec3 p = transform.getPosition();
+						if(ImGui::InputFloat3("Position", &p.x))
+							transform.setPosition(p);
+						ImGui::SameLine();
+						if(ImGui::Button("Reset##Position"))
+							transform.setPosition(glm::vec3{0.0f});
+						
+						glm::quat r = transform.getRotation();
+						if(ImGui::InputFloat4("Rotation", &r.x))
+							transform.setRotation(r);
+						ImGui::SameLine();
+						if(ImGui::Button("Reset##Rotation"))
+							transform.setRotation(glm::quat{});
+						
+						glm::vec3 s = transform.getScale();
+						if(ImGui::InputFloat3("Scale", &s.x))
+							transform.setScale(s);
+						ImGui::SameLine();
+						if(ImGui::Button("Reset##Scale"))
+							transform.setScale(glm::vec3{1.0f});
+						
+						ImGui::TreePop();
+					}
 					
-					// renders the mesh into a small framebuffer
-					static Framebuffer<> model_render{256};
-					if(!model_render)
-						model_render.init();
-					static auto& GUIModelRender = Resources::loadProgram("GUIModelRender",
-						Resources::load<VertexShader>("src/GLSL/Forward/simple_vs.glsl"),
-						Resources::load<FragmentShader>("src/GLSL/Forward/simple_fs.glsl")
-					);
-					static float gui_model_render_fov = 1.0f;
-					static float gui_model_render_camx = 400;	/// @todo Compute it automatically
-					auto aabb = mr.getMesh().getBoundingBox();
-					ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.1, 5.0);
-					ImGui::SliderFloat("Position", &gui_model_render_camx, 0, 1000);
-					GUIModelRender.setUniform("ProjectionMatrix", glm::perspective(gui_model_render_fov, 1.0f, 0.1f, 1000.0f));
-					GUIModelRender.setUniform("ViewMatrix", glm::lookAt(
-					   glm::vec3(gui_model_render_camx, 0.5f * (aabb.max.y + aabb.min.y), 0),
-					   0.5f * (aabb.max + aabb.min),
-					   glm::vec3(0, -1, 0)
-					));
-					GUIModelRender.setUniform("ModelMatrix", glm::rotate(glm::mat4(1.0f), _time, glm::vec3{0, 1, 0}));
-					Material mat = mr.getMesh().getMaterial(); // Copy Material... not perfect but will do for now.
-					mat.setShadingProgram(GUIModelRender);
-					mat.use();
-					Context::enable(Capability::DepthTest);
-					model_render.bind();
-					glClearColor(0, 0, 0, 0);
-					Context::clear();
-					mr.getMesh().draw();
-					model_render.unbind();
+					auto edit_material = [&](Material& mat)
+					{
+						auto uniform_color = mat.searchUniform<glm::vec3>("Color");
+						if(uniform_color != nullptr)
+						{
+							float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
+							if(ImGui::ColorEdit3("Color", col))
+								uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
+						}
+						auto uniform_r = mat.searchUniform<float>("R");
+						if(uniform_r != nullptr)
+						{
+							float val = uniform_r->getValue();
+							if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
+								uniform_r->setValue(val);
+						}
+						auto uniform_f0 = mat.searchUniform<float>("F0");
+						if(uniform_f0 != nullptr)
+						{
+							float val = uniform_f0->getValue();
+							if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
+								uniform_f0->setValue(val);
+						}
+						auto display_texture = [&](const std::string& name) 
+						{
+							auto uniform_tex = mat.searchUniform<Texture>(name);
+							if(uniform_tex != nullptr)
+							{
+								ImGui::Text(name.c_str());
+								ImGui::Image(reinterpret_cast<void*>(uniform_tex->getValue().getName()), ImVec2{256, 256});
+							}
+						};
+						display_texture("Texture");
+						display_texture("NormalMap");
+					};
 					
-					ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
+					if(_selectedObject->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						auto& mr = _selectedObject->get<MeshRenderer>();
+						if(ImGui::TreeNode("Mesh"))
+						{
+							ImGui::Text("Name: %s", mr.getMesh().getName().c_str());
+							ImGui::Text("Path: %s", mr.getMesh().getPath().c_str());
+							
+							// renders the mesh into a small framebuffer
+							static Framebuffer<> model_render{256};
+							if(!model_render)
+								model_render.init();
+							static auto& GUIModelRender = Resources::loadProgram("GUIModelRender",
+								Resources::load<VertexShader>("src/GLSL/Forward/simple_vs.glsl"),
+								Resources::load<FragmentShader>("src/GLSL/Forward/simple_fs.glsl")
+							);
+							static float gui_model_render_fov = 1.0f;
+							static float gui_model_render_camx = 400;	/// @todo Compute it automatically
+							auto aabb = mr.getMesh().getBoundingBox();
+							ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.1, 5.0);
+							ImGui::SliderFloat("Position", &gui_model_render_camx, 0, 1000);
+							GUIModelRender.setUniform("ProjectionMatrix", glm::perspective(gui_model_render_fov, 1.0f, 1.0f, 1500.0f));
+							GUIModelRender.setUniform("ViewMatrix", glm::lookAt(
+							   glm::vec3(gui_model_render_camx, 0.5f * (aabb.max.y + aabb.min.y), 0),
+							   0.5f * (aabb.max + aabb.min),
+							   glm::vec3(0, -1, 0)
+							));
+							GUIModelRender.setUniform("ModelMatrix", glm::rotate(glm::mat4(1.0f), _time, glm::vec3{0, 1, 0}));
+							Material mat = mr.getMesh().getMaterial(); // Copy Material... not perfect but will do for now.
+							mat.setShadingProgram(GUIModelRender);
+							mat.use();
+							Context::enable(Capability::DepthTest);
+							model_render.bind();
+							glClearColor(0, 0, 0, 0);
+							Context::clear();
+							mr.getMesh().draw();
+							model_render.unbind();
+							
+							ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
+							
+							// if(ImGui::TreeNode("Base Material"))
+							// {
+								// edit_material(mr.getMesh().getMaterial());
+								// ImGui::TreePop();
+							// }
+							
+							ImGui::TreePop();
+						}
+						
+						if(ImGui::TreeNode("Material"))
+						{
+							edit_material(mr.getMaterial());
+							ImGui::TreePop();
+						}
+						ImGui::TreePop();
+					}
 					
-					ImGui::TreePop();
+					if(ImGui::Button("Delete Entity"))
+					{
+						destroy_entity(_selectedObject->get_id());
+						deselectObject();
+					}
+				} else {
+					ImGui::Text("No object selected.");
 				}
-				
-				if(ImGui::TreeNode("Material"))
-				{
-					auto uniform_color = mr.getMaterial().searchUniform<glm::vec3>("Color");
-					if(uniform_color != nullptr)
-					{
-						float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
-						if(ImGui::ColorEdit3("Color", col))
-							uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
-					}
-					auto uniform_r = mr.getMaterial().searchUniform<float>("R");
-					if(uniform_r != nullptr)
-					{
-						float val = uniform_r->getValue();
-						if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
-							uniform_r->setValue(val);
-					}
-					auto uniform_f0 = mr.getMaterial().searchUniform<float>("F0");
-					if(uniform_f0 != nullptr)
-					{
-						float val = uniform_f0->getValue();
-						if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
-							uniform_f0->setValue(val);
-					}
-					auto uniform_tex = mr.getMaterial().searchUniform<Texture>("Texture");
-					if(uniform_tex != nullptr)
-					{
-						ImGui::Text("Diffuse texture:");
-						ImGui::Image(reinterpret_cast<void*>(uniform_tex->getValue().getName()), ImVec2{256, 256});
-					}
-					auto uniform_ntex = mr.getMaterial().searchUniform<Texture>("NormalMap");
-					if(uniform_ntex != nullptr)
-					{
-						ImGui::Text("Normal map:");
-						ImGui::Image(reinterpret_cast<void*>(uniform_ntex->getValue().getName()), ImVec2{256, 256});
-					}
-					ImGui::TreePop();
-				}
-				ImGui::TreePop();
 			}
-			
-			if(ImGui::Button("Delete Entity"))
-			{
-				destroy_entity(_selectedObject->get_id());
-				deselectObject();
-			}
-		} else {
-			ImGui::Text("No object selected.");
+			ImGui::End();
 		}
-		ImGui::End();
 		
 		if(!ImGui::GetIO().WantCaptureMouse)
 		{

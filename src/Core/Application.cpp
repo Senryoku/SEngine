@@ -108,15 +108,15 @@ void Application::update()
 {
 	glfwSetWindowTitle(_window,
 		std::string("SEngine - ")
-			.append(std::to_string(1000.f * TimeManager::getInstance().getRealDeltaTime()))
+			.append(std::to_string(1000.f * TimeManager::getRealDeltaTime()))
 			.append("ms - FPS: ")
-			.append(std::to_string(TimeManager::getInstance().getInstantFrameRate()))
+			.append(std::to_string(TimeManager::getInstantFrameRate()))
 			.c_str());
 	
 	_cameraMoved = false;
 	if(_controlCamera)
 	{
-		float _frameTime = TimeManager::getInstance().getRealDeltaTime(); // Should move even on pause :)
+		float _frameTime = TimeManager::getRealDeltaTime(); // Should move even on pause :)
 		if(glfwGetKey(_window, GLFW_KEY_W) == GLFW_PRESS)
 		{
 			_cameraMoved = true;
@@ -191,9 +191,9 @@ void Application::run()
 	while(!glfwWindowShouldClose(_window))
 	{
 		// Time Management
-		TimeManager::getInstance().update();
-		_frameTime = TimeManager::getInstance().getRealDeltaTime();
-		_frameRate = TimeManager::getInstance().getInstantFrameRate();
+		TimeManager::update();
+		_frameTime = TimeManager::getRealDeltaTime();
+		_frameRate = TimeManager::getInstantFrameRate();
 		if(!_paused)
 		{
 			_time += _timescale * _frameTime;
@@ -290,7 +290,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 			}
 			case GLFW_KEY_ESCAPE:
 			{
-				glfwSetWindowShouldClose(_window, GL_TRUE);
+				_menu = !_menu;
 				break;
 			}
 			case GLFW_KEY_R:
