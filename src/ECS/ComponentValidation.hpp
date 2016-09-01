@@ -27,3 +27,12 @@ inline void deletion_pass()
 		}
 	}
 }
+
+template<typename T>
+struct deletion_pass_wrapper
+{
+	inline void operator()()
+	{
+		deletion_pass<T>();
+	}
+};

@@ -1,9 +1,9 @@
 #include <MeshRenderer.hpp>
 
-MeshRenderer::MeshRenderer(const Mesh& mesh, const Entity& e) :
-	_mesh(&mesh),
-	_material(mesh.getMaterial()),
-	_entity(e.get_id())
+MeshRenderer::MeshRenderer(const Mesh& mesh) :
+	_mesh{&mesh},
+	_material{mesh.getMaterial()},
+	_entity{get_owner<MeshRenderer>(*this)}
 {
 }
 

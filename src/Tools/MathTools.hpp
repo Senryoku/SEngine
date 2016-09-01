@@ -90,21 +90,27 @@ ScalarType clamp(ScalarType val, ScalarType min, ScalarType max)
 }
 
 template<typename T>
-T max(std::initializer_list<T> args)
+T max(T h, T t)
 {
-	T r = std::numeric_limits<T>::lowest();
-	for(const auto& v: args)
-		r = std::max(v, r);
-	return r;
+	return h > t ? h : t;
+}
+
+template<typename H, typename... T>
+H max(H h, T... t)
+{
+	return max(h, max(t...));
 }
 
 template<typename T>
-T min(std::initializer_list<T> args)
+T min(T h, T t)
 {
-	T r = std::numeric_limits<T>::max();
-	for(const auto& v: args)
-		r = std::min(v, r);
-	return r;
+	return h < t ? h : t;
+}
+
+template<typename H, typename... T>
+H min(H h, T... t)
+{
+	return min(h, min(t...));
 }
 
 }

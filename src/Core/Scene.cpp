@@ -1,5 +1,6 @@
 #include <Scene.hpp>
 
+#include <Meta.hpp>
 #include <ComponentValidation.hpp>
 
 Scene::~Scene()
@@ -56,8 +57,7 @@ void Scene::update()
 		updatePointLightBuffer();
 	
 	/// @todo Move elsewhere?
-	deletion_pass<Transformation>();
-	deletion_pass<MeshRenderer>();
+	for_each<deletion_pass_wrapper, TList<Transformation, MeshRenderer>>{}();
 }
 
 void Scene::draw(const glm::mat4& p, const glm::mat4& v) const

@@ -16,6 +16,7 @@ https://youtu.be/NRjylzEVU9w
  * Choose/Develop a scene file format and use it (gltf ? https://github.com/KhronosGroup/glTF)
  * Write a editor for this format.
  * Decouple the renderer from the application ? (related to the previous point)
+
 ## Minor
  * Better Gizmos (particularly rotation, which is really unclear atm)
 

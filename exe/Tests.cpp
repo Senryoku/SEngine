@@ -80,7 +80,8 @@ public:
 				auto& entity = create_entity();
 				entity.set_name(part->getName());
 				entity.add<Transformation>(Matrices.begin()[i] * t.getModelMatrix());
-				entity.add<MeshRenderer>(*part, entity);
+				entity.add<MeshRenderer>(*part);
+				//entity.add<MeshRenderer>(*part, entity);
 			}
 		}
 		
@@ -546,21 +547,28 @@ public:
 			if(_selectedObject->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				auto& transform = _selectedObject->get<Transformation>();
+				
 				glm::vec3 p = transform.getPosition();
 				if(ImGui::InputFloat3("Position", &p.x))
-				{
 					transform.setPosition(p);
-				}
+				ImGui::SameLine();
+				if(ImGui::Button("Reset##Position"))
+					transform.setPosition(glm::vec3{0.0f});
+				
 				glm::quat r = transform.getRotation();
 				if(ImGui::InputFloat4("Rotation", &r.x))
-				{
 					transform.setRotation(r);
-				}
+				ImGui::SameLine();
+				if(ImGui::Button("Reset##Rotation"))
+					transform.setRotation(glm::quat{});
+				
 				glm::vec3 s = transform.getScale();
 				if(ImGui::InputFloat3("Scale", &s.x))
-				{
 					transform.setScale(s);
-				}
+				ImGui::SameLine();
+				if(ImGui::Button("Reset##Scale"))
+					transform.setScale(glm::vec3{1.0f});
+				
 				ImGui::TreePop();
 			}
 			
@@ -571,22 +579,76 @@ public:
 				{
 					ImGui::Text("Name: %s", mr.getMesh().getName().c_str());
 					ImGui::Text("Path: %s", mr.getMesh().getPath().c_str());
+					
+					// renders the mesh into a small framebuffer
+					static Framebuffer<> model_render{256};
+					if(!model_render)
+						model_render.init();
+					static auto& GUIModelRender = Resources::loadProgram("GUIModelRender",
+						Resources::load<VertexShader>("src/GLSL/Forward/simple_vs.glsl"),
+						Resources::load<FragmentShader>("src/GLSL/Forward/simple_fs.glsl")
+					);
+					static float gui_model_render_fov = 1.0f;
+					static float gui_model_render_camx = 400;	/// @todo Compute it automatically
+					auto aabb = mr.getMesh().getBoundingBox();
+					ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.1, 5.0);
+					ImGui::SliderFloat("Position", &gui_model_render_camx, 0, 1000);
+					GUIModelRender.setUniform("ProjectionMatrix", glm::perspective(gui_model_render_fov, 1.0f, 0.1f, 1000.0f));
+					GUIModelRender.setUniform("ViewMatrix", glm::lookAt(
+					   glm::vec3(gui_model_render_camx, 0.5f * (aabb.max.y + aabb.min.y), 0),
+					   0.5f * (aabb.max + aabb.min),
+					   glm::vec3(0, -1, 0)
+					));
+					GUIModelRender.setUniform("ModelMatrix", glm::rotate(glm::mat4(1.0f), _time, glm::vec3{0, 1, 0}));
+					Material mat = mr.getMesh().getMaterial(); // Copy Material... not perfect but will do for now.
+					mat.setShadingProgram(GUIModelRender);
+					mat.use();
+					Context::enable(Capability::DepthTest);
+					model_render.bind();
+					glClearColor(0, 0, 0, 0);
+					Context::clear();
+					mr.getMesh().draw();
+					model_render.unbind();
+					
+					ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
+					
 					ImGui::TreePop();
 				}
 				
 				if(ImGui::TreeNode("Material"))
 				{
-					Uniform<glm::vec3>* uniform = mr.getMaterial().searchUniform<glm::vec3>("Color");
-					if(uniform != nullptr)
+					auto uniform_color = mr.getMaterial().searchUniform<glm::vec3>("Color");
+					if(uniform_color != nullptr)
 					{
-						float col[3] = {uniform->getValue().x, uniform->getValue().y, uniform->getValue().z};
+						float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
 						if(ImGui::ColorEdit3("Color", col))
-							uniform->setValue(glm::vec3{col[0], col[1], col[2]});
+							uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
+					}
+					auto uniform_r = mr.getMaterial().searchUniform<float>("R");
+					if(uniform_r != nullptr)
+					{
+						float val = uniform_r->getValue();
+						if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
+							uniform_r->setValue(val);
+					}
+					auto uniform_f0 = mr.getMaterial().searchUniform<float>("F0");
+					if(uniform_f0 != nullptr)
+					{
+						float val = uniform_f0->getValue();
+						if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
+							uniform_f0->setValue(val);
 					}
 					auto uniform_tex = mr.getMaterial().searchUniform<Texture>("Texture");
 					if(uniform_tex != nullptr)
 					{
-						ImGui::Text("Has a Texture");
+						ImGui::Text("Diffuse texture:");
+						ImGui::Image(reinterpret_cast<void*>(uniform_tex->getValue().getName()), ImVec2{256, 256});
+					}
+					auto uniform_ntex = mr.getMaterial().searchUniform<Texture>("NormalMap");
+					if(uniform_ntex != nullptr)
+					{
+						ImGui::Text("Normal map:");
+						ImGui::Image(reinterpret_cast<void*>(uniform_ntex->getValue().getName()), ImVec2{256, 256});
 					}
 					ImGui::TreePop();
 				}

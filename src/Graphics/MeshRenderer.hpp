@@ -8,13 +8,14 @@ class MeshRenderer
 {
 public:
 	MeshRenderer() =default;
-	MeshRenderer(const Mesh& mesh, const Entity& e);
+	MeshRenderer(const Mesh& mesh);
 	
 	inline void draw() const;
 	
 	inline Material& getMaterial() { return _material; }
 	inline const Mesh& getMesh() const { return *_mesh; }
 	
+	//inline const Transformation& getTransformation() const { return entities[get_owner<MeshRenderer>(*this)].get<Transformation>(); }
 	inline const Transformation& getTransformation() const { return entities[_entity].get<Transformation>(); }
 	
 	bool isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const;

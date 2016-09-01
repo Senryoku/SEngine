@@ -17,6 +17,7 @@ constexpr std::size_t max_component_types = 64;
 
 namespace impl
 {
+	
 template<typename T>
 std::vector<T>			components;			///< Component storage
 template<typename T>
@@ -28,7 +29,8 @@ extern std::size_t next_component_type_idx;
 
 template<typename T>
 ComponentID next_component_idx = 0;
-}
+
+} // impl namespace
 
 template<typename T>
 inline bool is_valid(ComponentID idx)
@@ -81,8 +83,8 @@ inline ComponentID add_component(EntityID eid, Args&& ...args)
 		++impl::next_component_idx<T>;
 
 	// Construct and return component
-	impl::components<T>[r] = T{std::forward<Args>(args)...};
 	impl::component_owner<T>[r] = eid;
+	::new(&impl::components<T>[r]) T{std::forward<Args>(args)...};
 	return r;
 }
 
