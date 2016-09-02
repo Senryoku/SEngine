@@ -11,7 +11,6 @@ using ComponentID = std::size_t;
 using EntityID = std::size_t;
 
 constexpr EntityID invalid_entity = std::numeric_limits<EntityID>::max();
-constexpr EntityID unassigned_component = invalid_entity - 1;	// HACK!
 constexpr ComponentID invalid_component_type_idx = std::numeric_limits<ComponentID>::max();
 
 constexpr std::size_t max_entities = 2048;
@@ -37,8 +36,7 @@ ComponentID next_component_idx = 0;
 template<typename T>
 inline bool is_valid(ComponentID idx)
 {
-	return impl::component_owner<T>[idx] != invalid_entity
-		&& impl::component_owner<T>[idx] != unassigned_component; // HACK!
+	return impl::component_owner<T>[idx] != invalid_entity;
 }
 
 template<typename T>
@@ -89,6 +87,10 @@ inline ComponentID add_component(EntityID eid, Args&& ...args)
 	// Makes sure component is allocated
 	if(impl::next_component_idx<T> + 1 >= impl::components<T>.size())
 	{
+		/// @todo ANOTHER BIG PROBLEM...
+		/// This does not only allocates memory for the components, but also construct them, and we
+		/// don't want that... I should be using something else than std::vector, but there is
+		/// something wrong with my tentatives of implementations ~~
 		auto target_size = std::max(static_cast<std::size_t>(64), impl::components<T>.size() * 2);
 		impl::component_owner<T>.resize(target_size, invalid_entity);
 		impl::components<T>.resize(target_size);
@@ -97,11 +99,12 @@ inline ComponentID add_component(EntityID eid, Args&& ...args)
 	auto r = impl::next_component_idx<T>++;
 	while(impl::next_component_idx<T> < impl::components<T>.size() && is_valid<T>(impl::next_component_idx<T>))
 		++impl::next_component_idx<T>;
-
-	// [HACK!] There was a previously constructed component, destroy it.
-	if(impl::component_owner<T>[r] == unassigned_component)
-		impl::components<T>[r].~T();
 	
+	/// @todo HACK
+	/// Explicitly calls the destructor of the previous component. We know it exists, since
+	/// std::vector constructs them by default... However, we would like to avoid that =/
+	impl::components<T>[r].~T();
+
 	// Construct and return component
 	impl::component_owner<T>[r] = eid;
 	::new(&impl::components<T>[r]) T{std::forward<Args>(args)...};
@@ -120,11 +123,8 @@ inline void delete_component(ComponentID idx)
 	// (via std::vector) and manage them ourselves...
 	//impl::components<T>[idx].~T();
 	/// @todo THIS IS A SERIOUS PROBLEM!!!!
-	///			Destructor may never be called!
-	/// 		Rolling our own version of std::vector brings other problems...
-	///			Not sure what to do right now =/
-	///			=> Added a hack in add_component to circumvent this... (unassigned_component)
-	impl::component_owner<T>[idx] = unassigned_component;
+	///		  See add_component for the current hackish solution, and what we should be doing...
+	impl::component_owner<T>[idx] = invalid_entity;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
