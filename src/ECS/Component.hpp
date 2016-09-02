@@ -11,6 +11,7 @@ using ComponentID = std::size_t;
 using EntityID = std::size_t;
 
 constexpr EntityID invalid_entity = std::numeric_limits<EntityID>::max();
+constexpr EntityID unassigned_component = invalid_entity - 1;	// HACK!
 constexpr ComponentID invalid_component_type_idx = std::numeric_limits<ComponentID>::max();
 
 constexpr std::size_t max_entities = 2048;
@@ -36,7 +37,8 @@ ComponentID next_component_idx = 0;
 template<typename T>
 inline bool is_valid(ComponentID idx)
 {
-	return impl::component_owner<T>[idx] != invalid_entity;
+	return impl::component_owner<T>[idx] != invalid_entity
+		&& impl::component_owner<T>[idx] != unassigned_component; // HACK!
 }
 
 template<typename T>
@@ -96,6 +98,10 @@ inline ComponentID add_component(EntityID eid, Args&& ...args)
 	while(impl::next_component_idx<T> < impl::components<T>.size() && is_valid<T>(impl::next_component_idx<T>))
 		++impl::next_component_idx<T>;
 
+	// [HACK!] There was a previously constructed component, destroy it.
+	if(impl::component_owner<T>[r] == unassigned_component)
+		impl::components<T>[r].~T();
+	
 	// Construct and return component
 	impl::component_owner<T>[r] = eid;
 	::new(&impl::components<T>[r]) T{std::forward<Args>(args)...};
@@ -113,7 +119,12 @@ inline void delete_component(ComponentID idx)
 	// To call the component destructor here, we should forbid the destructor calls at exit
 	// (via std::vector) and manage them ourselves...
 	//impl::components<T>[idx].~T();
-	impl::component_owner<T>[idx] = invalid_entity;
+	/// @todo THIS IS A SERIOUS PROBLEM!!!!
+	///			Destructor may never be called!
+	/// 		Rolling our own version of std::vector brings other problems...
+	///			Not sure what to do right now =/
+	///			=> Added a hack in add_component to circumvent this... (unassigned_component)
+	impl::component_owner<T>[idx] = unassigned_component;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

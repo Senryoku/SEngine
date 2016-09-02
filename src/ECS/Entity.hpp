@@ -37,10 +37,7 @@ public:
 	
 	~Entity()
 	{
-		if(is_valid())
-			for(auto& id : _components)
-				if(id != invalid_component_idx)
-					mark_for_deletion(id);
+		delete_components();
 		invalidate();
 	}
 	
@@ -96,12 +93,15 @@ public:
 		return _id != invalid_entity;
 	}
 	
-private:
-	EntityID										_id = invalid_entity;
-	std::string										_name;
-	std::array<ComponentID, max_component_types>	_components;
+	inline void delete_components()
+	{
+		if(is_valid())
+			for(auto& id : _components)
+				if(id != invalid_component_idx)
+					mark_for_deletion(id);
+	}
 	
-	void invalidate()
+	inline void invalidate()
 	{
 		if(is_valid())
 			for(auto& id : _components)
@@ -109,6 +109,10 @@ private:
 		_id = invalid_entity;
 		_name = "";
 	}
+private:
+	EntityID										_id = invalid_entity;
+	std::string										_name;
+	std::array<ComponentID, max_component_types>	_components;
 };
 
 extern EntityID				next_entity_id;
@@ -137,7 +141,8 @@ inline Entity& create_entity()
 
 inline void destroy_entity(EntityID id)
 {
-	entities[id].~Entity();
+	entities[id].delete_components();
+	entities[id].invalidate();
 	if(id < next_entity_id)
 		next_entity_id = id;
 }
