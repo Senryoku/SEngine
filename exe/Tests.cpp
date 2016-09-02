@@ -320,22 +320,30 @@ public:
 					{
 						ImGui::PushID(&tr);
 						auto& entity = get_entity(get_owner(tr));
-						bool expand = ImGui::TreeNodeEx(entity.get_name().c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
-						if(ImGui::IsItemClicked()) 
-							selectObject(&entity);
-						if(expand)
+						if(!tr.getChildren().empty())
 						{
-							for(ComponentID child : tr.getChildren())
-								explore_hierarchy(get_component<Transformation>(child));
-							ImGui::TreePop();
+							bool expand = ImGui::TreeNodeEx(entity.get_name().c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
+							if(ImGui::IsItemClicked()) 
+								selectObject(&entity);
+							if(expand)
+							{
+								for(ComponentID child : tr.getChildren())
+									explore_hierarchy(get_component<Transformation>(child));
+								ImGui::TreePop();
+							}
+						} else {
+							if(ImGui::SmallButton(entity.get_name().c_str()))
+								selectObject(&entity);
 						}
 						ImGui::PopID();
 					};
 					
 					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
+					// Iterate over root (without parent) Transformations.
 					for(auto& tr : ComponentIterator<Transformation>{[] (const Transformation& t) { return t.getParent() == invalid_component_idx; }})
 						explore_hierarchy(tr);
-					ImGui::PopStyleColor();
+					ImGui::PopStyleColor(2);
 					ImGui::TreePop();
 				}
 				
