@@ -5,6 +5,7 @@
 #include <limits>
 #include <cassert>
 #include <iterator>
+#include <functional>
 
 using ComponentID = std::size_t;
 using EntityID = std::size_t;
@@ -39,6 +40,12 @@ inline bool is_valid(ComponentID idx)
 }
 
 template<typename T>
+inline ComponentID get_id(const T& c)
+{
+	return std::distance(&*impl::components<T>.cbegin(), &c);
+}
+
+template<typename T>
 inline EntityID get_owner(ComponentID idx)
 {
 	return impl::component_owner<T>[idx];
@@ -47,7 +54,7 @@ inline EntityID get_owner(ComponentID idx)
 template<typename T>
 inline EntityID get_owner(const T& c)
 {
-	return impl::component_owner<T>[std::distance(&*impl::components<T>.cbegin(), &c)];
+	return impl::component_owner<T>[get_id<T>(c)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,6 +73,13 @@ inline std::size_t get_component_type_idx()
 // Component IDs Managment
 
 constexpr ComponentID invalid_component_idx = std::numeric_limits<std::size_t>::max();
+
+template<typename T>
+inline T& get_component(ComponentID id)
+{
+	assert(id < impl::components<T>.size());
+	return impl::components<T>[id];
+}
 
 template<typename T, typename ...Args>
 inline ComponentID add_component(EntityID eid, Args&& ...args)
@@ -105,22 +119,34 @@ inline void delete_component(ComponentID idx)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Utils
 
+/**
+ * Use this to iterates over all valid instances of a component type.
+ * The predicate argument can be used to work only on a subset of all valid instances (only the
+ * instances for which predicate returns true will be considered).
+**/
 template<typename T>
 class ComponentIterator
 {
 public:
+	
+	ComponentIterator(const std::function<bool(const T&)>& predicate = [](const T&) -> bool { return true; }) : 
+		_predicate{predicate}
+	{
+	}
+	
 	class iterator : public std::iterator<std::forward_iterator_tag, T>
 	{
     public:
-        explicit iterator(ComponentID idx = impl::components<T>.size()) :
-			_idx(idx > impl::components<T>.size() ? impl::components<T>.size() : idx)
+        explicit iterator(std::function<bool(const T&)> predicate, ComponentID idx = impl::components<T>.size()) :
+			_predicate{predicate},
+			_idx{idx > impl::components<T>.size() ? impl::components<T>.size() : idx}
 		{}
         iterator& operator++()
 		{
 			do
 			{
 				++_idx;
-			} while(_idx < impl::components<T>.size() && !is_valid<T>(_idx));
+			} while(_idx < impl::components<T>.size() && (!is_valid<T>(_idx) || !_predicate(impl::components<T>[_idx])));
 			assert(_idx <= impl::components<T>.size());
 			return *this;
 		}
@@ -133,16 +159,18 @@ public:
 			return impl::components<T>[_idx];
 		}
 	private:
-		ComponentID	_idx;
+		std::function<bool(const T&)>	_predicate;
+		ComponentID						_idx;
     };
 	
 	iterator begin() const
 	{
 		ComponentID idx = 0;
-		while(idx < impl::components<T>.size() && !is_valid<T>(idx))
+		while(idx < impl::components<T>.size() && (!is_valid<T>(idx) || !_predicate(impl::components<T>[idx])))
 			++idx;
-		return iterator{idx};
+		return iterator{_predicate, idx};
 	}
-	iterator end() const { return iterator{}; }
+	iterator end() const { return iterator{_predicate}; }
 private:
+	std::function<bool(const T&)> _predicate;
 };

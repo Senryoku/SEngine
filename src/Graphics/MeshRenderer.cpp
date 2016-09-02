@@ -14,8 +14,9 @@ bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4&
 	
 	/// @todo Use MeshRenderer's bounding box
 	const BoundingBox& bbox = _mesh->getBoundingBox();
-	const glm::vec4 a = getTransformation().getModelMatrix() * glm::vec4(bbox.min, 1.0);
-	const glm::vec4 b = getTransformation().getModelMatrix() * glm::vec4(bbox.max, 1.0);
+	auto gmm = getTransformation().getGlobalModelMatrix();
+	const glm::vec4 a = gmm * glm::vec4(bbox.min, 1.0);
+	const glm::vec4 b = gmm * glm::vec4(bbox.max, 1.0);
 
 	std::array<glm::vec4, 8> p = {glm::vec4{a.x, a.y, a.z, 1.0},
 									glm::vec4{a.x, a.y, b.z, 1.0},

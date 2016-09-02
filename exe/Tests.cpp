@@ -70,6 +70,9 @@ public:
 		};
 		for(size_t i = 0; i < Paths.size(); ++i)
 		{
+			auto& base_entity = create_entity();
+			base_entity.set_name(Paths.begin()[i]);
+			auto base_transform = get_id(base_entity.add<Transformation>());
 			auto m = Mesh::load(Paths.begin()[i]);
 			for(auto& part : m)
 			{
@@ -79,9 +82,9 @@ public:
 				part->getMaterial().setUniform("F0", F0);
 				auto& entity = create_entity();
 				entity.set_name(part->getName());
-				entity.add<Transformation>(Matrices.begin()[i] * t.getModelMatrix());
+				auto& ent_transform = entity.add<Transformation>(Matrices.begin()[i] * t.getModelMatrix());
+				get_component<Transformation>(base_transform).addChild(ent_transform);
 				entity.add<MeshRenderer>(*part);
-				//entity.add<MeshRenderer>(*part, entity);
 			}
 		}
 		
@@ -311,6 +314,31 @@ public:
 		{
 			ImGui::Begin("Scene", &win_scene);
 			{
+				if(ImGui::TreeNode("Transformation Hierarchy"))
+				{
+					const static std::function<void(const Transformation&)> explore_hierarchy = [&] (const Transformation& tr)
+					{
+						ImGui::PushID(&tr);
+						auto& entity = get_entity(get_owner(tr));
+						bool expand = ImGui::TreeNodeEx(entity.get_name().c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
+						if(ImGui::IsItemClicked()) 
+							selectObject(&entity);
+						if(expand)
+						{
+							for(ComponentID child : tr.getChildren())
+								explore_hierarchy(get_component<Transformation>(child));
+							ImGui::TreePop();
+						}
+						ImGui::PopID();
+					};
+					
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+					for(auto& tr : ComponentIterator<Transformation>{[] (const Transformation& t) { return t.getParent() == invalid_component_idx; }})
+						explore_hierarchy(tr);
+					ImGui::PopStyleColor();
+					ImGui::TreePop();
+				}
+				
 				if(ImGui::TreeNode("Entities"))
 				{
 					for(auto& e : entities)

@@ -198,7 +198,7 @@ inline bool trace(const Ray& r, const MeshRenderer& o, float& t)
 	for(const auto& tr : o.getMesh().getTriangles())
 	{
 		for(int i = 0; i < 3; ++i)
-			triangle[i] = glm::vec3{o.getTransformation().getModelMatrix() * glm::vec4{o.getMesh().getVertices()[tr.vertices[i]].position, 1.0}};
+			triangle[i] = glm::vec3{o.getTransformation().getGlobalModelMatrix() * glm::vec4{o.getMesh().getVertices()[tr.vertices[i]].position, 1.0}};
 		if(glm::intersectRayTriangle(r.origin,
 						r.direction, 
 						triangle[0],

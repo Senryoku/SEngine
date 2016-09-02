@@ -2,10 +2,13 @@
 
 #include <vector>
 #include <functional>
+#include <algorithm>
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+
+#include <Component.hpp>
 
 class Transformation
 {
@@ -17,9 +20,13 @@ public:
 	Transformation(const Transformation&) =default;
 	
 	inline const glm::mat4& getModelMatrix() const { return _modelMatrix; }
+	inline const glm::mat4& getGlobalModelMatrix() const { return _globalModelMatrix; };
 	inline const glm::vec3& getPosition() const { return _position; }
 	inline const glm::quat& getRotation() const { return _rotation; }
 	inline const glm::vec3& getScale() const { return _scale; }
+	
+	inline ComponentID getParent() const { return _parent; }
+	inline const std::vector<ComponentID>& getChildren() const { return _children; }
 	
 	inline void setModelMatrix(const glm::mat4& m)
 	{ 
@@ -28,6 +35,7 @@ public:
 		glm::vec3 skew;
 		glm::vec4 perspective;
 		glm::decompose(_modelMatrix, _scale, _rotation, _position, skew, perspective);
+		updateGlobalModelMatrix();
 	}
 	
 	inline void setPosition(const glm::vec3& p)
@@ -69,17 +77,49 @@ public:
 		return apply(v);
 	}
 
+	/// @todo Maybe passing a ComponentID would be safer?...
+	inline void addChild(Transformation& t)
+	{
+		if(t._parent != invalid_component_idx)
+		{
+			auto& c = get_component<Transformation>(t._parent)._children;
+			c.erase(std::find(c.begin(), c.end(), get_id(t)));
+		}
+		_children.push_back(get_id<Transformation>(t));
+		t._parent = get_id(*this);
+		t.updateGlobalModelMatrix();
+	}
+	
+	inline void setParent(Transformation& t)
+	{
+		_parent = get_id(t);
+		updateGlobalModelMatrix();
+	}
+
 private:
 	glm::mat4		_modelMatrix;
+	glm::mat4		_globalModelMatrix;
 	
 	glm::vec3		_position;
 	glm::quat		_rotation;
 	glm::vec3		_scale;
+
+	ComponentID					_parent = invalid_component_idx;
+	std::vector<ComponentID>	_children;
 	
 	inline void computeMatrix()
 	{
 		_modelMatrix = glm::translate(glm::mat4(1.0f), _position) * 
 			glm::mat4_cast(_rotation) * 
 			glm::scale(glm::mat4(1.0f), _scale);
+		updateGlobalModelMatrix();
+	}
+	
+	inline void updateGlobalModelMatrix()
+	{
+		_globalModelMatrix = _parent == invalid_component_idx ? _modelMatrix :
+			get_component<Transformation>(_parent).getGlobalModelMatrix() * _modelMatrix;
+		for(ComponentID c : _children)
+			get_component<Transformation>(c).updateGlobalModelMatrix();
 	}
 };

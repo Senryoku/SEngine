@@ -114,6 +114,11 @@ private:
 extern EntityID				next_entity_id;
 extern std::vector<Entity>	entities;
 
+inline Entity& get_entity(EntityID id)
+{
+	return entities[id];
+}
+
 inline Entity& create_entity()
 {
 	// Allocating if necessary

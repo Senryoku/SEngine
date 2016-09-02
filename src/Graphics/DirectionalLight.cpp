@@ -67,7 +67,7 @@ void DirectionalLight::drawShadowMap(const ComponentIterator<MeshRenderer>& obje
 	for(auto& b : objects)
 		if(b.isVisible(getProjectionMatrix(), getViewMatrix()))
 		{
-			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getModelMatrix());
+			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getGlobalModelMatrix());
 			b.getMesh().draw();
 		}
 		

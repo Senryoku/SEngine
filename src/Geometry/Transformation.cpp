@@ -13,4 +13,3 @@ Transformation::Transformation(const glm::vec3& p, const glm::quat& r, const glm
 {
 	computeMatrix();
 }
-

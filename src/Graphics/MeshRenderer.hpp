@@ -15,7 +15,6 @@ public:
 	inline Material& getMaterial() { return _material; }
 	inline const Mesh& getMesh() const { return *_mesh; }
 	
-	//inline const Transformation& getTransformation() const { return entities[get_owner<MeshRenderer>(*this)].get<Transformation>(); }
 	inline const Transformation& getTransformation() const { return entities[_entity].get<Transformation>(); }
 	
 	bool isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const;
@@ -33,7 +32,7 @@ inline void MeshRenderer::draw() const
 	assert(_mesh != nullptr);
 	assert(_entity != invalid_entity);
 	_material.use();
-	setUniform("ModelMatrix", getTransformation().getModelMatrix()); // @todo Should be in the material...
+	setUniform("ModelMatrix", getTransformation().getGlobalModelMatrix());
 	_mesh->draw();
 }
 
