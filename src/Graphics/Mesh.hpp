@@ -48,7 +48,7 @@ public:
 	};
 	
 	Mesh();
-	~Mesh() =default;
+	virtual ~Mesh() =default;
 
 	inline std::vector<Vertex>&			getVertices()		{ return _vertices; }		///< @return Array of Vertices
 	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }		///< @return Array of Triangles
@@ -71,8 +71,8 @@ public:
 	void draw() const;
 	
 	void computeBoundingBox();
-	void setBoundingBox(const BoundingBox& bbox)	{ _bbox = bbox; }
-	const BoundingBox& getBoundingBox() const		{ return _bbox; }
+	inline void setBoundingBox(const BoundingBox& bbox)	{ _bbox = bbox; }
+	inline const BoundingBox& getBoundingBox() const	{ return _bbox; }
 
 	static std::vector<Mesh*> load(const std::string& path);
 	static std::vector<Mesh*> load(const std::string& path, const Program& p);

@@ -159,7 +159,6 @@ public:
 	{	
 		static bool	win_imgui_stats = false,
 					win_stats = false,
-					win_debug = false,
 					win_rendering = false,
 					win_scene = true,
 					win_logs = false,
@@ -177,13 +176,39 @@ public:
 				}
 				if(ImGui::BeginMenu("Windows"))
 				{
-					if(ImGui::MenuItem("Debug Options")) win_debug = !win_debug;
 					if(ImGui::MenuItem("Rendering Options")) win_rendering = !win_rendering;
 					if(ImGui::MenuItem("Scene")) win_scene = !win_scene;
 					if(ImGui::MenuItem("Entity Inspector")) win_inspect = !win_inspect;
 					if(ImGui::MenuItem("Logs")) win_logs = !win_logs;
 					if(ImGui::MenuItem("Statistics")) win_stats = !win_stats;
 					if(ImGui::MenuItem("ImGui Statistics")) win_imgui_stats = !win_imgui_stats;
+					ImGui::EndMenu();
+				}
+				if(ImGui::BeginMenu("Debug Options"))
+				{
+					ImGui::Checkbox("Pause", &_paused);
+					ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
+					if(ImGui::Button("Update shadow maps"))
+					{
+						for(auto l : _scene.getLights())
+						{
+							l->updateMatrices();
+							l->drawShadowMap(ComponentIterator<MeshRenderer>{});
+						}
+						
+						for(auto& l : _scene.getOmniLights())
+						{
+							l.updateMatrices();
+							l.drawShadowMap(ComponentIterator<MeshRenderer>{});
+						}
+					}
+					ImGui::Separator(); 
+					ImGui::Checkbox("Toggle Debug", &_debug_buffers);
+					const char* debugbuffer_items[] = {"Color","Position", "Normal"};
+					const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
+					static int debugbuffer_item_current = 0;
+					if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
+						_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
 					ImGui::EndMenu();
 				}
 				ImGui::EndMainMenuBar();
@@ -232,37 +257,6 @@ public:
 				ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
 				ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
 				ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
-			}
-			ImGui::End();
-		}
-		
-		if(win_debug)
-		{
-			if(ImGui::Begin("Debug Options", &win_debug))
-			{
-				ImGui::Checkbox("Pause", &_paused);
-				ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
-				if(ImGui::Button("Update shadow maps"))
-				{
-					for(auto l : _scene.getLights())
-					{
-						l->updateMatrices();
-						l->drawShadowMap(ComponentIterator<MeshRenderer>{});
-					}
-					
-					for(auto& l : _scene.getOmniLights())
-					{
-						l.updateMatrices();
-						l.drawShadowMap(ComponentIterator<MeshRenderer>{});
-					}
-				}
-				ImGui::Separator(); 
-				ImGui::Checkbox("Toggle Debug", &_debug_buffers);
-				const char* debugbuffer_items[] = {"Color","Position", "Normal"};
-				const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
-				static int debugbuffer_item_current = 0;
-				if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
-					_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
 			}
 			ImGui::End();
 		}

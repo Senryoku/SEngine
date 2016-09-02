@@ -233,7 +233,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 			M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");
 		}
 		
-		auto minmax = glm::vec3{
+		const auto minmax = glm::vec3{
 			attrib.vertices[3 * shapes[s].mesh.indices[0].vertex_index + 0],
 			attrib.vertices[3 * shapes[s].mesh.indices[0].vertex_index + 1],
 			attrib.vertices[3 * shapes[s].mesh.indices[0].vertex_index + 2]
@@ -242,19 +242,19 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 		auto max = minmax;
 		for(const auto& i : shapes[s].mesh.indices)
 		{
-			glm::vec3 v{
+			const glm::vec3 v{
 				attrib.vertices[3 * i.vertex_index + 0],
 				attrib.vertices[3 * i.vertex_index + 1],
 				attrib.vertices[3 * i.vertex_index + 2]
 			};
-			auto n = i.normal_index >= 0 ?
+			const auto n = i.normal_index >= 0 ?
 				glm::vec3{
 					attrib.normals[3 * i.normal_index + 0],
 					attrib.normals[3 * i.normal_index + 1],
 					attrib.normals[3 * i.normal_index + 2]
 				} : 
 				glm::vec3{0.0f};
-			auto t = i.texcoord_index >= 0 ?
+			const auto t = i.texcoord_index >= 0 ?
 				glm::vec2{
 					attrib.texcoords[2 * i.texcoord_index + 0],
 					1.0f - attrib.texcoords[2 * i.texcoord_index + 1] // !
@@ -262,8 +262,8 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 				glm::vec2{0.0f};
 			M[s]->getVertices().push_back(Mesh::Vertex{v, n, t});
 			
-			min = glm::vec3(std::min(min.x, v.x), std::min(min.y, v.y), std::min(min.z, v.z));
-			max = glm::vec3(std::max(max.x, v.x), std::max(max.y, v.y), std::max(max.z, v.z));
+			min = glm::min(min, v);
+			max = glm::max(max, v);
 		}
 		
 		M[s]->setBoundingBox({min, max});
