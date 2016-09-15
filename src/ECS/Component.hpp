@@ -7,6 +7,14 @@
 #include <iterator>
 #include <functional>
 
+/**
+ * (Almost) Any type can be used as a component, just add one to an entity.
+ * Once added to a entity, pointers to a component can be invalidated after another insertion
+ * (so we can have a dynamically sized buffer), it is therefore not wise to refer to them this way,
+ * prefer using their ComponentID (and retrieve them with the get_component<T>(ComponentID) function).
+ * For the same reason, the component type must provide a correct move constructor (they can be
+ * moved around after an insertion).
+**/
 
 using ComponentID = std::size_t;
 using EntityID = std::size_t;
@@ -21,6 +29,10 @@ constexpr std::size_t max_component_types = 64;
 namespace impl
 {
 
+/**
+ * ComponentPool
+ * Preallocated buffer of memory to hold components of type T
+**/
 template<typename T>
 class ComponentPool
 {
@@ -72,10 +84,7 @@ public:
 		{}
         iterator& operator++()
 		{
-			do
-			{
-				++_idx;
-			} while(_idx < _pool.size() && _pool.is_valid(_idx));
+			do ++_idx; while(_idx < _pool.size() && _pool.is_valid(_idx));
 			assert(_idx <= _pool.size());
 			return *this;
 		}
@@ -85,6 +94,7 @@ public:
         typename std::iterator<std::forward_iterator_tag, T>::reference operator*() const
 		{
 			assert(_idx < _pool.size());
+			assert(is_valid(_idx));
 			return _pool[_idx];
 		}
 	private:
@@ -102,6 +112,7 @@ public:
 	iterator end() const { return iterator{*this, size()}; }
 	
 	template<typename ...Args>
+	ComponentID add(EntityID eid, Args&&... args)
 	{
 		auto id = _next_id;
 		
@@ -120,6 +131,7 @@ public:
 	}
 	
 	template<typename ...Args>
+	void replace(ComponentID id, Args&&... args)
 	{
 		assert(is_valid(id));
 		_data[id].~T();
@@ -151,7 +163,10 @@ private:
 		assert(new_buffer);
 		for(size_t i = 0; i < curr_size; ++i)
 			if(is_valid(i))
+			{
 				::new(new_buffer + i) T{std::move(_data[i])};	// Explicit move
+				_data[i].~T();
+			}
 		std::free(_data);
 		_data = new_buffer;
 		
@@ -166,10 +181,11 @@ template<typename T>
 ComponentPool<T>				components;				///< Component storage
 
 extern std::list<ComponentID>	marked_for_deletion;	///< Components marked for deletion (we don't know their types yet).
-extern std::size_t 				next_component_type_idx;
+
+extern std::size_t 				next_component_type_idx;///< First unused component type index
 
 template<typename T>
-ComponentID 					next_component_idx = 0;
+ComponentID 					next_component_idx = 0;	///< First unused ComponentID
 
 } // impl namespace
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +268,7 @@ class ComponentIterator
 {
 public:
 	
-	ComponentIterator(const std::function<bool(const T&)>& predicate = [](const T&) -> bool { return true; }) : 
+	ComponentIterator(const std::function<bool(const T&)>& predicate = [](const T&) -> bool { return true; }) :
 		_predicate{predicate}
 	{
 	}
