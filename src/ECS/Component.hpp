@@ -27,8 +27,8 @@ class ComponentPool
 public:
 	ComponentPool() :
 		_buffer_size{64},
-		_data{new T[_buffer_size]},
-		_owners{new EntityID[_buffer_size]}
+		_data{static_cast<T*>(std::malloc(_buffer_size * sizeof(T)))},
+		_owners{static_cast<EntityID*>(std::malloc(_buffer_size * sizeof(EntityID)))}
 	{
 		for(size_t i = 0; i < size(); ++i)
 			_owners[i] = invalid_entity;
@@ -142,13 +142,6 @@ private:
 		assert(_owners);
 		for(size_t i = curr_size; i < _buffer_size; ++i)
 			_owners[i] = invalid_entity;
-		/*
-		EntityID* new_owners = new EntityID[_buffer_size];
-		for(size_t i = 0; i < curr_size; ++i)
-			new_owners[i] = _owners[i];
-		std::free(_owners);
-		_owners = new_owners;
-		*/
 	}
 };
 
