@@ -107,7 +107,7 @@ public:
 			for(auto& id : _components)
 				id = invalid_component_idx;
 		_id = invalid_entity;
-		_name = "";
+		_name.clear();
 	}
 private:
 	EntityID										_id = invalid_entity;

@@ -7,7 +7,6 @@
 #include <iterator>
 #include <functional>
 
-// #include <iostream>
 
 using ComponentID = std::size_t;
 using EntityID = std::size_t;
@@ -103,7 +102,6 @@ public:
 	iterator end() const { return iterator{*this, size()}; }
 	
 	template<typename ...Args>
-	ComponentID add(EntityID eid, Args... args)
 	{
 		auto id = _next_id;
 		
@@ -122,7 +120,6 @@ public:
 	}
 	
 	template<typename ...Args>
-	void replace(ComponentID id, Args... args)
 	{
 		assert(is_valid(id));
 		_data[id].~T();
