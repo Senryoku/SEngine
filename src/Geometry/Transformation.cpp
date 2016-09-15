@@ -1,6 +1,5 @@
 #include <Transformation.hpp>
 
-
 Transformation::Transformation(const glm::mat4& m)
 {
 	setModelMatrix(m);

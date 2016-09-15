@@ -6,6 +6,7 @@ class GenericUniform
 {
 public:
 	GenericUniform() =default;
+	GenericUniform(GenericUniform&&) =default;
 	GenericUniform(const std::string& N, GLuint L) :
 		_name(N),
 		_location(L)
@@ -38,6 +39,7 @@ class Uniform : public GenericUniform
 {
 public:
 	Uniform() =default;
+	Uniform(Uniform&&) =default;
 	Uniform(const std::string& N, GLuint L, const T& V) :
 		GenericUniform(N, L),
 		_value(V)

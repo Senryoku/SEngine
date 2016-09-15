@@ -27,8 +27,8 @@ class Material
 public:
 	//	Constructors
 	Material() =default;
-	
 	Material(const Program& P);
+	Material(Material&&) =default;
 	
 	/**
 	 * Copy constructor
@@ -41,6 +41,7 @@ public:
 	~Material() =default;
 	
 	Material& operator=(const Material&);
+	Material& operator=(Material&&) =default;
 
 	//	Getters/Setters
 	const Program& getShadingProgram() const;

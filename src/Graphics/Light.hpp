@@ -8,7 +8,6 @@
 #include <Framebuffer.hpp>
 #include <MeshRenderer.hpp>
 #include <Shaders.hpp>
-#include <Component.hpp>
 
 /**
  * ShadowCastingLight
