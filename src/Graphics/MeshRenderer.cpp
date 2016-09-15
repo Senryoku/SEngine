@@ -7,6 +7,15 @@ MeshRenderer::MeshRenderer(const Mesh& mesh) :
 {
 }
 
+MeshRenderer::MeshRenderer(MeshRenderer&& m) :
+	_mesh{m._mesh},
+	_material{std::move(m._material)},
+	_entity{m._entity}
+{
+	m._mesh = nullptr;
+	m._entity = invalid_entity;
+}
+
 bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const
 {
 	assert(_mesh != nullptr);

@@ -6,7 +6,8 @@
 #include <cassert>
 #include <iterator>
 #include <functional>
-#include <iostream>
+
+// #include <iostream>
 
 using ComponentID = std::size_t;
 using EntityID = std::size_t;
@@ -48,8 +49,20 @@ public:
 	inline const T& operator[](ComponentID id) const { return _data[id]; }
 	
 	inline bool is_valid(ComponentID id) const { return _owners[id] != invalid_entity; }
-	inline ComponentID get_id(const T& c) const { return std::distance<const T*>(_data, &c); }
-	inline EntityID get_owner(ComponentID id) const { return _owners[id]; }
+	
+	inline ComponentID get_id(const T& c) const
+	{
+		auto d = std::distance<const T*>(_data, &c);
+		assert(d >= 0);
+		assert(d < static_cast<decltype(d)>(size()));
+		return d;
+	}
+	
+	inline EntityID get_owner(ComponentID id) const
+	{
+		assert(id < size());
+		return _owners[id];
+	}
 	
 	class iterator : public std::iterator<std::forward_iterator_tag, T>
 	{
@@ -102,10 +115,18 @@ public:
 			resize();
 		
 		// Construct component
-		::new(_data + id) T{std::forward<Args>(args)...};
 		_owners[id] = eid;
+		::new(_data + id) T{std::forward<Args>(args)...};
 		
 		return id;
+	}
+	
+	template<typename ...Args>
+	void replace(ComponentID id, Args... args)
+	{
+		assert(is_valid(id));
+		_data[id].~T();
+		::new(_data + id) T{std::forward<Args>(args)...};
 	}
 	
 	void rem(ComponentID id)
@@ -128,7 +149,6 @@ private:
 	{
 		auto curr_size = _buffer_size;
 		_buffer_size *= 2;
-		std::cout << "Resize to " << _buffer_size << std::endl;
 		
 		T* new_buffer = new T[_buffer_size];
 		assert(new_buffer);
@@ -178,7 +198,7 @@ inline EntityID get_owner(ComponentID idx)
 template<typename T>
 inline EntityID get_owner(const T& c)
 {
-	return impl::components<T>.get_owner(get_id<T>(c));
+	return impl::components<T>.get_owner(impl::components<T>.get_id(c));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -262,6 +282,7 @@ public:
         typename std::iterator<std::forward_iterator_tag, T>::reference operator*() const
 		{
 			assert(_idx < impl::components<T>.size());
+			assert(is_valid<T>(_idx));
 			return impl::components<T>[_idx];
 		}
 	private:
