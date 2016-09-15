@@ -323,6 +323,7 @@ void main(void)
 			}
 		}
 		
+		// Ray march for volumetric lighting
 		if(VolumeSamples > 0)
 		{
 			for(int shadow = 0; shadow < ShadowCount; ++shadow)
@@ -367,6 +368,7 @@ void main(void)
 	
 	if(isVisible)
 	{
+		// Combine volumetric lightingi
 		if(VolumeSamples > 0)
 		{
 			uint i = gl_LocalInvocationIndex;

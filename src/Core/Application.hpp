@@ -103,10 +103,7 @@ protected:
 	float	_frameTime;
 	float	_frameRate;
 	bool	_paused = false;
-	
-	/// Quick hack for testing
-	PointLight*	_selectedLight = nullptr;
-	
+
 	void update_projection();
 
 	// Callbacks (GLFW)

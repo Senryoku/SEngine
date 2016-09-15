@@ -45,18 +45,11 @@ public:
 			Resources::load<FragmentShader>("src/GLSL/fs.glsl")
 		);
 		
-		auto& LightDraw = Resources::loadProgram("LightDraw",
-			Resources::load<VertexShader>("src/GLSL/Debug/light_vs.glsl"),
-			Resources::load<GeometryShader>("src/GLSL/Debug/light_gs.glsl"),
-			Resources::load<FragmentShader>("src/GLSL/Debug/light_fs.glsl")
-		);
-		
 		_camera.speed() = 15;
 		_camera.setPosition(glm::vec3(0.0, 15.0, -20.0));
 		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
 		
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
-		LightDraw.bindUniformBlock("Camera", _camera_buffer);
 		
 		float R = 0.95f;
 		float F0 = 0.15f;
@@ -87,8 +80,6 @@ public:
 				entity.add<MeshRenderer>(*part);
 			}
 		}
-		
-		LightDraw.bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 
 		_volumeSamples = 16;
 		// Shadow casting lights ---------------------------------------------------
@@ -319,12 +310,13 @@ public:
 					const static std::function<void(const Transformation&)> explore_hierarchy = [&] (const Transformation& tr)
 					{
 						ImGui::PushID(&tr);
-						auto& entity = get_entity(get_owner(tr));
+						auto entityID = get_owner(tr);
+						auto& entity = get_entity(entityID);
 						if(!tr.getChildren().empty())
 						{
 							bool expand = ImGui::TreeNodeEx(entity.get_name().c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
 							if(ImGui::IsItemClicked()) 
-								selectObject(&entity);
+								selectObject(entityID);
 							if(expand)
 							{
 								for(ComponentID child : tr.getChildren())
@@ -333,7 +325,7 @@ public:
 							}
 						} else {
 							if(ImGui::SmallButton(entity.get_name().c_str()))
-								selectObject(&entity);
+								selectObject(entityID);
 						}
 						ImGui::PopID();
 					};
@@ -356,7 +348,7 @@ public:
 						{
 							ImGui::PushID(&e);
 							if(ImGui::SmallButton(e.get_name().c_str()))
-								selectObject(&e);
+								selectObject(e.get_id());
 							ImGui::PopID();
 						}
 						ImGui::PopStyleColor();
@@ -391,6 +383,64 @@ public:
 						ImGui::PushItemWidth(50);
 						ImGui::InputFloat("Range", &l.range);
 						ImGui::PopID();
+					}
+					ImGui::TreePop();
+				}
+				
+				if(ImGui::TreeNode("Resources"))
+				{
+					if(ImGui::TreeNode("Textures"))
+					{
+						for(auto& p : Resources::_textures)
+							if(ImGui::TreeNode(p.first.c_str()))
+							{
+								gui_display(*p.second);
+								ImGui::TreePop();
+							}
+						ImGui::TreePop();
+					}
+					if(ImGui::TreeNode("Shaders"))
+					{
+						for(auto& p : Resources::_shaders)
+						{
+							if(ImGui::TreeNode(p.first.c_str()))
+							{
+								ImGui::PushID(&p);
+								ImGui::Text("Path: %s", p.second->getPath().c_str());
+								ImGui::Text(p.second->isValid() ? "Valid" : "Invalid!");
+								ImGui::SameLine();
+								if(ImGui::SmallButton("Reload"))
+								{
+									Log::info("Reloading ", p.first, "...");
+									p.second->reload();
+									Log::info(p.first, " reloaded.");
+								}
+								ImGui::PopID();
+								ImGui::TreePop();
+							}
+						}
+						ImGui::TreePop();
+					}
+					if(ImGui::TreeNode("Programs"))
+					{
+						for(auto& p : Resources::_programs)
+						{
+							if(p.second.isValid())
+								ImGui::Text("%s: Valid", p.first.c_str());
+							else
+								ImGui::Text("%s: Invalid!", p.first.c_str());
+						}
+						ImGui::TreePop();
+					}
+					if(ImGui::TreeNode("Meshs"))
+					{
+						for(auto& p : Resources::_meshes)
+							if(ImGui::TreeNode(p.first.c_str()))
+							{
+								gui_display(*p.second);
+								ImGui::TreePop();
+							}
+						ImGui::TreePop();
 					}
 					ImGui::TreePop();
 				}
@@ -430,11 +480,12 @@ public:
 			ImGui::End();
 		}
 		
-		if(_selectedObject != nullptr)
+		if(_selectedObject != invalid_entity)
 		{
-			if(_selectedObject->has<Transformation>())
+			auto selectedEntityPtr = &get_entity(_selectedObject);
+			if(selectedEntityPtr->has<Transformation>())
 			{
-				auto& transform = _selectedObject->get<Transformation>();
+				auto& transform = selectedEntityPtr->get<Transformation>();
 				
 				// Dummy Window for "on field" widgets
 				ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});
@@ -446,9 +497,9 @@ public:
 				const auto mouse = glm::vec2{ImGui::GetMousePos()};
 				ImDrawList* drawlist = ImGui::GetWindowDrawList();
 				
-				if(_selectedObject->has<MeshRenderer>())
+				if(selectedEntityPtr->has<MeshRenderer>())
 				{
-					auto& mr = _selectedObject->get<MeshRenderer>();
+					auto& mr = selectedEntityPtr->get<MeshRenderer>();
 					Context::disable(Capability::DepthTest);
 					Context::enable(Capability::Blend);
 					Context::blendFunc(Factor::SrcAlpha, Factor::OneMinusSrcAlpha);
@@ -538,7 +589,7 @@ public:
 					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0f}})
 				};
 				
-				static const char* rot_labels[3] = {"RotationGizmoX", "RotationGizmoY", "RotationGizmoZ"};
+				static constexpr const char* rot_labels[3] = {"RotationGizmoX", "RotationGizmoY", "RotationGizmoZ"};
 				const std::array<glm::vec3, 3> plane_normals = {
 					glm::vec3{transform.getRotation() * glm::vec4{0.0, 1.0, 0.0, 1.0}},
 					glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0}},
@@ -622,12 +673,13 @@ public:
 			{
 				ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
 				ImGui::Separator();
-				if(_selectedObject != nullptr)
+				if(_selectedObject != invalid_entity)
 				{
-					ImGui::Text("Name: %s", _selectedObject->get_name().c_str());
-					if(_selectedObject->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+					auto selectedEntityPtr = &get_entity(_selectedObject);
+					ImGui::Text("Name: %s", selectedEntityPtr->get_name().c_str());
+					if(selectedEntityPtr->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						auto& transform = _selectedObject->get<Transformation>();
+						auto& transform = selectedEntityPtr->get<Transformation>();
 						
 						glm::vec3 p = transform.getPosition();
 						if(ImGui::InputFloat3("Position", &p.x))
@@ -655,22 +707,19 @@ public:
 					
 					auto edit_material = [&](Material& mat)
 					{
-						auto uniform_color = mat.searchUniform<glm::vec3>("Color");
-						if(uniform_color != nullptr)
+						if(auto uniform_color = mat.searchUniform<glm::vec3>("Color"))
 						{
 							float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
 							if(ImGui::ColorEdit3("Color", col))
 								uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
 						}
-						auto uniform_r = mat.searchUniform<float>("R");
-						if(uniform_r != nullptr)
+						if(auto uniform_r = mat.searchUniform<float>("R"))
 						{
 							float val = uniform_r->getValue();
 							if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
 								uniform_r->setValue(val);
 						}
-						auto uniform_f0 = mat.searchUniform<float>("F0");
-						if(uniform_f0 != nullptr)
+						if(auto uniform_f0 = mat.searchUniform<float>("F0"))
 						{
 							float val = uniform_f0->getValue();
 							if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
@@ -678,63 +727,22 @@ public:
 						}
 						auto display_texture = [&](const std::string& name) 
 						{
-							auto uniform_tex = mat.searchUniform<Texture>(name);
-							if(uniform_tex != nullptr)
+							if(auto uniform_tex = mat.searchUniform<Texture>(name))
 							{
 								ImGui::Text(name.c_str());
-								ImGui::Image(reinterpret_cast<void*>(uniform_tex->getValue().getName()), ImVec2{256, 256});
+								gui_display(uniform_tex->getValue());
 							}
 						};
 						display_texture("Texture");
 						display_texture("NormalMap");
 					};
 					
-					if(_selectedObject->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
+					if(selectedEntityPtr->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						auto& mr = _selectedObject->get<MeshRenderer>();
+						auto& mr = selectedEntityPtr->get<MeshRenderer>();
 						if(ImGui::TreeNode("Mesh"))
 						{
-							ImGui::Text("Name: %s", mr.getMesh().getName().c_str());
-							ImGui::Text("Path: %s", mr.getMesh().getPath().c_str());
-							
-							// renders the mesh into a small framebuffer
-							static Framebuffer<> model_render{256};
-							if(!model_render)
-								model_render.init();
-							static auto& GUIModelRender = Resources::loadProgram("GUIModelRender",
-								Resources::load<VertexShader>("src/GLSL/Forward/simple_vs.glsl"),
-								Resources::load<FragmentShader>("src/GLSL/Forward/simple_fs.glsl")
-							);
-							static float gui_model_render_fov = 1.0f;
-							static float gui_model_render_camx = 400;	/// @todo Compute it automatically
-							auto aabb = mr.getMesh().getBoundingBox();
-							ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.1, 5.0);
-							ImGui::SliderFloat("Position", &gui_model_render_camx, 0, 1000);
-							GUIModelRender.setUniform("ProjectionMatrix", glm::perspective(gui_model_render_fov, 1.0f, 1.0f, 1500.0f));
-							GUIModelRender.setUniform("ViewMatrix", glm::lookAt(
-							   glm::vec3(gui_model_render_camx, 0.5f * (aabb.max.y + aabb.min.y), 0),
-							   0.5f * (aabb.max + aabb.min),
-							   glm::vec3(0, -1, 0)
-							));
-							GUIModelRender.setUniform("ModelMatrix", glm::rotate(glm::mat4(1.0f), _time, glm::vec3{0, 1, 0}));
-							Material mat = mr.getMesh().getMaterial(); // Copy Material... not perfect but will do for now.
-							mat.setShadingProgram(GUIModelRender);
-							mat.use();
-							Context::enable(Capability::DepthTest);
-							model_render.bind();
-							glClearColor(0, 0, 0, 0);
-							Context::clear();
-							mr.getMesh().draw();
-							model_render.unbind();
-							
-							ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
-							
-							// if(ImGui::TreeNode("Base Material"))
-							// {
-								// edit_material(mr.getMesh().getMaterial());
-								// ImGui::TreePop();
-							// }
-							
+							gui_display(mr.getMesh());
 							ImGui::TreePop();
 						}
 						
@@ -748,7 +756,7 @@ public:
 					
 					if(ImGui::Button("Delete Entity"))
 					{
-						destroy_entity(_selectedObject->get_id());
+						destroy_entity(selectedEntityPtr->get_id());
 						deselectObject();
 					}
 				} else {
@@ -768,7 +776,7 @@ public:
 				for(auto& o : ComponentIterator<MeshRenderer>{})
 				{
 					if(trace(r, o, depth))
-						selectObject(&entities[get_owner<MeshRenderer>(o)]);
+						selectObject(get_owner<MeshRenderer>(o));
 				}
 			}
 		}
@@ -777,19 +785,81 @@ public:
 	}
 		
 protected:
-	Entity*			_selectedObject = nullptr;
+	EntityID		_selectedObject = invalid_entity;
 	glm::vec4		_selectedObjectColor = glm::vec4{0.0, 0.0, 1.0, 0.10};
 
 	void deselectObject()
 	{
-		_selectedObject = nullptr;
+		_selectedObject = invalid_entity;
 	}
 	
-	void selectObject(Entity* o)
+	void selectObject(EntityID o)
 	{
-		if(_selectedObject != nullptr)
+		if(_selectedObject != invalid_entity)
 			deselectObject();
 		_selectedObject = o;
+	}
+	
+	void gui_display(const Texture& t)
+	{
+		ImGui::Image(reinterpret_cast<void*>(t.getName()), ImVec2{256, 256});
+	}
+	
+	void gui_display(const Texture2D& t)
+	{
+		ImGui::Text("Size: %d * %d", t.getSize().x, t.getSize().y);
+		ImGui::Image(reinterpret_cast<void*>(t.getName()), ImVec2{256, 256});
+	}
+
+	void gui_display(const Mesh& m)
+	{
+		ImGui::Text("Name: %s", m.getName().c_str());
+		ImGui::Text("Path: %s", m.getPath().c_str());
+		
+		gui_render_mesh(m);
+		// if(ImGui::TreeNode("Base Material"))
+		// {
+			// edit_material(mr.getMesh().getMaterial());
+			// ImGui::TreePop();
+		// }
+	}
+	
+	void gui_render_mesh(const Mesh& m)
+	{
+		// renders the mesh into a small framebuffer (unique, so avoid calling this twice in a frame :))
+		static Framebuffer<> model_render{256};
+		if(!model_render)
+			model_render.init();
+		static auto& GUIModelRender = Resources::loadProgram("GUIModelRender",
+			Resources::load<VertexShader>("src/GLSL/Forward/simple_vs.glsl"),
+			Resources::load<FragmentShader>("src/GLSL/Forward/simple_fs.glsl")
+		);
+		static float gui_model_render_fov = 1.0f;
+		static float gui_model_render_camx = 400;	/// @todo Compute it automatically
+		auto aabb = m.getBoundingBox();
+		ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.1, 5.0);
+		ImGui::SliderFloat("Position", &gui_model_render_camx, 0, 1000);
+		GUIModelRender.setUniform("ProjectionMatrix", glm::perspective(gui_model_render_fov, 1.0f, 1.0f, 1500.0f));
+		GUIModelRender.setUniform("ViewMatrix", glm::lookAt(
+		   glm::vec3(gui_model_render_camx, 0.5f * (aabb.max.y + aabb.min.y), 0),
+		   0.5f * (aabb.max + aabb.min),
+		   glm::vec3(0, -1, 0)
+		));
+		GUIModelRender.setUniform("ModelMatrix", glm::rotate(glm::mat4(1.0f), _time, glm::vec3{0, 1, 0}));
+		Material mat = m.getMaterial(); // Copy Material... not perfect but will do for now.
+		mat.setShadingProgram(GUIModelRender);
+		
+		model_render.bind();
+		mat.use();
+		Context::enable(Capability::DepthTest);
+		glClearColor(0, 0, 0, 0);
+		Context::clear();
+		m.draw();
+		mat.useNone();
+		model_render.unbind();
+		Context::viewport(0, 0, _width, _height);
+		
+		ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
 	}
 };
 

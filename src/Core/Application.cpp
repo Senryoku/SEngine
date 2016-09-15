@@ -169,12 +169,6 @@ void Application::update()
 
 	if(!_paused || _time == 0.0f)
 		_scene.update();
-	
-	if(_selectedLight)
-	{
-		auto d = (_projection * _camera.getMatrix() * glm::vec4(_selectedLight->position, 1.0));
-		_selectedLight->position = getMouseProjection(d.z/d.w);
-	}
 }
 
 void Application::renderGUI()
