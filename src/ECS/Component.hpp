@@ -16,22 +16,142 @@ constexpr ComponentID invalid_component_type_idx = std::numeric_limits<Component
 constexpr std::size_t max_entities = 2048;
 constexpr std::size_t max_component_types = 64;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace impl
 {
+
+template<typename T>
+class ComponentPool
+{
+public:
+	ComponentPool() :
+		_buffer_size{64},
+		_data{new T[_buffer_size]},
+		_owners{new T[_buffer_size]}
+	{
+	}
+
+	~ComponentPool()
+	{
+		for(size_t i = 0; i < _last_valid; ++i)
+			if(is_valid(i))
+				_data[i].~T();	// Explicit destructor if needed
+		std::free(_data);
+		std::free(_owners);
+	}
 	
+	inline size_t size() const { return _size; }
+	
+	class iterator : public std::iterator<std::forward_iterator_tag, T>
+	{
+    public:
+        explicit iterator(const ComponentPool& pool, ComponentID idx = pool.size()) :
+			_pool{pool},
+			_idx{idx > pool.size() ? pool.size() : idx}
+		{}
+        iterator& operator++()
+		{
+			do
+			{
+				++_idx;
+			} while(_idx < _pool.size() && (!is_valid<T>(_idx)));
+			assert(_idx <= _pool.size());
+			return *this;
+		}
+        iterator operator++(int) { iterator r = *this; ++(*this); return r; }
+        bool operator==(iterator other) const {return _idx == other._idx;}
+        bool operator!=(iterator other) const {return !(*this == other);}
+        typename std::iterator<std::forward_iterator_tag, T>::reference operator*() const
+		{
+			assert(_idx < _pool.size());
+			return impl::components<T>[_idx];
+		}
+	private:
+		const ComponentPool&			_pool;
+		ComponentID						_idx;
+    };
+	
+	iterator begin() const
+	{
+		ComponentID idx = 0;
+		while(idx < size() && !is_valid(idx))
+			++idx;
+		return iterator{*this, idx};
+	}
+	iterator end() const { return iterator{*this}; }
+	
+	template<typename ...Args>
+	void add(EntityID eid, Args... args)
+	{
+		auto id = _next_id++;
+		
+		// Search next valid id.
+		while(_next_id < _buffer_size && _owners[_next_id] != invalid_entity)
+			++_next_id;
+		
+		// Makes sure buffer is big enough for the next insertion
+		if(_next_id >= _buffer_size)
+			resize();
+		
+		// Construct component
+		::new(_data + id) T{std::forward<Args>(args...)};
+		_owners[id] = eid;
+		
+		// Updates _last_valid
+		if(id > _last_valid)
+			_last_valid = id;
+	}
+	
+private:
+	size_t		_next_id = 0;		/// First invalid id in the array
+	size_t		_buffer_size = 0;	/// Buffer size
+
+	size_t		_last_valid = 0;	/// Higher valid id (useful for interation over components)
+
+	T*			_data = nullptr;
+	EntityID*	_owners = nullptr;
+	
+	void resize()
+	{
+		auto curr_size = _buffer_size;
+		_buffer_size *= 2;
+		
+		T* new_buffer = new T[_buffer_size];
+		for(size_t i = 0; i < _last_valid; ++i)
+			if(is_valid(i))
+				new_buffer[i] = std::move(_data[i]);	// Explicit move
+		std::free(_data);
+		_data = new_buffer;
+		
+		std::realloc(_owners, _buffer_size * sizeof(EntityID));
+		/*
+		EntityID* new_owners = new EntityID[_buffer_size];
+		for(size_t i = 0; i < curr_size; ++i)
+			new_owners[i] = _owners[i];
+		std::free(_owners);
+		_owners = new_owners;
+		*/	
+	}
+	
+	bool is_valid(ComponentID idx)
+	{
+		return _owners[i] != invalid_entity;
+	}
+};
+
 template<typename T>
-std::vector<T>			components;			///< Component storage
+std::vector<T>					components;				///< Component storage
 template<typename T>
-std::vector<EntityID>	component_owner;	///< Marks components as actively used.
+std::vector<EntityID>			component_owner;		///< Marks components as actively used.
 
 extern std::list<ComponentID>	marked_for_deletion;	///< Components marked for deletion (we don't know their types yet).
-
-extern std::size_t next_component_type_idx;
+extern std::size_t 				next_component_type_idx;
 
 template<typename T>
-ComponentID next_component_idx = 0;
+ComponentID 					next_component_idx = 0;
 
 } // impl namespace
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
 inline bool is_valid(ComponentID idx)
