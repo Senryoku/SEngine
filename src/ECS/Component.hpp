@@ -7,6 +7,15 @@
 #include <iterator>
 #include <functional>
 
+/**
+ * (Almost) Any type can be used as a component, just add one to an entity.
+ * Once added to a entity, pointers to a component can be invalidated after another insertion
+ * (so we can have a dynamically sized buffer), it is therefore not wise to refer to them this way,
+ * prefer using their ComponentID (and retrieve them with the get_component<T>(ComponentID) function).
+ * For the same reason, the component type must provide a correct move constructor (they can be
+ * moved around after an insertion).
+**/
+
 using ComponentID = std::size_t;
 using EntityID = std::size_t;
 
@@ -16,45 +25,193 @@ constexpr ComponentID invalid_component_type_idx = std::numeric_limits<Component
 constexpr std::size_t max_entities = 2048;
 constexpr std::size_t max_component_types = 64;
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace impl
 {
+
+/**
+ * ComponentPool
+ * Preallocated buffer of memory to hold components of type T
+**/
+template<typename T>
+class ComponentPool
+{
+public:
+	ComponentPool() :
+		_buffer_size{64},
+		_data{static_cast<T*>(std::malloc(_buffer_size * sizeof(T)))},
+		_owners{static_cast<EntityID*>(std::malloc(_buffer_size * sizeof(EntityID)))}
+	{
+		for(size_t i = 0; i < size(); ++i)
+			_owners[i] = invalid_entity;
+	}
+
+	~ComponentPool()
+	{
+		for(size_t i = 0; i < size(); ++i)
+			if(is_valid(i))
+				_data[i].~T();	// Explicit destructor if needed
+		std::free(_data);
+		std::free(_owners);
+	}
 	
+	inline size_t size() const { return _buffer_size; }
+	inline T& operator[](ComponentID id) { return _data[id]; }
+	inline const T& operator[](ComponentID id) const { return _data[id]; }
+	
+	inline bool is_valid(ComponentID id) const { return _owners[id] != invalid_entity; }
+	
+	inline ComponentID get_id(const T& c) const
+	{
+		auto d = std::distance<const T*>(_data, &c);
+		assert(d >= 0);
+		assert(d < static_cast<decltype(d)>(size()));
+		return d;
+	}
+	
+	inline EntityID get_owner(ComponentID id) const
+	{
+		assert(id < size());
+		return _owners[id];
+	}
+	
+	class iterator : public std::iterator<std::forward_iterator_tag, T>
+	{
+    public:
+        explicit iterator(const ComponentPool& pool, ComponentID idx) :
+			_pool{pool},
+			_idx{idx > pool.size() ? pool.size() : idx}
+		{}
+        iterator& operator++()
+		{
+			do ++_idx; while(_idx < _pool.size() && _pool.is_valid(_idx));
+			assert(_idx <= _pool.size());
+			return *this;
+		}
+        iterator operator++(int) { iterator r = *this; ++(*this); return r; }
+        bool operator==(iterator other) const {return _idx == other._idx;}
+        bool operator!=(iterator other) const {return !(*this == other);}
+        typename std::iterator<std::forward_iterator_tag, T>::reference operator*() const
+		{
+			assert(_idx < _pool.size());
+			assert(is_valid(_idx));
+			return _pool[_idx];
+		}
+	private:
+		const ComponentPool&			_pool;
+		ComponentID						_idx;
+    };
+	
+	iterator begin() const
+	{
+		ComponentID idx = 0;
+		while(idx < size() && !is_valid(idx))
+			++idx;
+		return iterator{*this, idx};
+	}
+	iterator end() const { return iterator{*this, size()}; }
+	
+	template<typename ...Args>
+	ComponentID add(EntityID eid, Args&&... args)
+	{
+		auto id = _next_id;
+		
+		// Search next valid id.
+		do ++_next_id; while(_next_id < _buffer_size && is_valid(_next_id));
+		
+		// Makes sure buffer is big enough for the next insertion
+		if(_next_id >= _buffer_size)
+			resize();
+		
+		// Construct component
+		_owners[id] = eid;
+		::new(_data + id) T{std::forward<Args>(args)...};
+		
+		return id;
+	}
+	
+	template<typename ...Args>
+	void replace(ComponentID id, Args&&... args)
+	{
+		assert(is_valid(id));
+		_data[id].~T();
+		::new(_data + id) T{std::forward<Args>(args)...};
+	}
+	
+	void rem(ComponentID id)
+	{
+		_owners[id] = invalid_entity;
+		_data[id].~T();
+		
+		if(id < _next_id)
+			_next_id = id;
+	}
+	
+private:
+	size_t		_next_id = 0;		/// First invalid id in the array
+	size_t		_buffer_size = 0;	/// Buffer size
+
+	T*			_data = nullptr;
+	EntityID*	_owners = nullptr;
+	
+	void resize()
+	{
+		auto curr_size = _buffer_size;
+		_buffer_size *= 2;
+		
+		T* new_buffer = new T[_buffer_size];
+		assert(new_buffer);
+		for(size_t i = 0; i < curr_size; ++i)
+			if(is_valid(i))
+			{
+				::new(new_buffer + i) T{std::move(_data[i])};	// Explicit move
+				_data[i].~T();
+			}
+		std::free(_data);
+		_data = new_buffer;
+		
+		_owners = static_cast<EntityID*>(std::realloc(_owners, _buffer_size * sizeof(EntityID)));
+		assert(_owners);
+		for(size_t i = curr_size; i < _buffer_size; ++i)
+			_owners[i] = invalid_entity;
+	}
+};
+
 template<typename T>
-std::vector<T>			components;			///< Component storage
-template<typename T>
-std::vector<EntityID>	component_owner;	///< Marks components as actively used.
+ComponentPool<T>				components;				///< Component storage
 
 extern std::list<ComponentID>	marked_for_deletion;	///< Components marked for deletion (we don't know their types yet).
 
-extern std::size_t next_component_type_idx;
+extern std::size_t 				next_component_type_idx;///< First unused component type index
 
 template<typename T>
-ComponentID next_component_idx = 0;
+ComponentID 					next_component_idx = 0;	///< First unused ComponentID
 
 } // impl namespace
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
 inline bool is_valid(ComponentID idx)
 {
-	return impl::component_owner<T>[idx] != invalid_entity;
+	return impl::components<T>.is_valid(idx);
 }
 
 template<typename T>
 inline ComponentID get_id(const T& c)
 {
-	return std::distance(&*impl::components<T>.cbegin(), &c);
+	return impl::components<T>.get_id(c);
 }
 
 template<typename T>
 inline EntityID get_owner(ComponentID idx)
 {
-	return impl::component_owner<T>[idx];
+	return impl::components<T>.get_owner(idx);
 }
 
 template<typename T>
 inline EntityID get_owner(const T& c)
 {
-	return impl::component_owner<T>[get_id<T>(c)];
+	return impl::components<T>.get_owner(impl::components<T>.get_id(c));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,31 +241,7 @@ inline T& get_component(ComponentID id)
 template<typename T, typename ...Args>
 inline ComponentID add_component(EntityID eid, Args&& ...args)
 {
-	// Makes sure component is allocated
-	if(impl::next_component_idx<T> + 1 >= impl::components<T>.size())
-	{
-		/// @todo ANOTHER BIG PROBLEM...
-		/// This does not only allocates memory for the components, but also construct them, and we
-		/// don't want that... I should be using something else than std::vector, but there is
-		/// something wrong with my tentatives of implementations ~~
-		auto target_size = std::max(static_cast<std::size_t>(64), impl::components<T>.size() * 2);
-		impl::component_owner<T>.resize(target_size, invalid_entity);
-		impl::components<T>.resize(target_size);
-	}
-	// Search next id
-	auto r = impl::next_component_idx<T>++;
-	while(impl::next_component_idx<T> < impl::components<T>.size() && is_valid<T>(impl::next_component_idx<T>))
-		++impl::next_component_idx<T>;
-	
-	/// @todo HACK
-	/// Explicitly calls the destructor of the previous component. We know it exists, since
-	/// std::vector constructs them by default... However, we would like to avoid that =/
-	impl::components<T>[r].~T();
-
-	// Construct and return component
-	impl::component_owner<T>[r] = eid;
-	::new(&impl::components<T>[r]) T{std::forward<Args>(args)...};
-	return r;
+	return impl::components<T>.add(eid, std::forward<Args>(args)...);
 }
 
 inline void mark_for_deletion(ComponentID idx)
@@ -119,12 +252,7 @@ inline void mark_for_deletion(ComponentID idx)
 template<typename T>
 inline void delete_component(ComponentID idx)
 {
-	// To call the component destructor here, we should forbid the destructor calls at exit
-	// (via std::vector) and manage them ourselves...
-	//impl::components<T>[idx].~T();
-	/// @todo THIS IS A SERIOUS PROBLEM!!!!
-	///		  See add_component for the current hackish solution, and what we should be doing...
-	impl::component_owner<T>[idx] = invalid_entity;
+	impl::components<T>.rem(idx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +268,7 @@ class ComponentIterator
 {
 public:
 	
-	ComponentIterator(const std::function<bool(const T&)>& predicate = [](const T&) -> bool { return true; }) : 
+	ComponentIterator(const std::function<bool(const T&)>& predicate = [](const T&) -> bool { return true; }) :
 		_predicate{predicate}
 	{
 	}
@@ -167,6 +295,7 @@ public:
         typename std::iterator<std::forward_iterator_tag, T>::reference operator*() const
 		{
 			assert(_idx < impl::components<T>.size());
+			assert(is_valid<T>(_idx));
 			return impl::components<T>[_idx];
 		}
 	private:

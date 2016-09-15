@@ -72,7 +72,7 @@ public:
 		assert(_id != invalid_entity);
 		if(has<T>())
 		{
-			impl::components<T>[_components[get_component_type_idx<T>()]] = T{std::forward<Args>(args)...};
+			impl::components<T>.replace(_components[get_component_type_idx<T>()], std::forward<Args>(args)...);
 		} else {
 			_components[get_component_type_idx<T>()] = add_component<T>(_id, std::forward<Args>(args)...);
 			assert(has<T>());
@@ -107,7 +107,7 @@ public:
 			for(auto& id : _components)
 				id = invalid_component_idx;
 		_id = invalid_entity;
-		_name = "";
+		_name.clear();
 	}
 private:
 	EntityID										_id = invalid_entity;

@@ -6,9 +6,9 @@
 template<typename T>
 inline bool deep_validation(ComponentID idx)
 {
-	return is_valid<T>(idx) && is_valid<T>(impl::component_owner<T>[idx]) &&
-		entities[impl::component_owner<T>[idx]].template has<T>() &&
-		&entities[impl::component_owner<T>[idx]].template get<T>() == &impl::components<T>[idx];
+	return is_valid<T>(idx) && is_valid<T>(impl::components<T>.get_owner(idx)) &&
+		entities[impl::components<T>.get_owner(idx)].template has<T>() &&
+		&entities[impl::components<T>.get_owner(idx)].template get<T>() == &impl::components<T>[idx];
 }
 
 template<typename T>

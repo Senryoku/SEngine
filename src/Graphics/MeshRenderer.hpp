@@ -8,7 +8,8 @@ class MeshRenderer
 {
 public:
 	MeshRenderer() =default;
-	MeshRenderer(const Mesh& mesh);
+	explicit MeshRenderer(const Mesh& mesh);
+	MeshRenderer(MeshRenderer&&);
 	
 	inline void draw() const;
 	
