@@ -123,7 +123,7 @@ inline Entity& get_entity(EntityID id)
 	return entities[id];
 }
 
-inline Entity& create_entity()
+inline Entity& create_entity(const std::string& name = "")
 {
 	// Allocating if necessary
 	if(next_entity_id + 1 >= entities.size())

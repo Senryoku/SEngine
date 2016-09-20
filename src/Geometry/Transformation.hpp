@@ -19,6 +19,8 @@ public:
 		const glm::vec3& scale = glm::vec3{1.0f});
 	Transformation(const Transformation&) =default;
 	
+	~Transformation();
+	
 	inline const glm::mat4& getModelMatrix() const { return _modelMatrix; }
 	inline const glm::mat4& getGlobalModelMatrix() const { return _globalModelMatrix; };
 	inline const glm::vec3& getPosition() const { return _position; }
@@ -44,7 +46,11 @@ public:
 
 	/// @todo Maybe passing a ComponentID would be safer?...
 	void addChild(Transformation& t);
+	void addChild(ComponentID t);
+	void remChild(const Transformation& t);
+	void remChild(ComponentID t);
 	void setParent(Transformation& t);
+	void setParent(ComponentID t);
 
 private:
 	glm::mat4		_modelMatrix;

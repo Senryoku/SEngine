@@ -39,8 +39,8 @@ public:
 	{
 		Vertex() =default;
 		Vertex(glm::vec3 pos,
-			glm::vec3 nor,
-			glm::vec2 tex);
+			glm::vec3 nor = glm::vec3{0.0},
+			glm::vec2 tex = glm::vec2{0.0});
 
 		glm::vec3	position;
 		glm::vec3	normal;
@@ -64,6 +64,8 @@ public:
 	inline const Buffer& 				getVertexBuffer()	const { return _vertex_buffer; }///< @return Vertex Buffer
 	inline const Buffer&				getIndexBuffer()	const { return _index_buffer; }	///< @return Index Buffer
 	
+	inline void	setName(const std::string& name) { _name = name; }
+	
 	void computeNormals();
 	Transformation resetPivot();
 	
@@ -76,7 +78,7 @@ public:
 
 	static std::vector<Mesh*> load(const std::string& path);
 	static std::vector<Mesh*> load(const std::string& path, const Program& p);
-	
+
 protected:
 	std::string				_name;	///< Name
 	std::string				_path;	///< Path to the file from where the mesh was loaded (optional)

@@ -20,8 +20,6 @@ public:
 	
 	void init();
 	
-	inline std::vector<MeshRenderer>& getObjects()  { return _objects; }
-	inline const std::vector<MeshRenderer>& getObjects() const { return _objects; }
 	inline const std::vector<DirectionalLight*>& getLights() const { return _lights; }
 	inline std::vector<DirectionalLight*>& getLights() { _dirtyLights = true; return _lights; }
 	inline std::vector<OmnidirectionalLight>& getOmniLights() { _dirtyLights = true; return _omniLights; }
@@ -39,9 +37,7 @@ public:
 	
 	inline Skybox& getSkybox() { return _skybox; }
 	
-private:
-	std::vector<MeshRenderer>	_objects;
-	
+private:	
 	bool								_dirtyLights = true;
 	std::vector<DirectionalLight*>		_lights;
 	std::vector<OmnidirectionalLight>	_omniLights;

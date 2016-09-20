@@ -54,16 +54,18 @@ public:
 		float R = 0.95f;
 		float F0 = 0.15f;
 		const auto Paths = {
-			"in/3DModels/sponza/sponza.obj"
+			"in/3DModels/sponza/sponza.obj",
+			"in/3DModels/cube.obj"
 			//,"in/3DModels/sibenik/sibenik.obj"
 		};
 		const auto Matrices = {
-			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04))
+			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04)),
+			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(1.0))
 			//,glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(200.0, 0.0, 0.0)), glm::vec3(3.0))
 		};
 		for(size_t i = 0; i < Paths.size(); ++i)
 		{
-			auto& base_entity = create_entity();
+			auto& base_entity = create_entity(Paths.begin()[i]);
 			base_entity.set_name(Paths.begin()[i]);
 			auto base_transform = get_id(base_entity.add<Transformation>());
 			auto m = Mesh::load(Paths.begin()[i]);
@@ -80,7 +82,7 @@ public:
 				entity.add<MeshRenderer>(*part);
 			}
 		}
-
+	
 		_volumeSamples = 16;
 		// Shadow casting lights ---------------------------------------------------
 		
