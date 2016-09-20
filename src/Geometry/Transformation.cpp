@@ -42,7 +42,7 @@ void Transformation::addChild(Transformation& t)
 {
 	if(t._parent != invalid_component_idx)
 		get_component<Transformation>(t._parent).remChild(t);
-	_children.push_back(getID<Transformation>(t));
+	_children.push_back(get_id<Transformation>(t));
 	t.setParent(*this);
 }
 
@@ -53,7 +53,7 @@ void Transformation::addChild(ComponentID t)
 
 void Transformation::remChild(const Transformation& t)
 {
-	remChild(getID<Transformation>(t));
+	remChild(get_id<Transformation>(t));
 }
 
 void Transformation::remChild(ComponentID t)
@@ -63,7 +63,7 @@ void Transformation::remChild(ComponentID t)
 
 void Transformation::setParent(Transformation& t)
 {
-	setParent(getID(t));
+	setParent(get_id(t));
 }
 
 void Transformation::setParent(ComponentID t)
@@ -82,8 +82,10 @@ inline void Transformation::computeMatrix()
 
 inline void Transformation::updateGlobalModelMatrix()
 {
-	_globalModelMatrix = _parent == invalid_component_idx ? _modelMatrix :
+	_globalModelMatrix = _parent == invalid_component_idx ? 
+		_modelMatrix :
 		get_component<Transformation>(_parent).getGlobalModelMatrix() * _modelMatrix;
+
 	for(ComponentID c : _children)
 		get_component<Transformation>(c).updateGlobalModelMatrix();
 }
