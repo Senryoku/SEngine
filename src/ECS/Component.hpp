@@ -159,7 +159,7 @@ private:
 		auto curr_size = _buffer_size;
 		_buffer_size *= 2;
 		
-		T* new_buffer = new T[_buffer_size];
+		T* new_buffer = static_cast<T*>(std::malloc(_buffer_size * sizeof(T)));
 		assert(new_buffer);
 		for(size_t i = 0; i < curr_size; ++i)
 			if(is_valid(i))
