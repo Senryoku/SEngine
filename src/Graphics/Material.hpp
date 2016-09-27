@@ -5,10 +5,10 @@
 #include <iostream>
 #include <memory>
 
-#define GLEW_STATIC
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
+#include <Graphics/UniformGLM.hpp>
 #include <Shaders.hpp>
 #include <Uniform.hpp>
 #include <Texture2D.hpp>

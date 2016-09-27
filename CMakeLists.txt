@@ -24,11 +24,14 @@ FIND_PACKAGE(PkgConfig)
 
 SET(EXT_LIB_BUILD "extlib_build" CACHE FILEPATH "Where the external libraries will be build.")
 
-#GL3W
-SET(GL3W_INCLUDE_DIR "../gl3w/include" CACHE FILEPATH "GL3W_INCLUDE_DIR")
-SET(GL3W_LIBRARY_DIRS "../gl3w" CACHE FILEPATH "GL3W_LIBRARY_DIRS")
-INCLUDE_DIRECTORIES(${GL3W_INCLUDE_DIR})
-LINK_DIRECTORIES(${GL3W_LIBRARY_DIRS})
+#SENOGL
+add_subdirectory("ext/SenOGL")
+# This should not be necessary...
+include_directories("ext/SenOGL/include")
+include_directories("ext/SenOGL/include/shaders")
+include_directories("ext/SenOGL/include/textures")
+include_directories("ext/SenOGL/external/stb_image")
+include_directories("ext/SenOGL/external/gl3w/include")
 
 #GLFW
 IF(${PkgConfig_FOUND})
@@ -46,12 +49,6 @@ ENDIF()
 #GLM
 SET(GLM_INCLUDE_DIR "../glm" CACHE FILEPATH "GLM_INCLUDE_DIR")
 INCLUDE_DIRECTORIES(${GLM_INCLUDE_DIR})
-
-#SENOGL
-find_package(SenOGL REQUIRED)
-INCLUDE_DIRECTORIES(${SenOGL_INCLUDE_DIRS})
-LINK_DIRECTORIES(${SenOGL_LIBRARY_DIRS})
-ADD_DEFINITIONS(${SenOGL_DEFINITIONS})
 
 #dear imgui
 set(IMGUI_ROOT "ext/imgui")
@@ -108,7 +105,7 @@ foreach(Exe ${EXECUTABLES})
 	get_filename_component(Target ${Exe} NAME_WE [CACHE])
 	if(NOT TARGET ${Target})
 		add_executable(${Target} ${Exe})
-		target_link_libraries(${Target} SEngine ${SenOGL_LIBRARY} glfw3 ${GLFW_LIBRARIES} libgl3w.a ${OPENGL_LIBRARIES})
+		target_link_libraries(${Target} SEngine glfw3 ${GLFW_LIBRARIES} SenOGL)
 		MESSAGE(STATUS "Adding rule for ${Target}.")
 	endif(NOT TARGET ${Target})
 endforeach(Exe)

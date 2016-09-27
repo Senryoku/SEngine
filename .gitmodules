@@ -1,0 +1,3 @@
+[submodule "ext/SenOGL"]
+	path = ext/SenOGL
+	url = https://github.com/Senryoku/SenOGL.git

@@ -51,6 +51,8 @@ public:
 		
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		
+		Clock model_loading_clock;
+		auto model_loading_start = model_loading_clock.now();
 		float R = 0.95f;
 		float F0 = 0.15f;
 		const auto Paths = {
@@ -82,6 +84,8 @@ public:
 				entity.add<MeshRenderer>(*part);
 			}
 		}
+		auto model_loading_end = model_loading_clock.now();
+		Log::info("Model loading done in ", std::chrono::duration_cast<std::chrono::milliseconds>(model_loading_end - model_loading_start).count(), "ms.");
 	
 		_volumeSamples = 16;
 		// Shadow casting lights ---------------------------------------------------

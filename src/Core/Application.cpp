@@ -64,7 +64,7 @@ void Application::init(const std::string& windowName)
 	glfwMakeContextCurrent(_window);
 	glfwSwapInterval(0);
 	
-	if(gl3wInit())
+	if(!Context::init())
 	{
 		std::cerr << "Error: couldn't initialize gl3w." << std::endl;
 		exit(EXIT_FAILURE);
