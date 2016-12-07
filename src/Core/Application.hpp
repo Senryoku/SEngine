@@ -93,7 +93,7 @@ protected:
 	UniformBuffer		_camera_buffer;
 
 	bool 	_menu = false;
-	bool 	_controlCamera = true;
+	bool 	_controlCamera = false;
 	double 	_mouse_x = 0.0, 
 			_mouse_y = 0.0;
 	

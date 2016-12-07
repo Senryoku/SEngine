@@ -3,12 +3,11 @@
 #include <DirectionalLight.hpp>
 #include <OmnidirectionalLight.hpp>
 #include <PointLight.hpp>
-#include <MeshRenderer.hpp>
 #include <Skybox.hpp>
-#include <Component.hpp>
 
 /**
  * @todo Octree
+ * @todo Remove lights from here (turn them into standard components)
  * @todo Delegates to systems
 **/
 class Scene

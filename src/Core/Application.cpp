@@ -80,7 +80,8 @@ void Application::init(const std::string& windowName)
 	glfwSetScrollCallback(_window, s_scroll_callback);
 	glfwSetDropCallback(_window, s_drop_callback);
 	
-	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	if(_controlCamera)
+		glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	
 	ImGui_ImplGlfwGL3_Init(_window, false);
 	ImGui::GetIO().MouseDrawCursor = false;

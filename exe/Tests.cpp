@@ -6,6 +6,7 @@
 #include <glmext.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <json.hpp>
 
 #include <Query.hpp>
 
@@ -26,6 +27,64 @@ std::string to_string(const T a_value, const int n = 6)
 	out << std::fixed;
     out << std::setprecision(n) << a_value;
     return out.str();
+}
+
+glm::vec3 vec3(const nlohmann::json& j)
+{
+	assert(j.is_array());
+	return glm::vec3{j[0], j[1], j[2]};
+}
+
+glm::vec4 vec4(const nlohmann::json& j)
+{
+	assert(j.is_array());
+	return glm::vec4{j[0], j[1], j[2], j[3]};
+}
+
+glm::mat4 mat4(const nlohmann::json& json)
+{
+	glm::mat4 r;
+	if(json.is_array())
+	{
+		for(int i = 0; i < 4; ++i)
+			for(int j = 0; j < 4; ++j)
+				r[i][j] = json[i * 4 + j];
+	} else {
+		r = glm::scale(
+				glm::translate(
+					glm::rotate(static_cast<float>(json["rotation"][0]), glm::vec3{1, 0, 0}) *  
+					glm::rotate(static_cast<float>(json["rotation"][1]), glm::vec3{0, 1, 0}) *
+					glm::rotate(static_cast<float>(json["rotation"][2]), glm::vec3{0, 0, 1})
+				, vec3(json["position"])), 
+				vec3(json["scale"]));
+	}
+	return r;
+}
+
+void loadScene(const std::string& path)
+{
+	std::ifstream f(path);
+	nlohmann::json j;
+	f >> j;
+	for(auto& e : j["entities"])
+	{
+		auto& base_entity = create_entity(e["MeshRenderer"]["mesh"]);
+		base_entity.set_name(e["MeshRenderer"]["mesh"]);
+		auto base_transform = get_id(base_entity.add<Transformation>());
+		auto m = Mesh::load(e["MeshRenderer"]["mesh"]);
+		for(auto& part : m)
+		{
+			auto t = part->resetPivot();
+			part->createVAO();
+			part->getMaterial().setUniform("R", 0.95f);
+			part->getMaterial().setUniform("F0", 0.15f);
+			auto& entity = create_entity();
+			entity.set_name(part->getName());
+			auto& ent_transform = entity.add<Transformation>(mat4(e["Transformation"]) * t.getModelMatrix());
+			get_component<Transformation>(base_transform).addChild(ent_transform);
+			entity.add<MeshRenderer>(*part);
+		}
+	}
 }
 
 class Editor : public DeferredRenderer
@@ -53,37 +112,9 @@ public:
 		
 		Clock model_loading_clock;
 		auto model_loading_start = model_loading_clock.now();
-		float R = 0.95f;
-		float F0 = 0.15f;
-		const auto Paths = {
-			"in/3DModels/sponza/sponza.obj",
-			"in/3DModels/cube.obj"
-			//,"in/3DModels/sibenik/sibenik.obj"
-		};
-		const auto Matrices = {
-			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(0.04)),
-			glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(0.0, 0.0, 0.0)), glm::vec3(1.0))
-			//,glm::scale(glm::translate(glm::mat4(1.0), glm::vec3(200.0, 0.0, 0.0)), glm::vec3(3.0))
-		};
-		for(size_t i = 0; i < Paths.size(); ++i)
-		{
-			auto& base_entity = create_entity(Paths.begin()[i]);
-			base_entity.set_name(Paths.begin()[i]);
-			auto base_transform = get_id(base_entity.add<Transformation>());
-			auto m = Mesh::load(Paths.begin()[i]);
-			for(auto& part : m)
-			{
-				auto t = part->resetPivot();
-				part->createVAO();
-				part->getMaterial().setUniform("R", R);
-				part->getMaterial().setUniform("F0", F0);
-				auto& entity = create_entity();
-				entity.set_name(part->getName());
-				auto& ent_transform = entity.add<Transformation>(Matrices.begin()[i] * t.getModelMatrix());
-				get_component<Transformation>(base_transform).addChild(ent_transform);
-				entity.add<MeshRenderer>(*part);
-			}
-		}
+		
+		loadScene("in/Scenes/test_scene.json");
+		
 		auto model_loading_end = model_loading_clock.now();
 		Log::info("Model loading done in ", std::chrono::duration_cast<std::chrono::milliseconds>(model_loading_end - model_loading_start).count(), "ms.");
 	

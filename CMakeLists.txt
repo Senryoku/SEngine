@@ -67,6 +67,9 @@ set(SOURCE_FILES ${SOURCE_FILES}
 	${TINYOBJLOADER_ROOT}/tiny_obj_loader.cc
 )
 
+#json
+include_directories("ext/json")
+
 # -----------------------------------------------------------------------------------
 
 MACRO(SUBDIRLIST result curdir)
@@ -97,7 +100,7 @@ REC_SOURCE(${CMAKE_SOURCE_DIR}/src)
 
 AUX_SOURCE_DIRECTORY(exe/ EXECUTABLES)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Wall -Wfatal-errors ${CMAKE_CXX_FLAGS}")
 
 add_library(SEngine STATIC ${SOURCE_FILES})
 
