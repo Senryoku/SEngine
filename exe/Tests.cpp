@@ -68,21 +68,31 @@ void loadScene(const std::string& path)
 	f >> j;
 	for(auto& e : j["entities"])
 	{
-		auto& base_entity = create_entity(e["MeshRenderer"]["mesh"]);
-		base_entity.set_name(e["MeshRenderer"]["mesh"]);
-		auto base_transform = get_id(base_entity.add<Transformation>());
-		auto m = Mesh::load(e["MeshRenderer"]["mesh"]);
-		for(auto& part : m)
+		auto& base_entity = create_entity("EmptyEntity");
+		
+		auto transform = e.find("Transformation");
+		if(transform != e.end())
 		{
-			auto t = part->resetPivot();
-			part->createVAO();
-			part->getMaterial().setUniform("R", 0.95f);
-			part->getMaterial().setUniform("F0", 0.15f);
-			auto& entity = create_entity();
-			entity.set_name(part->getName());
-			auto& ent_transform = entity.add<Transformation>(mat4(e["Transformation"]) * t.getModelMatrix());
-			get_component<Transformation>(base_transform).addChild(ent_transform);
-			entity.add<MeshRenderer>(*part);
+			ComponentID base_transform = get_id(base_entity.add<Transformation>(mat4(*transform)));
+		
+			auto meshrenderer = e.find("MeshRenderer");
+			if(meshrenderer != e.end())
+			{
+				base_entity.set_name((*meshrenderer)["mesh"]);
+				auto m = Mesh::load((*meshrenderer)["mesh"]);
+				for(auto& part : m)
+				{
+					auto t = part->resetPivot();
+					part->createVAO();
+					part->getMaterial().setUniform("R", 0.95f);
+					part->getMaterial().setUniform("F0", 0.15f);
+					auto& entity = create_entity();
+					entity.set_name(part->getName());
+					auto& ent_transform = entity.add<Transformation>(t);
+					get_component<Transformation>(base_transform).addChild(ent_transform);
+					entity.add<MeshRenderer>(*part);
+				}
+			}
 		}
 	}
 }
@@ -110,14 +120,12 @@ public:
 		
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		
-		Clock model_loading_clock;
-		auto model_loading_start = model_loading_clock.now();
-		
+		Clock scene_loading_clock;
+		auto scene_loading_start = scene_loading_clock.now();
 		loadScene("in/Scenes/test_scene.json");
-		
-		auto model_loading_end = model_loading_clock.now();
-		Log::info("Model loading done in ", std::chrono::duration_cast<std::chrono::milliseconds>(model_loading_end - model_loading_start).count(), "ms.");
-	
+		auto scene_loading_end = scene_loading_clock.now();
+		Log::info("Scene loading done in ", std::chrono::duration_cast<std::chrono::milliseconds>(scene_loading_end - scene_loading_start).count(), "ms.");
+
 		_volumeSamples = 16;
 		// Shadow casting lights ---------------------------------------------------
 		

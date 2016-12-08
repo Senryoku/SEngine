@@ -67,7 +67,7 @@ public:
 	inline void	setName(const std::string& name) { _name = name; }
 	
 	void computeNormals();
-	Transformation resetPivot();
+	glm::vec3 resetPivot();
 	
 	virtual void createVAO();
 	void draw() const;

@@ -13,6 +13,21 @@ Transformation::Transformation(const glm::vec3& p, const glm::quat& r, const glm
 	computeMatrix();
 }
 
+Transformation::Transformation(Transformation&& t)
+{
+	_modelMatrix = t._modelMatrix;
+	_globalModelMatrix = t._globalModelMatrix;
+	
+	_position = t._position;
+	_rotation = t._rotation;
+	_scale = t._scale;
+
+	_parent = t._parent;
+	t._parent = invalid_component_idx;
+	_children = t._children;
+	t._children.clear();
+}
+
 Transformation::~Transformation()
 {
 	if(_parent != invalid_component_idx)
@@ -37,7 +52,7 @@ void Transformation::setModelMatrix(const glm::mat4& m)
 	glm::decompose(_modelMatrix, _scale, _rotation, _position, skew, perspective);
 	updateGlobalModelMatrix();
 }
-	
+
 void Transformation::addChild(Transformation& t)
 {
 	if(t._parent != invalid_component_idx)

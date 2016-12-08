@@ -36,7 +36,7 @@ Mesh::Mesh() :
 {
 }
 
-Transformation Mesh::resetPivot()
+glm::vec3 Mesh::resetPivot()
 {
 	glm::vec3 pivot = 0.5f * (_bbox.max + _bbox.min);
 	pivot.y = _bbox.min.y;
@@ -45,7 +45,7 @@ Transformation Mesh::resetPivot()
 		v.position -= pivot;
 	computeBoundingBox();
 	
-	return Transformation(pivot);
+	return pivot;
 }
 
 void Mesh::createVAO()

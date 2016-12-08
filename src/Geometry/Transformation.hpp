@@ -17,7 +17,8 @@ public:
 	Transformation(const glm::vec3& p, 
 		const glm::quat& r = glm::quat{}, 
 		const glm::vec3& scale = glm::vec3{1.0f});
-	Transformation(const Transformation&) =default;
+	Transformation(const Transformation&) =delete;
+	Transformation(Transformation&&);
 	
 	~Transformation();
 	
