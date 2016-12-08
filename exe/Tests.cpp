@@ -551,7 +551,7 @@ public:
 					Program& blend = Resources::getProgram("Simple");
 					blend.use();
 					blend.setUniform("Color", _selectedObjectColor);
-					blend.setUniform("ModelMatrix", transform.getModelMatrix());
+					blend.setUniform("ModelMatrix", transform.getGlobalModelMatrix());
 					mr.getMesh().draw();
 					Program::useNone();
 					Context::disable(Capability::Blend);
@@ -576,12 +576,16 @@ public:
 				/////////////////////////////////////
 				// Position Gizmo
 				// @todo Debug it, Clean in, Package it 
+				
+				auto gp = transform.getGlobalPosition();
+				auto gr = transform.getGlobalRotation();
+				auto gs = transform.getGlobalScale();
 		
 				const std::array<glm::vec2, 4> gizmo_points{
-					project(transform.getPosition() + glm::vec3{0.0, 0.0, 0.0}),
-					project(transform.getPosition() + glm::vec3{1.0, 0.0, 0.0}),
-					project(transform.getPosition() + glm::vec3{0.0, 1.0, 0.0}),
-					project(transform.getPosition() + glm::vec3{0.0, 0.0, 1.0})
+					project(gp + glm::vec3{0.0, 0.0, 0.0}),
+					project(gp + glm::vec3{1.0, 0.0, 0.0}),
+					project(gp + glm::vec3{0.0, 1.0, 0.0}),
+					project(gp + glm::vec3{0.0, 0.0, 1.0})
 				};
 				
 				static const char* labels[3] = {"PositionGizmoX", "PositionGizmoY", "PositionGizmoZ"};
@@ -600,13 +604,13 @@ public:
 						ImGui::ResetMouseDragDelta(0);
 						const auto newR = getScreenRay(newP.x, newP.y);
 						const auto oldR = getScreenRay(oldP.x, oldP.y);
-						Plane pl{transform.getPosition(), -_camera.getDirection()}; // @todo Project onto something else (line)
+						Plane pl{gp, -_camera.getDirection()}; // @todo Project onto something else (line)
 						float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
 						glm::vec3 p0, p1, n0, n1;
 						trace(newR, pl, d0, p0, n0);
 						trace(oldR, pl, d1, p1, n1);
 						auto newPosition = transform.getPosition();
-						newPosition[i] += p0[i] - p1[i];
+						newPosition[i] += (p0[i] - p1[i]) / gs[i];
 						transform.setPosition(newPosition);
 						
 						//ImGui::SetActiveID(id, window);
@@ -628,17 +632,17 @@ public:
 				
 				// Rotation Gizmo
 				const std::array<glm::vec2, 4> rot_gizmo_points{
-					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
-					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
-					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 1.0, 0.0, 1.0f}}),
-					project(transform.getPosition() + glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0f}})
+					project(gp + glm::vec3{gr * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
+					project(gp + glm::vec3{gr * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
+					project(gp + glm::vec3{gr * glm::vec4{0.0, 1.0, 0.0, 1.0f}}),
+					project(gp + glm::vec3{gr * glm::vec4{0.0, 0.0, 1.0, 1.0f}})
 				};
 				
 				static constexpr const char* rot_labels[3] = {"RotationGizmoX", "RotationGizmoY", "RotationGizmoZ"};
 				const std::array<glm::vec3, 3> plane_normals = {
-					glm::vec3{transform.getRotation() * glm::vec4{0.0, 1.0, 0.0, 1.0}},
-					glm::vec3{transform.getRotation() * glm::vec4{0.0, 0.0, 1.0, 1.0}},
-					glm::vec3{transform.getRotation() * glm::vec4{1.0, 0.0, 0.0, 1.0}},
+					glm::vec3{gr * glm::vec4{0.0, 1.0, 0.0, 1.0}},
+					glm::vec3{gr * glm::vec4{0.0, 0.0, 1.0, 1.0}},
+					glm::vec3{gr * glm::vec4{1.0, 0.0, 0.0, 1.0}},
 				};
 				for(int i = 0; i < 3; ++i)
 				{
@@ -655,17 +659,17 @@ public:
 						ImGui::ResetMouseDragDelta(0);
 						const auto newR = getScreenRay(newP.x, newP.y);
 						const auto oldR = getScreenRay(oldP.x, oldP.y);
-						Plane pl{transform.getPosition(), 
+						Plane pl{gp, 
 							(glm::dot(plane_normals[i], _camera.getDirection()) < 0.0 ? 1.0f : -1.0f) * plane_normals[i]};
 						float d0 = std::numeric_limits<float>::max(), d1 = std::numeric_limits<float>::max();
 						glm::vec3 p0, p1, n0, n1;
 						trace(newR, pl, d0, p0, n0);
 						trace(oldR, pl, d1, p1, n1);
 						
-						auto v1 = p1 - transform.getPosition();
-						auto v2 = p0 - transform.getPosition();
-						v1 = glm::vec3{glm::inverse(transform.getRotation()) * glm::vec4{v1, 1.0}};
-						v2 = glm::vec3{glm::inverse(transform.getRotation()) * glm::vec4{v2, 1.0}};
+						auto v1 = p1 - gp;
+						auto v2 = p0 - gp;
+						v1 = glm::vec3{glm::inverse(gr) * glm::vec4{v1, 1.0}};
+						v2 = glm::vec3{glm::inverse(gr) * glm::vec4{v2, 1.0}};
 						auto a = glm::cross(v1, v2);
 						
 						glm::quat q(a);
@@ -699,8 +703,8 @@ public:
 							, 1.0}};
 					for(size_t p = 0; p < circle_precision - 1; ++p)
 					{
-						drawlist->AddLine(project(transform.getPosition() + circle[p]), 
-							project(transform.getPosition() + circle[p + 1]),
+						drawlist->AddLine(project(gp + circle[p]), 
+							project(gp + circle[p + 1]),
 							ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
 					}
 

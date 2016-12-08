@@ -28,6 +28,10 @@ public:
 	inline const glm::quat& getRotation() const { return _rotation; }
 	inline const glm::vec3& getScale() const { return _scale; }
 	
+	glm::vec3 getGlobalPosition() const;
+	glm::quat getGlobalRotation() const;
+	glm::vec3 getGlobalScale() const;
+	
 	inline ComponentID getParent() const { return _parent; }
 	inline const std::vector<ComponentID>& getChildren() const { return _children; }
 	
@@ -39,7 +43,7 @@ public:
 	
 	inline void setScale(float s) { setScale(glm::vec3{s, s, s}); }
 	
-	inline glm::vec4 apply(const glm::vec4& v) const { return _modelMatrix * v; }
+	inline glm::vec4 apply(const glm::vec4& v) const { return _globalModelMatrix * v; }
 	inline glm::vec3 apply(const glm::vec3& v) const { return glm::vec3{apply(glm::vec4{v, 1.0f})}; }
 	
 	template<typename T>

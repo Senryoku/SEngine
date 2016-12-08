@@ -43,6 +43,33 @@ Transformation::~Transformation()
 	}
 }
 
+glm::vec3 Transformation::getGlobalPosition() const
+{
+	return get_component<Transformation>(_parent)(_position);
+}
+
+glm::quat Transformation::getGlobalRotation() const
+{
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(_globalModelMatrix, scale, rotation, translation, skew, perspective);
+	return rotation;
+}
+
+glm::vec3 Transformation::getGlobalScale() const
+{ 
+	glm::vec3 scale;
+	glm::quat rotation;
+	glm::vec3 translation;
+	glm::vec3 skew;
+	glm::vec4 perspective;
+	glm::decompose(_globalModelMatrix, scale, rotation, translation, skew, perspective);
+	return scale;
+}
+
 void Transformation::setModelMatrix(const glm::mat4& m)
 { 
 	_modelMatrix = m;
