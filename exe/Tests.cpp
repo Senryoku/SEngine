@@ -631,6 +631,7 @@ public:
 				////////////////////////////////////////////////////
 				
 				// Rotation Gizmo
+				// @todo FIX IT
 				const std::array<glm::vec2, 4> rot_gizmo_points{
 					project(gp + glm::vec3{gr * glm::vec4{0.0, 0.0, 0.0, 1.0f}}),
 					project(gp + glm::vec3{gr * glm::vec4{1.0, 0.0, 0.0, 1.0f}}),
@@ -668,8 +669,8 @@ public:
 						
 						auto v1 = p1 - gp;
 						auto v2 = p0 - gp;
-						v1 = glm::vec3{glm::inverse(gr) * glm::vec4{v1, 1.0}};
-						v2 = glm::vec3{glm::inverse(gr) * glm::vec4{v2, 1.0}};
+						v1 = glm::vec3{glm::inverse(transform.getRotation()) * glm::vec4{v1, 1.0}};
+						v2 = glm::vec3{glm::inverse(transform.getRotation()) * glm::vec4{v2, 1.0}};
 						auto a = glm::cross(v1, v2);
 						
 						glm::quat q(a);
