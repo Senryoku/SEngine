@@ -1,12 +1,12 @@
 #include <sstream>
 #include <iomanip>
 #include <deque>
+#include <experimental/filesystem>
 
 #include <glm/gtx/transform.hpp>
 #include <glmext.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <json.hpp>
 
 #include <Query.hpp>
 
@@ -29,73 +29,151 @@ std::string to_string(const T a_value, const int n = 6)
     return out.str();
 }
 
-glm::vec3 vec3(const nlohmann::json& j)
+std::experimental::filesystem::path explore(const std::experimental::filesystem::path& path, const std::vector<const char*>& extensions = {})
 {
-	assert(j.is_array());
-	return glm::vec3{j[0], j[1], j[2]};
-}
-
-glm::vec4 vec4(const nlohmann::json& j)
-{
-	assert(j.is_array());
-	return glm::vec4{j[0], j[1], j[2], j[3]};
-}
-
-glm::mat4 mat4(const nlohmann::json& json)
-{
-	glm::mat4 r;
-	if(json.is_array())
+	namespace fs = std::experimental::filesystem;
+	fs::path return_path;
+	if(!fs::is_directory(path))
+		return return_path;
+	for(auto& p: fs::directory_iterator(path))
 	{
-		for(int i = 0; i < 4; ++i)
-			for(int j = 0; j < 4; ++j)
-				r[i][j] = json[i * 4 + j];
-	} else {
-		r = glm::scale(
-				glm::translate(
-					glm::rotate(static_cast<float>(json["rotation"][0]), glm::vec3{1, 0, 0}) *  
-					glm::rotate(static_cast<float>(json["rotation"][1]), glm::vec3{0, 1, 0}) *
-					glm::rotate(static_cast<float>(json["rotation"][2]), glm::vec3{0, 0, 1})
-				, vec3(json["position"])), 
-				vec3(json["scale"]));
+		if(fs::is_directory(p))
+		{
+			if(ImGui::TreeNode(p.path().filename().string().c_str()))
+			{
+				auto tmp_r = explore(p.path(), extensions);
+				if(!tmp_r.empty())
+					return_path = tmp_r;
+				ImGui::TreePop();
+			}
+		} else {
+			auto ext = p.path().extension().string();
+			if(extensions.empty() || std::find(extensions.begin(), extensions.end(), ext) != extensions.end())
+				if(ImGui::SmallButton(p.path().filename().string().c_str()))
+					return_path = p.path();
+		}
 	}
-	return r;
+	return return_path;
 }
 
-void loadScene(const std::string& path)
+bool loadScene(const std::string& path)
 {
+	Clock scene_loading_clock;
+	auto scene_loading_start = scene_loading_clock.now();
 	std::ifstream f(path);
+	if(!f)
+	{
+		Log::error("Error opening scene '", path, "'.");
+		return false;
+	}
+	
+	clear_entities();
+	Resources::clearMeshes();
+	
 	nlohmann::json j;
 	f >> j;
+	
+	for(auto& e : j["models"])
+	{
+		Mesh::load(e);
+	}
+	
+	// TODO: Handle transformation hierarchy!
+	
+	std::vector<std::tuple<ComponentID, ComponentID>> transform_relations;
 	for(auto& e : j["entities"])
 	{
-		auto& base_entity = create_entity("EmptyEntity");
+		auto& base_entity = create_entity(j["Name"].is_null() ? "" : j["Name"]);
 		
 		auto transform = e.find("Transformation");
 		if(transform != e.end())
 		{
-			ComponentID base_transform = get_id(base_entity.add<Transformation>(mat4(*transform)));
+			ComponentID base_transform = get_id(base_entity.add<Transformation>(*transform));
+			if((*transform).find("parent") != (*transform).end() && (*transform)["parent"] != invalid_component_idx)
+				transform_relations.push_back({(*transform)["parent"], base_transform});
 		
 			auto meshrenderer = e.find("MeshRenderer");
 			if(meshrenderer != e.end())
 			{
-				base_entity.set_name((*meshrenderer)["mesh"]);
+				if(base_entity.get_name().empty())
+					base_entity.set_name((*meshrenderer)["mesh"]);
 				auto m = Mesh::load((*meshrenderer)["mesh"]);
+				
 				for(auto& part : m)
 				{
 					auto t = part->resetPivot();
 					part->createVAO();
 					part->getMaterial().setUniform("R", 0.95f);
 					part->getMaterial().setUniform("F0", 0.15f);
-					auto& entity = create_entity();
-					entity.set_name(part->getName());
-					auto& ent_transform = entity.add<Transformation>(t);
-					get_component<Transformation>(base_transform).addChild(ent_transform);
-					entity.add<MeshRenderer>(*part);
+					
+					if(m.size() == 1)
+					{
+						auto& tr = get_component<Transformation>(base_transform);
+						tr.setPosition(tr.getPosition() + t);
+						base_entity.add<MeshRenderer>(*part);
+					} else {
+						auto& entity = create_entity(part->getName());
+						auto& ent_transform = entity.add<Transformation>(t);
+						get_component<Transformation>(base_transform).addChild(ent_transform);
+						entity.add<MeshRenderer>(*part);
+					}
 				}
 			}
 		}
 	}
+	
+	for(const auto& r : transform_relations)
+		get_component<Transformation>(std::get<0>(r)).addChild(std::get<1>(r));
+	
+	auto scene_loading_end = scene_loading_clock.now();
+	Log::info("Scene loading done in ", std::chrono::duration_cast<std::chrono::milliseconds>(scene_loading_end - scene_loading_start).count(), "ms.");
+	
+	return true;
 }
+
+bool saveScene(const std::string& path)
+{
+	std::ofstream f(path);
+	if(!f)
+	{
+		Log::error("Error opening '", path, "'.");
+		return false;
+	}
+	
+	nlohmann::json j;
+	
+	for(const auto& m : Resources::_meshes)
+	{
+		j["models"].push_back(m.second->getPath());
+	}
+	j["models"].erase(std::unique(j["models"].begin(), j["models"].end()), j["models"].end());
+	
+	for(const auto& e : entities)
+	{
+		if(e.is_valid())
+		{
+			nlohmann::json je;
+			je["Name"] = e.get_name();
+			if(e.has<Transformation>())
+				je["Transformation"] = {
+					{"position", tojson(e.get<Transformation>().getPosition())},
+					{"rotation", tojson(e.get<Transformation>().getRotation())},
+					{"scale", tojson(e.get<Transformation>().getScale())},
+					{"parent", e.get<Transformation>().getParent()}
+				};
+			if(e.has<MeshRenderer>())
+				je["MeshRenderer"] = {
+					{"mesh", e.get<MeshRenderer>().getMesh().getName()}
+				};
+			j["entities"].push_back(je);
+		}
+	}
+	
+	f << j;
+	
+	return true;
+}
+
 
 class Editor : public DeferredRenderer
 {
@@ -120,11 +198,7 @@ public:
 		
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		
-		Clock scene_loading_clock;
-		auto scene_loading_start = scene_loading_clock.now();
-		loadScene("in/Scenes/test_scene.json");
-		auto scene_loading_end = scene_loading_clock.now();
-		Log::info("Scene loading done in ", std::chrono::duration_cast<std::chrono::milliseconds>(scene_loading_end - scene_loading_start).count(), "ms.");
+		loadScene(_scenePath);
 
 		_volumeSamples = 16;
 		// Shadow casting lights ---------------------------------------------------
@@ -202,6 +276,8 @@ public:
 					win_scene = true,
 					win_logs = false,
 					win_inspect = true;
+					
+		bool load_scene = false;
 		
 		// Menu
 		if(_menu)
@@ -209,6 +285,11 @@ public:
 			{
 				if(ImGui::BeginMenu("File"))
 				{
+					load_scene = ImGui::MenuItem("Load Scene");
+					if(ImGui::MenuItem("Reload Scene"))
+						loadScene(_scenePath);
+					if(ImGui::MenuItem("Save Scene"))
+						saveScene(_scenePath);
 					if(ImGui::MenuItem("Exit", "Alt+F4"))
 						glfwSetWindowShouldClose(_window, GL_TRUE);
 					ImGui::EndMenu();
@@ -252,6 +333,28 @@ public:
 				}
 				ImGui::EndMainMenuBar();
 			}
+			
+		if(load_scene) ImGui::OpenPopup("Load Scene");
+		if(ImGui::BeginPopup("Load Scene"))
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
+			namespace fs = std::experimental::filesystem;
+			static char root_path[256] = ".";
+			ImGui::InputText("Root", root_path, 256);
+			auto p = explore(root_path, {".json"});
+			if(!p.empty())
+			{
+				loadScene(p.string());
+				// @todo Not so sure about that...
+				ImGui::GetIO().WantCaptureKeyboard = ImGui::GetIO().WantTextInput = false;
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::PopStyleColor(2);
+			if(ImGui::Button("Cancel"))
+				ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
+		}
 	
 		// Plots
 		static float last_update = 2.0;
@@ -551,7 +654,7 @@ public:
 					Program& blend = Resources::getProgram("Simple");
 					blend.use();
 					blend.setUniform("Color", _selectedObjectColor);
-					blend.setUniform("ModelMatrix", transform.getGlobalModelMatrix());
+					blend.setUniform("ModelMatrix", transform.getGlobalMatrix());
 					mr.getMesh().draw();
 					Program::useNone();
 					Context::disable(Capability::Blend);
@@ -837,6 +940,8 @@ public:
 protected:
 	EntityID		_selectedObject = invalid_entity;
 	glm::vec4		_selectedObjectColor = glm::vec4{0.0, 0.0, 1.0, 0.10};
+	
+	std::string		_scenePath = "in/Scenes/test_scene.json";
 
 	void deselectObject()
 	{

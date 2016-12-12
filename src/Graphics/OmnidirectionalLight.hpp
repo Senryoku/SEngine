@@ -195,7 +195,7 @@ void OmnidirectionalLight::drawShadowMap(const C<MeshRenderer>& objects) const
 	{
 		if(intersect(b.getAABB(), BoundingVolume))
 		{
-			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getGlobalModelMatrix());
+			getShadowMapProgram().setUniform("ModelMatrix", b.getTransformation().getGlobalMatrix());
 			b.getMesh().draw();
 		}
 	}

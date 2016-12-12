@@ -1,8 +1,10 @@
 #include <Transformation.hpp>
 
+#include <glm/gtx/transform.hpp>
+
 Transformation::Transformation(const glm::mat4& m)
 {
-	setModelMatrix(m);
+	setMatrix(m);
 }
 
 Transformation::Transformation(const glm::vec3& p, const glm::quat& r, const glm::vec3& s) :
@@ -26,6 +28,26 @@ Transformation::Transformation(Transformation&& t)
 	t._parent = invalid_component_idx;
 	_children = t._children;
 	t._children.clear();
+}
+
+Transformation::Transformation(const nlohmann::json& json)
+{	
+	glm::mat4 r;
+	if(json.is_array())
+	{
+		for(int i = 0; i < 4; ++i)
+			for(int j = 0; j < 4; ++j)
+				r[i][j] = json[i * 4 + j];
+	} else {
+		r = glm::scale(
+				glm::translate(
+					glm::rotate(static_cast<float>(json["rotation"][0]), glm::vec3{1, 0, 0}) *  
+					glm::rotate(static_cast<float>(json["rotation"][1]), glm::vec3{0, 1, 0}) *
+					glm::rotate(static_cast<float>(json["rotation"][2]), glm::vec3{0, 0, 1})
+				, vec3(json["position"])), 
+				vec3(json["scale"]));
+	}
+	setMatrix(r);
 }
 
 Transformation::~Transformation()
@@ -67,7 +89,7 @@ glm::vec3 Transformation::getGlobalScale() const
 		return _scale;
 }
 
-void Transformation::setModelMatrix(const glm::mat4& m)
+void Transformation::setMatrix(const glm::mat4& m)
 { 
 	_modelMatrix = m;
 	
@@ -123,7 +145,7 @@ inline void Transformation::updateGlobalModelMatrix()
 {
 	_globalModelMatrix = _parent == invalid_component_idx ? 
 		_modelMatrix :
-		get_component<Transformation>(_parent).getGlobalModelMatrix() * _modelMatrix;
+		get_component<Transformation>(_parent).getGlobalMatrix() * _modelMatrix;
 
 	for(ComponentID c : _children)
 		get_component<Transformation>(c).updateGlobalModelMatrix();

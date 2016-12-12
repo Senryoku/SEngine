@@ -34,6 +34,8 @@ void reloadShaders();
 
 bool isMesh(const std::string& name);
 
+void clearMeshes();
+
 Mesh& getMesh(const std::string& name);
 inline std::unique_ptr<Mesh>& getMeshPtr(const std::string& name) { return _meshes[name]; }
 

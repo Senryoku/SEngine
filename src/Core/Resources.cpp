@@ -64,3 +64,11 @@ Mesh& Resources::getMesh(const std::string& name)
 		return *newMesh;
 	}
 }
+
+void Resources::clearMeshes()
+{
+	for(auto& p : _meshes)
+		p.second.release();
+	_meshes.clear();
+}
+

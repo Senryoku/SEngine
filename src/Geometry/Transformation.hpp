@@ -8,6 +8,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
+#include <serialization.hpp>
+
 #include <Component.hpp>
 
 class Transformation
@@ -19,11 +21,12 @@ public:
 		const glm::vec3& scale = glm::vec3{1.0f});
 	Transformation(const Transformation&) =delete;
 	Transformation(Transformation&&);
+	Transformation(const nlohmann::json& json);
 	
 	~Transformation();
 	
-	inline const glm::mat4& getModelMatrix() const { return _modelMatrix; }
-	inline const glm::mat4& getGlobalModelMatrix() const { return _globalModelMatrix; };
+	inline const glm::mat4& getMatrix() const { return _modelMatrix; }
+	inline const glm::mat4& getGlobalMatrix() const { return _globalModelMatrix; };
 	inline const glm::vec3& getPosition() const { return _position; }
 	inline const glm::quat& getRotation() const { return _rotation; }
 	inline const glm::vec3& getScale() const { return _scale; }
@@ -35,7 +38,7 @@ public:
 	inline ComponentID getParent() const { return _parent; }
 	inline const std::vector<ComponentID>& getChildren() const { return _children; }
 	
-	void setModelMatrix(const glm::mat4& m);
+	void setMatrix(const glm::mat4& m);
 	
 	inline void setPosition(const glm::vec3& p) { _position = p; computeMatrix(); }
 	inline void setRotation(const glm::quat& r) { _rotation = r; computeMatrix(); }

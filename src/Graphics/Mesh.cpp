@@ -132,7 +132,13 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 {
 	std::vector<Mesh*> M;
+	if(Resources::isMesh(path))
+	{
+		M.push_back(&Resources::getMesh(path));
+		return M;
+	}
 	Log::info("Loading ", path, "...");
+	
 	std::string rep = path.substr(0, path.find_last_of('/') + 1);
 
 	// OBJ Loading
@@ -154,14 +160,14 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 	{
 		std::string name{path};
 		name.append("::" + shapes[s].name + "[" + std::to_string(s) + "]");
-		while(Resources::isMesh(name))
+		if(Resources::isMesh(name))
 		{
-			Log::warn("Mesh '", name, "' was already loaded. Re-loading it after appending '_' to its name.");
-			name.append("_");
+			M[s] = &Resources::getMesh(name);
+			continue;
 		}
 		
 		M[s] = &Resources::getMesh(name);
-		M[s]->_name = shapes[s].name;
+		M[s]->_name = name;
 		M[s]->_path = path;
 		M[s]->getMaterial().setShadingProgram(p);
 		

@@ -47,13 +47,13 @@ public:
 	inline EntityID get_id() const { return _id; }
 	
 	template<typename T>
-	inline bool has()
+	inline bool has() const
 	{
 		return _components[get_component_type_idx<T>()] != invalid_component_idx;
 	}
 	
 	template<typename T>
-	inline T& get()
+	inline T& get() const
 	{
 		assert(has<T>());
 		return impl::components<T>[_components[get_component_type_idx<T>()]];
@@ -136,6 +136,7 @@ inline Entity& create_entity(const std::string& name = "")
 
 	// Constructing and returning the entity
 	::new(&entities[r]) Entity{r};
+	entities[r].set_name(name);
 	return entities[r];
 }
 
@@ -145,4 +146,11 @@ inline void destroy_entity(EntityID id)
 	entities[id].invalidate();
 	if(id < next_entity_id)
 		next_entity_id = id;
+}
+
+inline void clear_entities()
+{
+	for(auto& e : entities)
+		if(e.is_valid())
+			destroy_entity(e.get_id());
 }

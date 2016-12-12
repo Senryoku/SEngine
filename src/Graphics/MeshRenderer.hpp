@@ -33,7 +33,7 @@ inline void MeshRenderer::draw() const
 	assert(_mesh != nullptr);
 	assert(_entity != invalid_entity);
 	_material.use();
-	setUniform("ModelMatrix", getTransformation().getGlobalModelMatrix());
+	setUniform("ModelMatrix", getTransformation().getGlobalMatrix());
 	_mesh->draw();
 }
 
