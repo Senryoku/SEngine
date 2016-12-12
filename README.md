@@ -28,3 +28,4 @@ https://youtu.be/NRjylzEVU9w
  * [GLM](http://glm.g-truc.net/0.9.7/index.html)
  * [tinyobjloader](https://github.com/syoyo/tinyobjloader) (included)
  * [dear imgui](https://github.com/ocornut/imgui) (included)
+ * [nlohmann's json for modern C++](https://github.com/nlohmann/json) (included)
