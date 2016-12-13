@@ -11,6 +11,7 @@ https://youtu.be/NRjylzEVU9w
 # TODO
 ## Major
  * Clean the ECS API (A LOT!)
+ * Convert Light(s) to components (using Transformation for positionning and direction)
  * A true Scene manager... (and an octree)
  * Develop a scene file format and use it.
  * Write a editor for this format.
