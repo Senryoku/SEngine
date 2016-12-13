@@ -32,22 +32,19 @@ Transformation::Transformation(Transformation&& t)
 
 Transformation::Transformation(const nlohmann::json& json)
 {	
-	glm::mat4 r;
 	if(json.is_array())
 	{
+		glm::mat4 r;
 		for(int i = 0; i < 4; ++i)
 			for(int j = 0; j < 4; ++j)
 				r[i][j] = json[i * 4 + j];
+		setMatrix(r);
 	} else {
-		r = glm::scale(
-				glm::translate(
-					glm::rotate(static_cast<float>(json["rotation"][0]), glm::vec3{1, 0, 0}) *  
-					glm::rotate(static_cast<float>(json["rotation"][1]), glm::vec3{0, 1, 0}) *
-					glm::rotate(static_cast<float>(json["rotation"][2]), glm::vec3{0, 0, 1})
-				, vec3(json["position"])), 
-				vec3(json["scale"]));
+		_position = vec3(json["position"]);
+		_rotation = quat(json["rotation"]);
+		_scale = vec3(json["scale"]);
+		computeMatrix();
 	}
-	setMatrix(r);
 }
 
 Transformation::~Transformation()

@@ -20,6 +20,9 @@
 
 #include <Entity.hpp>
 
+#include <Meta.hpp>
+#include <ComponentValidation.hpp>
+
 template <typename T>
 std::string to_string(const T a_value, const int n = 6)
 {
@@ -68,6 +71,7 @@ bool loadScene(const std::string& path)
 	}
 	
 	clear_entities();
+	for_each<deletion_pass_wrapper, TList<Transformation, MeshRenderer>>{}();
 	Resources::clearMeshes();
 	
 	nlohmann::json j;
@@ -83,7 +87,7 @@ bool loadScene(const std::string& path)
 	std::vector<std::tuple<ComponentID, ComponentID>> transform_relations;
 	for(auto& e : j["entities"])
 	{
-		auto& base_entity = create_entity(j["Name"].is_null() ? "" : j["Name"]);
+		auto& base_entity = create_entity(e["Name"].is_string() ? e["Name"] : "UnamedEntity");
 		
 		auto transform = e.find("Transformation");
 		if(transform != e.end())
@@ -95,7 +99,7 @@ bool loadScene(const std::string& path)
 			auto meshrenderer = e.find("MeshRenderer");
 			if(meshrenderer != e.end())
 			{
-				if(base_entity.get_name().empty())
+				if(base_entity.get_name() == "UnamedEntity")
 					base_entity.set_name((*meshrenderer)["mesh"]);
 				auto m = Mesh::load((*meshrenderer)["mesh"]);
 				
@@ -108,8 +112,6 @@ bool loadScene(const std::string& path)
 					
 					if(m.size() == 1)
 					{
-						auto& tr = get_component<Transformation>(base_transform);
-						tr.setPosition(tr.getPosition() + t);
 						base_entity.add<MeshRenderer>(*part);
 					} else {
 						auto& entity = create_entity(part->getName());
@@ -169,7 +171,7 @@ bool saveScene(const std::string& path)
 		}
 	}
 	
-	f << j;
+	f << std::setw(4) << j;
 	
 	return true;
 }
@@ -854,6 +856,8 @@ public:
 						ImGui::SameLine();
 						if(ImGui::Button("Reset##Scale"))
 							transform.setScale(glm::vec3{1.0f});
+						
+						ImGui::Text("Parent: %d", transform.getParent());
 						
 						ImGui::TreePop();
 					}
