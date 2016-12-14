@@ -82,6 +82,7 @@ void DeferredRenderer::renderLightPass()
 	/// @todo Move this to getLights, or something like that ?
 	for(size_t i = 0; i < impl::components<SpotLight>.count(); ++i)
 		DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
+	/// @todo No more omnidirectional lights. Add them again? Or maybe its better not to?
 	DeferredShadowCS.getProgram().setUniform("ShadowCount", impl::components<SpotLight>.count());
 	DeferredShadowCS.getProgram().setUniform("CubeShadowCount", 0);
 	DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());

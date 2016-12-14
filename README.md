@@ -11,7 +11,6 @@ https://youtu.be/NRjylzEVU9w
 # TODO
 ## Major
  * Clean the ECS API (A LOT!)
- * Convert Light(s) to components (using Transformation for positionning and direction)
  * A true Scene manager... (and an octree)
  * Develop a scene file format and use it.
  * Write a editor for this format.
@@ -19,6 +18,9 @@ https://youtu.be/NRjylzEVU9w
 
 ## Minor
  * Split meshes with multiple materials into differents objects
+ * Other Lights types
+ * Serialization of Lights component(s)
+ * Point Lights as component? (Probably not a good idea... Or with an external buffer in a 'system')
  * ...
 
 # Dependencies

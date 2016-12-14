@@ -204,16 +204,16 @@ public:
 
 		_volumeSamples = 16;
 		
+		// TEMP Testing Spotlight
 		auto& light_entity = create_entity("SpotLight_0");
-		/*auto& light_transformation = */light_entity.add<Transformation>(glm::vec3(45.0, 12.0, -18.0));
+		/*auto& light_transformation = */light_entity.add<Transformation>(glm::vec3{6.0, 15.0, 0.0}, glm::quat{1.0, 0.7, 0, 0});
 		auto& spotlight = light_entity.add<SpotLight>();
 		spotlight.init();
 		spotlight.dynamic = true;
 		spotlight.setColor(glm::vec3(1.5));
-		spotlight.setRange(20.0f);
+		spotlight.setRange(200.0f);
 		spotlight.setAngle(3.14159f * 0.5f);
 		spotlight.updateMatrices();
-
 		spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
 
 		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
@@ -594,6 +594,7 @@ public:
 					mr.getMesh().draw();
 					Program::useNone();
 					Context::disable(Capability::Blend);
+					Context::enable(Capability::DepthTest);
 				
 					auto aabb = mr.getAABB().getBounds();
 					std::array<ImVec2, 8> screen_aabb;
@@ -836,7 +837,6 @@ public:
 							gui_display(mr.getMesh());
 							ImGui::TreePop();
 						}
-						
 						if(ImGui::TreeNode("Material"))
 						{
 							edit_material(mr.getMaterial());
@@ -849,6 +849,11 @@ public:
 					{
 						auto& sl = selectedEntityPtr->get<SpotLight>();
 						
+						ImGui::Checkbox("Dynamic", &sl.dynamic);
+						int downsampling = sl.downsampling;
+						if(ImGui::SliderInt("Downsampling", &downsampling, 0, 16))
+							sl.downsampling = downsampling;
+
 						float col[3] = {sl.getColor().x, sl.getColor().y, sl.getColor().z};
 						if(ImGui::ColorEdit3("Color", col))
 							sl.setColor(glm::vec3{col[0], col[1], col[2]});

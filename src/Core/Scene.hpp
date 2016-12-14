@@ -29,9 +29,7 @@ public:
 	
 	inline Skybox& getSkybox() { return _skybox; }
 	
-private:	
-	bool								_dirtyLights = true;
-	
+private:
 	bool							_dirtyPointLights = true;
 	std::vector<PointLight>			_pointLights;
 	UniformBuffer					_pointLightBuffer;
