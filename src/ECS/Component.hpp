@@ -56,6 +56,7 @@ public:
 	}
 	
 	inline size_t size() const { return _buffer_size; }
+	inline size_t count() const { return _count; }
 	inline T& operator[](ComponentID id) { return _data[id]; }
 	inline const T& operator[](ComponentID id) const { return _data[id]; }
 	
@@ -127,6 +128,8 @@ public:
 		_owners[id] = eid;
 		::new(_data + id) T{std::forward<Args>(args)...};
 		
+		++_count;
+		
 		return id;
 	}
 	
@@ -145,11 +148,14 @@ public:
 		
 		if(id < _next_id)
 			_next_id = id;
+		
+		--_count;
 	}
 	
 private:
 	size_t		_next_id = 0;		/// First invalid id in the array
 	size_t		_buffer_size = 0;	/// Buffer size
+	size_t		_count = 0;			/// Used slot count
 
 	T*			_data = nullptr;
 	EntityID*	_owners = nullptr;

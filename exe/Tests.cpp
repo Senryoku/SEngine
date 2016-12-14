@@ -11,7 +11,6 @@
 #include <Query.hpp>
 
 #include <SpotLight.hpp>
-#include <OrthographicLight.hpp>
 #include <DeferredRenderer.hpp>
 
 #include <MathTools.hpp>
@@ -167,6 +166,7 @@ bool saveScene(const std::string& path)
 				je["MeshRenderer"] = {
 					{"mesh", e.get<MeshRenderer>().getMesh().getName()}
 				};
+			// TODO: Other Components (SpotLight...)
 			j["entities"].push_back(je);
 		}
 	}
@@ -203,64 +203,18 @@ public:
 		loadScene(_scenePath);
 
 		_volumeSamples = 16;
-		// Shadow casting lights ---------------------------------------------------
 		
-		OrthographicLight* o = _scene.add(new OrthographicLight());
-		o->init();
-		o->dynamic = false;
-		o->setColor(glm::vec3(2.0));
-		o->setDirection(glm::normalize(glm::vec3{58.8467 - 63.273, 161.167 - 173.158, -34.2005 - -37.1856}));
-		o->_position = glm::vec3{63.273, 173.158, -37.1856};
-		o->updateMatrices();
-		
-		OrthographicLight* o2 = _scene.add(new OrthographicLight());
-		o2->init();
-		o2->dynamic = false;
-		o2->setColor(glm::vec3(2.0));         
-		o2->setDirection(glm::normalize(glm::vec3{220.472 - 63.273, -34.6538 - 0.0, 0.789395 - 0.0}));
-		o2->_position = glm::vec3{127.27, 0.0, 0.0};
-		o2->updateMatrices();
-		
-		SpotLight* s = _scene.add(new SpotLight());
-		s->init();
-		s->setColor(glm::vec3(1.5));
-		s->setPosition(glm::vec3(45.0, 12.0, -18.0));
-		s->lookAt(glm::vec3(45.0, 0.0, -18.0));
-		s->setRange(20.0f);
-		s->setAngle(3.14159f * 0.5f);
-		s->updateMatrices();
-		
-		s = _scene.add(new SpotLight());
-		s->init();
-		s->setColor(glm::vec3(1.5));
-		s->setPosition(glm::vec3(0.0, 20.0, 00.0));
-		s->lookAt(glm::vec3(0.0, 0.0, 0.0));
-		s->setRange(50.0f);
-		s->setAngle(3.14159f * 0.5f);
-		s->updateMatrices();
-		/*
-		_scene.getOmniLights().resize(2);
-		_scene.getOmniLights()[0].setResolution(2048);
-		_scene.getOmniLights()[0].dynamic = true;
-		_scene.getOmniLights()[0].init();
-		_scene.getOmniLights()[0].setPosition(glm::vec3(-20.0, 25.0, -2.0));
-		_scene.getOmniLights()[0].setColor(glm::vec3(1.5));
-		_scene.getOmniLights()[0].setRange(40.0f);
-		_scene.getOmniLights()[0].updateMatrices();
-		
-		_scene.getOmniLights()[1].setResolution(2048);
-		_scene.getOmniLights()[1].dynamic = true;
-		_scene.getOmniLights()[1].init();
-		_scene.getOmniLights()[1].setPosition(glm::vec3(200.0, -28.0, 0.0));
-		_scene.getOmniLights()[1].setColor(glm::vec3(0.5));
-		_scene.getOmniLights()[1].setRange(150.0f);
-		_scene.getOmniLights()[1].updateMatrices();
-		*/
-		for(size_t i = 0; i < _scene.getLights().size(); ++i)
-			_scene.getLights()[i]->drawShadowMap(ComponentIterator<MeshRenderer>{});
-		
-		for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
-			_scene.getOmniLights()[i].drawShadowMap(ComponentIterator<MeshRenderer>{});
+		auto& light_entity = create_entity("SpotLight_0");
+		/*auto& light_transformation = */light_entity.add<Transformation>(glm::vec3(45.0, 12.0, -18.0));
+		auto& spotlight = light_entity.add<SpotLight>();
+		spotlight.init();
+		spotlight.dynamic = true;
+		spotlight.setColor(glm::vec3(1.5));
+		spotlight.setRange(20.0f);
+		spotlight.setAngle(3.14159f * 0.5f);
+		spotlight.updateMatrices();
+
+		spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
 
 		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
 				"in/Textures/skybox/negx.png",
@@ -312,16 +266,10 @@ public:
 					ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
 					if(ImGui::Button("Update shadow maps"))
 					{
-						for(auto l : _scene.getLights())
+						for(auto& it : ComponentIterator<SpotLight>{})
 						{
-							l->updateMatrices();
-							l->drawShadowMap(ComponentIterator<MeshRenderer>{});
-						}
-						
-						for(auto& l : _scene.getOmniLights())
-						{
-							l.updateMatrices();
-							l.drawShadowMap(ComponentIterator<MeshRenderer>{});
+							it.updateMatrices();
+							it.drawShadowMap(ComponentIterator<MeshRenderer>{});
 						}
 					}
 					ImGui::Separator(); 
@@ -502,20 +450,6 @@ public:
 							ImGui::PopID();
 						}
 						ImGui::PopStyleColor();
-					}
-					ImGui::TreePop();
-				}
-				
-				if(ImGui::TreeNode(("Directional Lights (" + std::to_string(_scene.getLights().size()) + ")").c_str()))
-				{
-					for(auto& l : _scene.getLights())
-					{
-						ImGui::PushID(&l);
-						ImGui::PushItemWidth(150);
-						float c[3] = {l->getColor().r, l->getColor().g, l->getColor().b};
-						if(ImGui::InputFloat3("Color", c))
-							l->setColor(glm::vec3{c[0], c[1], c[2]});
-						ImGui::PopID();
 					}
 					ImGui::TreePop();
 				}
@@ -908,6 +842,28 @@ public:
 							edit_material(mr.getMaterial());
 							ImGui::TreePop();
 						}
+						ImGui::TreePop();
+					}
+					
+					if(selectedEntityPtr->has<SpotLight>() && ImGui::TreeNodeEx("SpotLight", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						auto& sl = selectedEntityPtr->get<SpotLight>();
+						
+						float col[3] = {sl.getColor().x, sl.getColor().y, sl.getColor().z};
+						if(ImGui::ColorEdit3("Color", col))
+							sl.setColor(glm::vec3{col[0], col[1], col[2]});
+						
+						float ran = sl.getRange();
+							if(ImGui::SliderFloat("Range", &ran, 1.0, 1000.0))
+								sl.setRange(ran);
+							
+						float ang = sl.getAngle();
+						if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
+							sl.setAngle(ang);
+							
+						ImGui::Text("Depth Buffer");
+						gui_display(sl.getShadowMap());
+						
 						ImGui::TreePop();
 					}
 					

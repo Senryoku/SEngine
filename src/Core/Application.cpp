@@ -42,6 +42,8 @@ void Application::init(const std::string& windowName)
 		exit(EXIT_FAILURE);
 	}
 	glfwWindowHint(GLFW_SAMPLES, _multisampling);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
 	if(_fullscreen)
 	{

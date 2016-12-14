@@ -2,6 +2,9 @@
 
 #include <stb_image_write.hpp>
 
+#include <Component.hpp>
+#include <SpotLight.hpp>
+
 DeferredRenderer::DeferredRenderer(int argc, char* argv[]) :
 	Application(argc, argv)
 {
@@ -68,12 +71,8 @@ void DeferredRenderer::renderLightPass()
 	_offscreenRender.getColor(2).bindImage(2, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	
 	size_t lc = 0;
-	for(const auto& l : _scene.getLights())
-		l->getShadowMap().bind(lc++ + 3);
-	
-	lc = 0;
-	for(const auto& l : _scene.getOmniLights())
-		l.getShadowMap().bind(lc++ + 13);
+	for(auto& it : ComponentIterator<SpotLight>{})
+		it.getShadowMap().bind(lc++ + 3);
 	
 	ComputeShader& DeferredShadowCS = Resources::getShader<ComputeShader>("DeferredShadowCS");
 	DeferredShadowCS.getProgram().setUniform("ColorMaterial", (int) 0);
@@ -81,12 +80,10 @@ void DeferredRenderer::renderLightPass()
 	DeferredShadowCS.getProgram().setUniform("Normal", (int) 2);	
 	
 	/// @todo Move this to getLights, or something like that ?
-	for(size_t i = 0; i < _scene.getLights().size(); ++i)
+	for(size_t i = 0; i < impl::components<SpotLight>.count(); ++i)
 		DeferredShadowCS.getProgram().setUniform(std::string("ShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 3);
-	for(size_t i = 0; i < _scene.getOmniLights().size(); ++i)
-		DeferredShadowCS.getProgram().setUniform(std::string("CubeShadowMaps[").append(std::to_string(i)).append("]"), (int) i + 13);
-	DeferredShadowCS.getProgram().setUniform("ShadowCount", _scene.getLights().size());
-	DeferredShadowCS.getProgram().setUniform("CubeShadowCount", _scene.getOmniLights().size());
+	DeferredShadowCS.getProgram().setUniform("ShadowCount", impl::components<SpotLight>.count());
+	DeferredShadowCS.getProgram().setUniform("CubeShadowCount", 0);
 	DeferredShadowCS.getProgram().setUniform("LightCount", _scene.getPointLights().size());
 	
 	DeferredShadowCS.getProgram().setUniform("CameraPosition", _camera.getPosition());
