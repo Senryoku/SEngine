@@ -8,6 +8,7 @@
 #include <Framebuffer.hpp>
 #include <MeshRenderer.hpp>
 #include <Shaders.hpp>
+#include <serialization.hpp>
 
 /**
  * SpotLight
@@ -35,6 +36,8 @@ public:
 	 * @param shadowMapResolution Resolution of the shadow map depth texture.
 	**/
 	SpotLight(unsigned int shadowMapResolution = 2048);
+	
+	SpotLight(const nlohmann::json& json);
 	
 	/**
 	 * Destructor
@@ -169,6 +172,8 @@ protected:
 	EntityID			_entity = invalid_entity;
 	
 	glm::vec3			_color = glm::vec3(1.f);	///< Light's color
+	float				_angle = 0.7853975;			///< SpotLight's opening angle (rad)
+	float				_range = 1000.0; 			///< SpotLight's range, mainly used for the Shadow Mapping settings
 	
 	unsigned int		_shadowMapResolution;		///< Resolution of the shadow map (depth map)
 	ShadowBuffer		_shadowMapFramebuffer;		///< Framebuffer used to draw the shadow map
@@ -179,9 +184,6 @@ protected:
 	glm::mat4			_biasedVPMatrix;			///< Biased ViewProjection matrix used to compute the shadows projected on the scene
 	
 	inline const Transformation& getTransformation() const { return entities[_entity].get<Transformation>(); }
-
-	float				_angle = 0.7853975;			///< SpotLight's opening angle (rad)
-	float				_range = 1000.0; 			///< SpotLight's range, mainly used for the Shadow Mapping settings
 	
 	// Static
 	static void initPrograms();

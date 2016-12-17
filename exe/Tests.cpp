@@ -120,6 +120,10 @@ bool loadScene(const std::string& path)
 					}
 				}
 			}
+				
+			auto spotlight = e.find("SpotLight");
+			if(spotlight != e.end())
+				base_entity.add<SpotLight>(*spotlight);
 		}
 	}
 	
@@ -166,7 +170,16 @@ bool saveScene(const std::string& path)
 				je["MeshRenderer"] = {
 					{"mesh", e.get<MeshRenderer>().getMesh().getName()}
 				};
-			// TODO: Other Components (SpotLight...)
+			if(e.has<SpotLight>())
+				je["SpotLight"] = {
+					{"color", tojson(e.get<SpotLight>().getColor())},
+					{"range", e.get<SpotLight>().getRange()},
+					{"angle", e.get<SpotLight>().getAngle()},
+					{"resolution", e.get<SpotLight>().getResolution()},
+					{"dynamic", e.get<SpotLight>().dynamic},
+					{"downsampling", e.get<SpotLight>().downsampling}
+				};
+			// TODO: Other Components (...)
 			j["entities"].push_back(je);
 		}
 	}
@@ -204,9 +217,10 @@ public:
 
 		_volumeSamples = 16;
 		
+		/*
 		// TEMP Testing Spotlight
 		auto& light_entity = create_entity("SpotLight_0");
-		/*auto& light_transformation = */light_entity.add<Transformation>(glm::vec3{6.0, 15.0, 0.0}, glm::quat{1.0, 0.7, 0, 0});
+		light_entity.add<Transformation>(glm::vec3{6.0, 15.0, 0.0}, glm::quat{1.0, 0.7, 0, 0});
 		auto& spotlight = light_entity.add<SpotLight>();
 		spotlight.init();
 		spotlight.dynamic = true;
@@ -215,7 +229,9 @@ public:
 		spotlight.setAngle(3.14159f * 0.5f);
 		spotlight.updateMatrices();
 		spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
-
+		*/
+		
+		/// TODO REMOVE?
 		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
 				"in/Textures/skybox/negx.png",
 				"in/Textures/skybox/posy.png",

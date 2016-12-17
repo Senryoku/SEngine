@@ -24,6 +24,20 @@ SpotLight::SpotLight(unsigned int shadowMapResolution) :
 	updateMatrices();
 }
 
+SpotLight::SpotLight(const nlohmann::json& json) :
+	dynamic(json["dynamic"]),
+	downsampling(json["downsampling"]),
+	_entity(get_owner<SpotLight>(*this)),
+	_color(vec3(json["color"])),
+	_angle(json["angle"]),
+	_range(json["range"]),
+	_shadowMapResolution(json["resolution"]),
+	_shadowMapFramebuffer(_shadowMapResolution)
+{
+	updateMatrices();
+	init();
+}
+
 void SpotLight::setRange(float r)
 {
 	_range = r; 
