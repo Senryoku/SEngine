@@ -138,6 +138,8 @@ bool loadScene(const std::string& path)
 
 bool saveScene(const std::string& path)
 {
+	Log::info("Saving scene to '", path, "'...");
+	
 	std::ofstream f(path);
 	if(!f)
 	{
@@ -185,6 +187,8 @@ bool saveScene(const std::string& path)
 	}
 	
 	f << std::setw(4) << j;
+	
+	Log::info("Scene successfully saved to '", path, "'.");
 	
 	return true;
 }
@@ -260,7 +264,7 @@ public:
 					load_scene = ImGui::MenuItem("Load Scene");
 					if(ImGui::MenuItem("Reload Scene"))
 						loadScene(_scenePath);
-					if(ImGui::MenuItem("Save Scene"))
+					if(ImGui::MenuItem("Save Scene", "Ctrl+S"))
 						saveScene(_scenePath);
 					if(ImGui::MenuItem("Exit", "Alt+F4"))
 						glfwSetWindowShouldClose(_window, GL_TRUE);
@@ -916,6 +920,27 @@ public:
 		}
 		
 		DeferredRenderer::renderGUI();
+	}
+	
+	void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
+	{
+		Application::key_callback(_window, key, scancode, action, mods);
+		
+		if(ImGui::GetIO().WantCaptureKeyboard)
+		return;
+	
+		if(action == GLFW_PRESS)
+		{
+			switch(key)
+			{
+				case GLFW_KEY_S:
+				{
+					if(mods & GLFW_MOD_CONTROL)
+						saveScene(_scenePath);
+					break;
+				}
+			}
+		}
 	}
 		
 protected:
