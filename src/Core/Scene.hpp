@@ -5,9 +5,13 @@
 #include <PointLight.hpp>
 #include <Skybox.hpp>
 
+#include <Meta.hpp>
+
+#include <SpotLight.hpp>
+using ComponentTypes = TList<Transformation, MeshRenderer, SpotLight>;
+
 /**
  * @todo Octree
- * @todo Remove lights from here (turn them into standard components)
  * @todo Delegates to systems
 **/
 class Scene

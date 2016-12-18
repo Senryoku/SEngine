@@ -70,7 +70,7 @@ bool loadScene(const std::string& path)
 	}
 	
 	clear_entities();
-	for_each<deletion_pass_wrapper, TList<Transformation, MeshRenderer>>{}();
+	for_each<deletion_pass_wrapper, ComponentTypes>{}();
 	Resources::clearMeshes();
 	
 	nlohmann::json j;
@@ -220,20 +220,6 @@ public:
 		loadScene(_scenePath);
 
 		_volumeSamples = 16;
-		
-		/*
-		// TEMP Testing Spotlight
-		auto& light_entity = create_entity("SpotLight_0");
-		light_entity.add<Transformation>(glm::vec3{6.0, 15.0, 0.0}, glm::quat{1.0, 0.7, 0, 0});
-		auto& spotlight = light_entity.add<SpotLight>();
-		spotlight.init();
-		spotlight.dynamic = true;
-		spotlight.setColor(glm::vec3(1.5));
-		spotlight.setRange(200.0f);
-		spotlight.setAngle(3.14159f * 0.5f);
-		spotlight.updateMatrices();
-		spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
-		*/
 		
 		/// TODO REMOVE?
 		_scene.getSkybox().loadCubeMap({"in/Textures/skybox/posx.png",
@@ -885,11 +871,24 @@ public:
 						float ang = sl.getAngle();
 						if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
 							sl.setAngle(ang);
+						
+						int res = sl.getResolution();
+						if(ImGui::InputInt("Resolution", &res))
+							sl.setResolution(res);
 							
 						ImGui::Text("Depth Buffer");
 						gui_display(sl.getShadowMap());
 						
 						ImGui::TreePop();
+					} else {
+						if(ImGui::Button("Add SpotLight component (WIP)"))
+						{
+							auto& spotlight = selectedEntityPtr->add<SpotLight>();
+							spotlight.init();
+							spotlight.dynamic = true;
+							spotlight.updateMatrices();
+							spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
+						}
 					}
 					
 					if(ImGui::Button("Delete Entity"))

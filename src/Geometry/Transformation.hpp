@@ -25,17 +25,17 @@ public:
 	
 	~Transformation();
 	
-	inline const glm::mat4& getMatrix() const { return _modelMatrix; }
+	inline const glm::mat4& getMatrix()       const { return _modelMatrix; }
 	inline const glm::mat4& getGlobalMatrix() const { return _globalModelMatrix; };
-	inline const glm::vec3& getPosition() const { return _position; }
-	inline const glm::quat& getRotation() const { return _rotation; }
-	inline const glm::vec3& getScale() const { return _scale; }
+	inline const glm::vec3& getPosition()     const { return _position; }
+	inline const glm::quat& getRotation()     const { return _rotation; }
+	inline const glm::vec3& getScale()        const { return _scale; }
 	
 	glm::vec3 getGlobalPosition() const;
 	glm::quat getGlobalRotation() const;
-	glm::vec3 getGlobalScale() const;
+	glm::vec3 getGlobalScale()    const;
 	
-	inline ComponentID getParent() const { return _parent; }
+	inline ComponentID getParent()                       const { return _parent; }
 	inline const std::vector<ComponentID>& getChildren() const { return _children; }
 	
 	void setMatrix(const glm::mat4& m);

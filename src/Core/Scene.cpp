@@ -37,7 +37,7 @@ void Scene::update()
 		updatePointLightBuffer();
 	
 	/// @todo Move elsewhere?
-	for_each<deletion_pass_wrapper, TList<Transformation, MeshRenderer, SpotLight>>{}();
+	for_each<deletion_pass_wrapper, ComponentTypes>{}();
 }
 
 void Scene::draw(const glm::mat4& p, const glm::mat4& v) const

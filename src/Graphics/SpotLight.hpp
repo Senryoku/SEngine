@@ -130,6 +130,8 @@ public:
 	{
 		_shadowMapResolution = r;
 		_shadowMapFramebuffer = ShadowBuffer(_shadowMapResolution);
+		updateMatrices();
+		init();
 	}
 	
 	/**
