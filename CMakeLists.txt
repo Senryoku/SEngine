@@ -24,6 +24,8 @@ FIND_PACKAGE(PkgConfig)
 
 SET(EXT_LIB_BUILD "extlib_build" CACHE FILEPATH "Where the external libraries will be build.")
 
+include_directories("ext/")
+
 #SENOGL
 add_subdirectory("ext/SenOGL")
 # This should not be necessary...

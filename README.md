@@ -32,3 +32,4 @@ https://youtu.be/NRjylzEVU9w
  * [tinyobjloader](https://github.com/syoyo/tinyobjloader) (included)
  * [dear imgui](https://github.com/ocornut/imgui) (included)
  * [nlohmann's json for modern C++](https://github.com/nlohmann/json) (included)
+ * [fts_fuzzy_match](https://github.com/forrestthewoods/lib_fts) (included)

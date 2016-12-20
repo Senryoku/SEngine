@@ -7,6 +7,7 @@
 #include <glmext.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <fts_fuzzy_match.h>
 
 #include <Query.hpp>
 
@@ -442,10 +443,15 @@ public:
 				
 				if(ImGui::TreeNode("Entities"))
 				{
+					static char filter[256] = "\0";
+					ImGui::InputText("Filter", filter, 256);
+					/// TODO: Use score to order results
+					int score = 0;
+					/// TODO: Make the matching characters stand out?
 					for(auto& e : entities)
 					{
 						ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-						if(e.is_valid())
+						if(e.is_valid() && (filter[0] == '\0' || fts::fuzzy_match(filter, e.get_name().c_str(), score)))
 						{
 							ImGui::PushID(&e);
 							if(ImGui::SmallButton(e.get_name().c_str()))
