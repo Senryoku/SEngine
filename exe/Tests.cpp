@@ -567,6 +567,7 @@ public:
 			ImGui::End();
 		}
 		
+		// On screen Gizmos (Position/Rotation)
 		if(_selectedObject != invalid_entity)
 		{
 			auto selectedEntityPtr = &get_entity(_selectedObject);
@@ -760,6 +761,7 @@ public:
 			}
 		}
 		
+		// Entity Inspector
 		if(win_inspect)
 		{
 			if(ImGui::Begin("Entity Inspector", &win_inspect))
@@ -810,7 +812,7 @@ public:
 							selectedEntityPtr->add<Transformation>();
 						}
 					}
-					
+
 					if(selectedEntityPtr->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
 					{
 						auto edit_material = [&](Material& mat)
@@ -925,6 +927,7 @@ public:
 			ImGui::End();
 		}
 		
+		// Entity Selection
 		if(!ImGui::GetIO().WantCaptureMouse)
 		{
 			if(ImGui::IsMouseClicked(0))
@@ -1016,14 +1019,19 @@ protected:
 			Resources::load<VertexShader>("src/GLSL/Forward/simple_vs.glsl"),
 			Resources::load<FragmentShader>("src/GLSL/Forward/simple_fs.glsl")
 		);
-		static float gui_model_render_fov = 1.0f;
-		static float gui_model_render_camx = 400;	/// @todo Compute it automatically
+		static float gui_model_render_fov = 0.7f;
 		auto aabb = m.getBoundingBox();
-		ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.1, 5.0);
-		ImGui::SliderFloat("Position", &gui_model_render_camx, 0, 1000);
-		GUIModelRender.setUniform("ProjectionMatrix", glm::perspective(gui_model_render_fov, 1.0f, 1.0f, 1500.0f));
+		//ImGui::SliderFloat("Render FoV", &gui_model_render_fov, 0.5, 1.5);
+		float gui_model_render_camx = std::max(
+			0.5 * (glm::distance(aabb.max, aabb.min)) / std::tan(_resolution.y / _resolution.x * gui_model_render_fov),
+			0.5 * (glm::distance(aabb.max, aabb.min)) / std::tan(gui_model_render_fov)
+		) * 1.25f;
+		GUIModelRender.setUniform("ProjectionMatrix", 
+			glm::perspective(gui_model_render_fov, 1.0f, 1.0f, 
+				gui_model_render_camx + glm::distance(aabb.max, aabb.min))
+		);
 		GUIModelRender.setUniform("ViewMatrix", glm::lookAt(
-		   glm::vec3(gui_model_render_camx, 0.5f * (aabb.max.y + aabb.min.y), 0),
+		   glm::vec3(gui_model_render_camx, 0, 0) + 0.5f * (aabb.max + aabb.min),
 		   0.5f * (aabb.max + aabb.min),
 		   glm::vec3(0, -1, 0)
 		));

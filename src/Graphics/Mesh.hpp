@@ -50,9 +50,9 @@ public:
 	Mesh();
 	virtual ~Mesh() =default;
 
-	inline std::vector<Vertex>&			getVertices()		{ return _vertices; }		///< @return Array of Vertices
-	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }		///< @return Array of Triangles
-	inline Material& 					getMaterial()		{ return _material; }		///< @return Material
+	inline std::vector<Vertex>&			getVertices()		{ return _vertices; }			///< @return Array of Vertices
+	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }			///< @return Array of Triangles
+	inline Material& 					getMaterial()		{ return _material; }			///< @return Material
 	
 	inline const std::string&			getName()			const { return _name; }			///< @return Name
 	inline const std::string&			getPath()			const { return _path; }			///< @return Path @see _path
