@@ -212,9 +212,6 @@ public:
 		);
 		
 		_camera.speed() = 15;
-		_camera.setPosition(glm::vec3(0.0, 15.0, -20.0));
-		_camera.lookAt(glm::vec3(0.0, 5.0, 0.0));
-		
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		
 		loadScene(_scenePath);
@@ -772,71 +769,82 @@ public:
 				if(_selectedObject != invalid_entity)
 				{
 					auto selectedEntityPtr = &get_entity(_selectedObject);
-					ImGui::Text("Name: %s", selectedEntityPtr->get_name().c_str());
-					if(selectedEntityPtr->has<Transformation>() && ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+					char name_buffer[256];
+					std::strcpy(name_buffer, selectedEntityPtr->get_name().c_str());
+					if(ImGui::InputText("Name", name_buffer, 256))
+						selectedEntityPtr->set_name(name_buffer);
+					if(selectedEntityPtr->has<Transformation>())
 					{
-						auto& transform = selectedEntityPtr->get<Transformation>();
-						
-						glm::vec3 p = transform.getPosition();
-						if(ImGui::InputFloat3("Position", &p.x))
-							transform.setPosition(p);
-						ImGui::SameLine();
-						if(ImGui::Button("Reset##Position"))
-							transform.setPosition(glm::vec3{0.0f});
-						
-						glm::quat r = transform.getRotation();
-						if(ImGui::InputFloat4("Rotation", &r.x))
-							transform.setRotation(r);
-						ImGui::SameLine();
-						if(ImGui::Button("Reset##Rotation"))
-							transform.setRotation(glm::quat{});
-						
-						glm::vec3 s = transform.getScale();
-						if(ImGui::InputFloat3("Scale", &s.x))
-							transform.setScale(s);
-						ImGui::SameLine();
-						if(ImGui::Button("Reset##Scale"))
-							transform.setScale(glm::vec3{1.0f});
-						
-						ImGui::Text("Parent: %d", transform.getParent());
-						
-						ImGui::TreePop();
+						if(ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+						{
+							auto& transform = selectedEntityPtr->get<Transformation>();
+							
+							glm::vec3 p = transform.getPosition();
+							if(ImGui::InputFloat3("Position", &p.x))
+								transform.setPosition(p);
+							ImGui::SameLine();
+							if(ImGui::Button("Reset##Position"))
+								transform.setPosition(glm::vec3{0.0f});
+							
+							glm::quat r = transform.getRotation();
+							if(ImGui::InputFloat4("Rotation", &r.x))
+								transform.setRotation(r);
+							ImGui::SameLine();
+							if(ImGui::Button("Reset##Rotation"))
+								transform.setRotation(glm::quat{});
+							
+							glm::vec3 s = transform.getScale();
+							if(ImGui::InputFloat3("Scale", &s.x))
+								transform.setScale(s);
+							ImGui::SameLine();
+							if(ImGui::Button("Reset##Scale"))
+								transform.setScale(glm::vec3{1.0f});
+							
+							ImGui::Text("Parent: %d", transform.getParent());
+							
+							ImGui::TreePop();
+						}
+					} else {
+						if(ImGui::Button("Add Transformation component (WIP)"))
+						{
+							selectedEntityPtr->add<Transformation>();
+						}
 					}
-					
-					auto edit_material = [&](Material& mat)
-					{
-						if(auto uniform_color = mat.searchUniform<glm::vec3>("Color"))
-						{
-							float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
-							if(ImGui::ColorEdit3("Color", col))
-								uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
-						}
-						if(auto uniform_r = mat.searchUniform<float>("R"))
-						{
-							float val = uniform_r->getValue();
-							if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
-								uniform_r->setValue(val);
-						}
-						if(auto uniform_f0 = mat.searchUniform<float>("F0"))
-						{
-							float val = uniform_f0->getValue();
-							if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
-								uniform_f0->setValue(val);
-						}
-						auto display_texture = [&](const std::string& name) 
-						{
-							if(auto uniform_tex = mat.searchUniform<Texture>(name))
-							{
-								ImGui::Text(name.c_str());
-								gui_display(uniform_tex->getValue());
-							}
-						};
-						display_texture("Texture");
-						display_texture("NormalMap");
-					};
 					
 					if(selectedEntityPtr->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
 					{
+						auto edit_material = [&](Material& mat)
+						{
+							if(auto uniform_color = mat.searchUniform<glm::vec3>("Color"))
+							{
+								float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
+								if(ImGui::ColorEdit3("Color", col))
+									uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
+							}
+							if(auto uniform_r = mat.searchUniform<float>("R"))
+							{
+								float val = uniform_r->getValue();
+								if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
+									uniform_r->setValue(val);
+							}
+							if(auto uniform_f0 = mat.searchUniform<float>("F0"))
+							{
+								float val = uniform_f0->getValue();
+								if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
+									uniform_f0->setValue(val);
+							}
+							auto display_texture = [&](const std::string& name) 
+							{
+								if(auto uniform_tex = mat.searchUniform<Texture>(name))
+								{
+									ImGui::Text(name.c_str());
+									gui_display(uniform_tex->getValue());
+								}
+							};
+							display_texture("Texture");
+							display_texture("NormalMap");
+						};
+						
 						auto& mr = selectedEntityPtr->get<MeshRenderer>();
 						if(ImGui::TreeNode("Mesh"))
 						{
@@ -851,38 +859,43 @@ public:
 						ImGui::TreePop();
 					}
 					
-					if(selectedEntityPtr->has<SpotLight>() && ImGui::TreeNodeEx("SpotLight", ImGuiTreeNodeFlags_DefaultOpen))
+					if(selectedEntityPtr->has<SpotLight>())
 					{
-						auto& sl = selectedEntityPtr->get<SpotLight>();
-						
-						ImGui::Checkbox("Dynamic", &sl.dynamic);
-						int downsampling = sl.downsampling;
-						if(ImGui::SliderInt("Downsampling", &downsampling, 0, 16))
-							sl.downsampling = downsampling;
+						if(ImGui::TreeNodeEx("SpotLight", ImGuiTreeNodeFlags_DefaultOpen))
+						{
+							auto& sl = selectedEntityPtr->get<SpotLight>();
+							
+							ImGui::Checkbox("Dynamic", &sl.dynamic);
+							int downsampling = sl.downsampling;
+							if(ImGui::SliderInt("Downsampling", &downsampling, 0, 16))
+								sl.downsampling = downsampling;
 
-						float col[3] = {sl.getColor().x, sl.getColor().y, sl.getColor().z};
-						if(ImGui::ColorEdit3("Color", col))
-							sl.setColor(glm::vec3{col[0], col[1], col[2]});
-						
-						float ran = sl.getRange();
-							if(ImGui::SliderFloat("Range", &ran, 1.0, 1000.0))
-								sl.setRange(ran);
+							float col[3] = {sl.getColor().x, sl.getColor().y, sl.getColor().z};
+							if(ImGui::ColorEdit3("Color", col))
+								sl.setColor(glm::vec3{col[0], col[1], col[2]});
 							
-						float ang = sl.getAngle();
-						if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
-							sl.setAngle(ang);
-						
-						int res = sl.getResolution();
-						if(ImGui::InputInt("Resolution", &res))
-							sl.setResolution(res);
+							float ran = sl.getRange();
+								if(ImGui::SliderFloat("Range", &ran, 1.0, 1000.0))
+									sl.setRange(ran);
+								
+							float ang = sl.getAngle();
+							if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
+								sl.setAngle(ang);
 							
-						ImGui::Text("Depth Buffer");
-						gui_display(sl.getShadowMap());
-						
-						ImGui::TreePop();
+							int res = sl.getResolution();
+							if(ImGui::InputInt("Resolution", &res))
+								sl.setResolution(res);
+								
+							ImGui::Text("Depth Buffer");
+							gui_display(sl.getShadowMap());
+							
+							ImGui::TreePop();
+						}
 					} else {
 						if(ImGui::Button("Add SpotLight component (WIP)"))
 						{
+							if(!selectedEntityPtr->has<Transformation>())
+								selectedEntityPtr->add<Transformation>();
 							auto& spotlight = selectedEntityPtr->add<SpotLight>();
 							spotlight.init();
 							spotlight.dynamic = true;
@@ -896,8 +909,17 @@ public:
 						destroy_entity(selectedEntityPtr->get_id());
 						deselectObject();
 					}
+					
+					if(ImGui::Button("Deselect Entity"))
+						deselectObject();
 				} else {
 					ImGui::Text("No object selected.");
+					
+					if(ImGui::Button("Create Entity"))
+					{
+						auto& new_ent = create_entity("EmptyEntity");
+						_selectedObject = new_ent.get_id();
+					}
 				}
 			}
 			ImGui::End();
