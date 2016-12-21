@@ -6,7 +6,6 @@
 #include <glm/gtx/transform.hpp>
 #include <glmext.hpp>
 #include <imgui.h>
-#include <imgui_dock.h>
 #include <imgui_internal.h>
 #include <fts_fuzzy_match.h>
 
@@ -265,7 +264,6 @@ public:
 		bool load_model = false;
 		
 		// Menu
-		int menu_height = 0;
 		if(ImGui::BeginMainMenuBar())
 		{
 			if(ImGui::BeginMenu("File"))
@@ -313,27 +311,20 @@ public:
 					_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
 				ImGui::EndMenu();
 			}
-			menu_height = ImGui::GetWindowSize().y;
 			ImGui::EndMainMenuBar();
 		}
 			
-		if (ImGui::GetIO().DisplaySize.y > 0)
+		// Draw status bar
+		if(_status_bar)
 		{
-			////////////////////////////////////////////////////
-			// Setup root docking window                      //
-			// taking into account menu height and status bar //
-			////////////////////////////////////////////////////
-			auto pos = ImVec2(0, menu_height);
-			auto size = ImGui::GetIO().DisplaySize;
-			size.y -= pos.y;
-			ImGui::RootDock(pos, ImVec2(size.x, size.y - 25.0f));
-
-			// Draw status bar (no docking)
-			ImGui::SetNextWindowSize(ImVec2(size.x, 25.0f), ImGuiSetCond_Always);
-			ImGui::SetNextWindowPos(ImVec2(0, size.y - 6.0f), ImGuiSetCond_Always);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0, 2.5));
+			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20.0f), ImGuiSetCond_Always);
+			ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 20.f), ImGuiSetCond_Always);
 			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize);
 			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);
 			ImGui::End();
+			ImGui::PopStyleVar(2);
 		}
 
 		if(load_scene) ImGui::OpenPopup("Load Scene");
@@ -350,7 +341,6 @@ public:
 		if(win_rendering) gui_rendering();
 		if(win_scene) gui_scene();
 		if(win_inspect) gui_inspect();
-		
 		if(win_logs) gui_logs();
 		
 		// On screen Gizmos (Position/Rotation)
@@ -657,6 +647,7 @@ protected:
 		 win_scene = true,
 		 win_logs = false,
 		 win_inspect = true;
+	bool _status_bar = true;
 	float last_update = 2.0;
 	std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
 	const size_t max_samples = 100;
@@ -952,11 +943,10 @@ protected:
 				};
 				
 				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
 				// Iterate over root (without parent) Transformations.
 				for(auto& tr : ComponentIterator<Transformation>{[] (const Transformation& t) { return t.getParent() == invalid_component_idx; }})
 					explore_hierarchy(tr);
-				ImGui::PopStyleColor(2);
+				ImGui::PopStyleColor(1);
 				ImGui::TreePop();
 			}
 			
