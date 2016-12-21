@@ -687,7 +687,7 @@ public:
 						trace(newR, pl, d0, p0, n0);
 						trace(oldR, pl, d1, p1, n1);
 						auto newPosition = transform.getPosition();
-						newPosition[i] += (p0[i] - p1[i]) / gs[i];
+						newPosition[i] += (p0[i] - p1[i]) / (gs[i] / transform.getScale()[i]);
 						transform.setPosition(newPosition);
 						
 						//ImGui::SetActiveID(id, window);
