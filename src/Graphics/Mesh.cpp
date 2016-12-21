@@ -132,14 +132,16 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 {
 	std::vector<Mesh*> M;
-	if(Resources::isMesh(path))
+	std::string path_s = path;
+	std::replace(path_s.begin(), path_s.end(), '\\', '/');
+	if(Resources::isMesh(path_s))
 	{
-		M.push_back(&Resources::getMesh(path));
+		M.push_back(&Resources::getMesh(path_s));
 		return M;
 	}
-	Log::info("Loading ", path, "...");
-	
-	std::string rep = path.substr(0, path.find_last_of('/') + 1);
+	Log::info("Loading ", path_s, "...");
+
+	std::string rep = path_s.substr(0, path_s.find_last_of('/') + 1);
 
 	// OBJ Loading
 	tinyobj::attrib_t attrib;
@@ -147,7 +149,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 	std::vector<tinyobj::material_t> materials;
 
 	std::string err;
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str(), rep.c_str(), true);
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path_s.c_str(), rep.c_str(), true);
 
 	if (!err.empty()) // `err` may contain warning message.
 		Log::error(err);
@@ -158,7 +160,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 	M.resize(shapes.size());
 	for(size_t s = 0; s < shapes.size(); s++)
 	{
-		std::string name{path};
+		std::string name{path_s};
 		name.append("::" + shapes[s].name + "[" + std::to_string(s) + "]");
 		if(Resources::isMesh(name))
 		{
@@ -168,7 +170,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 		
 		M[s] = &Resources::getMesh(name);
 		M[s]->_name = name;
-		M[s]->_path = path;
+		M[s]->_path = path_s;
 		M[s]->getMaterial().setShadingProgram(p);
 		
 		if(!materials.empty())
@@ -186,14 +188,13 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 					
 			if(!material.diffuse_texname.empty())
 			{
-				std::string p = rep;
-				p.append(material.diffuse_texname);
-				std::replace(p.begin(), p.end(), '\\', '/');
-				auto& t = Resources::getTexture<Texture2D>(p);
+				std::string texpath = rep;
+				texpath.append(material.diffuse_texname);
+				auto& t = Resources::getTexture<Texture2D>(texpath);
 				if(!t.isValid())
 				{
-					Log::info("Loading diffuse texture '", p, "'.");
-					t.load(p);
+					Log::info("Loading diffuse texture '", texpath, "'.");
+					t.load(texpath);
 				}
 				if(t.isValid())
 				{
@@ -201,7 +202,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 					M[s]->getMaterial().setUniform("Color", glm::vec3{1.0});
 					M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "colorFunction", "texture_color");
 				} else {
-					Log::error("Texture ", p, " is invalid.");
+					Log::error("Texture ", texpath, " is invalid.");
 				}
 			} else {
 				M[s]->getMaterial().setUniform("Color", glm::vec3{material.diffuse[0], material.diffuse[1], material.diffuse[2]});
@@ -214,21 +215,20 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 			
 			if(!normal_map.empty())
 			{
-				std::string p = rep;
-				p.append(normal_map);
-				std::replace(p.begin(), p.end(), '\\', '/');
-				auto& t = Resources::getTexture<Texture2D>(p);
+				std::string texpath = rep;
+				texpath.append(normal_map);
+				auto& t = Resources::getTexture<Texture2D>(texpath);
 				if(!t.isValid())
 				{
-					Log::info("Loading normal texture '", p, "'.");
-					t.load(p);
+					Log::info("Loading normal texture '", texpath, "'.");
+					t.load(texpath);
 				}
 				if(t.isValid())
 				{
 					M[s]->getMaterial().setUniform("NormalMap", t);
 					M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "normal_mapping");
 				} else {
-					Log::error("Texture ", p, " is invalid.");
+					Log::error("Texture ", texpath, " is invalid.");
 				}
 			} else {
 				M[s]->getMaterial().setSubroutine(ShaderType::Fragment, "normalFunction", "basic_normal");

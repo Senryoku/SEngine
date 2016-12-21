@@ -1,5 +1,7 @@
 #include <MeshRenderer.hpp>
 
+#include <Resources.hpp>
+
 MeshRenderer::MeshRenderer(const Mesh& mesh) :
 	_mesh{&mesh},
 	_material{mesh.getMaterial()},
@@ -14,6 +16,26 @@ MeshRenderer::MeshRenderer(MeshRenderer&& m) :
 {
 	m._mesh = nullptr;
 	m._entity = invalid_entity;
+}
+
+MeshRenderer::MeshRenderer(const nlohmann::json& json) :
+	_mesh{&Resources::getMesh(json["mesh"])},
+	_material{_mesh->getMaterial()},
+	_entity{get_owner<MeshRenderer>(*this)}
+{
+	/// TODO: Load MATERIAL
+	/*
+	for (auto it = json["material"].begin(); it != json["material"].end(); ++it)
+		_material.setUniform(it.key(), it.value());
+	*/
+}
+
+nlohmann::json MeshRenderer::json() const
+{
+	return {
+		{"mesh", getMesh().getName()}
+		/// TODO: Save MATERIAL
+	};
 }
 
 bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const

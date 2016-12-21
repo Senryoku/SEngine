@@ -3,13 +3,17 @@
 #include <Mesh.hpp>
 #include <Transformation.hpp>
 #include <Entity.hpp>
+#include <serialization.hpp>
 
 class MeshRenderer
 {
 public:
 	MeshRenderer() =default;
 	explicit MeshRenderer(const Mesh& mesh);
+	MeshRenderer(const nlohmann::json& json);
 	MeshRenderer(MeshRenderer&&);
+	
+	nlohmann::json json() const;
 	
 	inline void draw() const;
 	

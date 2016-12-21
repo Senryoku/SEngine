@@ -59,6 +59,35 @@ std::experimental::filesystem::path explore(const std::experimental::filesystem:
 	return return_path;
 }
 
+bool loadModel(const std::string& path)
+{
+	auto& base_entity = create_entity(path);
+	auto& base_transform = base_entity.add<Transformation>();
+
+	auto m = Mesh::load(path);
+	
+	for(auto& part : m)
+	{
+		auto t = part->resetPivot();
+		part->createVAO();
+		part->getMaterial().setUniform("R", 0.95f);
+		part->getMaterial().setUniform("F0", 0.15f);
+		
+		if(m.size() == 1)
+		{
+			base_entity.set_name(part->getName());
+			base_entity.add<MeshRenderer>(*part);
+		} else {
+			auto& entity = create_entity(part->getName());
+			auto& ent_transform = entity.add<Transformation>(t);
+			base_transform.addChild(ent_transform);
+			entity.add<MeshRenderer>(*part);
+		}
+	}
+	
+	return true;
+}
+
 bool loadScene(const std::string& path)
 {
 	Clock scene_loading_clock;
@@ -79,7 +108,15 @@ bool loadScene(const std::string& path)
 	
 	for(auto& e : j["models"])
 	{
-		Mesh::load(e);
+		auto m = Mesh::load(e);
+		for(auto& part : m)
+		{
+			part->resetPivot();
+			part->createVAO();
+			// TEMP Not necessary.
+			part->getMaterial().setUniform("R", 0.95f);
+			part->getMaterial().setUniform("F0", 0.15f);
+		}
 	}
 	
 	// TODO: Handle transformation hierarchy!
@@ -98,29 +135,7 @@ bool loadScene(const std::string& path)
 		
 			auto meshrenderer = e.find("MeshRenderer");
 			if(meshrenderer != e.end())
-			{
-				if(base_entity.get_name() == "UnamedEntity")
-					base_entity.set_name((*meshrenderer)["mesh"]);
-				auto m = Mesh::load((*meshrenderer)["mesh"]);
-				
-				for(auto& part : m)
-				{
-					auto t = part->resetPivot();
-					part->createVAO();
-					part->getMaterial().setUniform("R", 0.95f);
-					part->getMaterial().setUniform("F0", 0.15f);
-					
-					if(m.size() == 1)
-					{
-						base_entity.add<MeshRenderer>(*part);
-					} else {
-						auto& entity = create_entity(part->getName());
-						auto& ent_transform = entity.add<Transformation>(t);
-						get_component<Transformation>(base_transform).addChild(ent_transform);
-						entity.add<MeshRenderer>(*part);
-					}
-				}
-			}
+				base_entity.add<MeshRenderer>(*meshrenderer);
 				
 			auto spotlight = e.find("SpotLight");
 			if(spotlight != e.end())
@@ -163,25 +178,11 @@ bool saveScene(const std::string& path)
 			nlohmann::json je;
 			je["Name"] = e.get_name();
 			if(e.has<Transformation>())
-				je["Transformation"] = {
-					{"position", tojson(e.get<Transformation>().getPosition())},
-					{"rotation", tojson(e.get<Transformation>().getRotation())},
-					{"scale", tojson(e.get<Transformation>().getScale())},
-					{"parent", e.get<Transformation>().getParent()}
-				};
+				je["Transformation"] = e.get<Transformation>().json();
 			if(e.has<MeshRenderer>())
-				je["MeshRenderer"] = {
-					{"mesh", e.get<MeshRenderer>().getMesh().getName()}
-				};
+				je["MeshRenderer"] = e.get<MeshRenderer>().json();
 			if(e.has<SpotLight>())
-				je["SpotLight"] = {
-					{"color", tojson(e.get<SpotLight>().getColor())},
-					{"range", e.get<SpotLight>().getRange()},
-					{"angle", e.get<SpotLight>().getAngle()},
-					{"resolution", e.get<SpotLight>().getResolution()},
-					{"dynamic", e.get<SpotLight>().dynamic},
-					{"downsampling", e.get<SpotLight>().downsampling}
-				};
+				je["SpotLight"] = e.get<SpotLight>().json();
 			// TODO: Other Components (...)
 			j["entities"].push_back(je);
 		}
@@ -216,7 +217,7 @@ public:
 		Simple.bindUniformBlock("Camera", _camera_buffer); 
 		
 		loadScene(_scenePath);
-
+		
 		_volumeSamples = 16;
 		
 		/// TODO REMOVE?
@@ -238,6 +239,7 @@ public:
 					win_inspect = true;
 					
 		bool load_scene = false;
+		bool load_model = false;
 		
 		// Menu
 		if(_menu)
@@ -250,6 +252,9 @@ public:
 						loadScene(_scenePath);
 					if(ImGui::MenuItem("Save Scene", "Ctrl+S"))
 						saveScene(_scenePath);
+					ImGui::Separator();
+					load_model = ImGui::MenuItem("Load Model");
+					ImGui::Separator();
 					if(ImGui::MenuItem("Exit", "Alt+F4"))
 						glfwSetWindowShouldClose(_window, GL_TRUE);
 					ImGui::EndMenu();
@@ -287,7 +292,7 @@ public:
 				}
 				ImGui::EndMainMenuBar();
 			}
-			
+
 		if(load_scene) ImGui::OpenPopup("Load Scene");
 		if(ImGui::BeginPopup("Load Scene"))
 		{
@@ -300,6 +305,28 @@ public:
 			if(!p.empty())
 			{
 				loadScene(p.string());
+				// @todo Not so sure about that...
+				ImGui::GetIO().WantCaptureKeyboard = ImGui::GetIO().WantTextInput = false;
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::PopStyleColor(2);
+			if(ImGui::Button("Cancel"))
+				ImGui::CloseCurrentPopup();
+			ImGui::EndPopup();
+		}
+			
+		if(load_model) ImGui::OpenPopup("Load Model");
+		if(ImGui::BeginPopup("Load Model"))
+		{
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
+			namespace fs = std::experimental::filesystem;
+			static char root_path[256] = ".";
+			ImGui::InputText("Root", root_path, 256);
+			auto p = explore(root_path, {".obj"});
+			if(!p.empty())
+			{
+				loadModel(p.string());
 				// @todo Not so sure about that...
 				ImGui::GetIO().WantCaptureKeyboard = ImGui::GetIO().WantTextInput = false;
 				ImGui::CloseCurrentPopup();

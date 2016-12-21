@@ -17,8 +17,8 @@ Transformation::Transformation(const glm::vec3& p, const glm::quat& r, const glm
 
 Transformation::Transformation(Transformation&& t)
 {
-	_modelMatrix = t._modelMatrix;
-	_globalModelMatrix = t._globalModelMatrix;
+	_matrix = t._matrix;
+	_globalMatrix = t._globalMatrix;
 	
 	_position = t._position;
 	_rotation = t._rotation;
@@ -62,6 +62,16 @@ Transformation::~Transformation()
 	}
 }
 
+nlohmann::json Transformation::json() const
+{
+	return {
+		{"position", tojson(getPosition())},
+		{"rotation", tojson(getRotation())},
+		{"scale", tojson(getScale())},
+		{"parent", getParent()}
+	};
+}
+	
 glm::vec3 Transformation::getGlobalPosition() const
 {
 	if(_parent != invalid_component_idx)
@@ -88,11 +98,11 @@ glm::vec3 Transformation::getGlobalScale() const
 
 void Transformation::setMatrix(const glm::mat4& m)
 { 
-	_modelMatrix = m;
+	_matrix = m;
 	
 	glm::vec3 skew;
 	glm::vec4 perspective;
-	glm::decompose(_modelMatrix, _scale, _rotation, _position, skew, perspective);
+	glm::decompose(_matrix, _scale, _rotation, _position, skew, perspective);
 	updateGlobalModelMatrix();
 }
 
@@ -132,7 +142,7 @@ void Transformation::setParent(ComponentID t)
 
 inline void Transformation::computeMatrix()
 {
-	_modelMatrix = glm::translate(glm::mat4(1.0f), _position) * 
+	_matrix = glm::translate(glm::mat4(1.0f), _position) * 
 		glm::mat4_cast(_rotation) * 
 		glm::scale(glm::mat4(1.0f), _scale);
 	updateGlobalModelMatrix();
@@ -140,9 +150,9 @@ inline void Transformation::computeMatrix()
 
 inline void Transformation::updateGlobalModelMatrix()
 {
-	_globalModelMatrix = _parent == invalid_component_idx ? 
-		_modelMatrix :
-		get_component<Transformation>(_parent).getGlobalMatrix() * _modelMatrix;
+	_globalMatrix = _parent == invalid_component_idx ? 
+		_matrix :
+		get_component<Transformation>(_parent).getGlobalMatrix() * _matrix;
 
 	for(ComponentID c : _children)
 		get_component<Transformation>(c).updateGlobalModelMatrix();

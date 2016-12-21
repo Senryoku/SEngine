@@ -25,8 +25,10 @@ public:
 	
 	~Transformation();
 	
-	inline const glm::mat4& getMatrix()       const { return _modelMatrix; }
-	inline const glm::mat4& getGlobalMatrix() const { return _globalModelMatrix; };
+	nlohmann::json json() const;
+	
+	inline const glm::mat4& getMatrix()       const { return _matrix; }
+	inline const glm::mat4& getGlobalMatrix() const { return _globalMatrix; };
 	inline const glm::vec3& getPosition()     const { return _position; }
 	inline const glm::quat& getRotation()     const { return _rotation; }
 	inline const glm::vec3& getScale()        const { return _scale; }
@@ -46,7 +48,7 @@ public:
 	
 	inline void setScale(float s) { setScale(glm::vec3{s, s, s}); }
 	
-	inline glm::vec4 apply(const glm::vec4& v) const { return _globalModelMatrix * v; }
+	inline glm::vec4 apply(const glm::vec4& v) const { return _globalMatrix * v; }
 	inline glm::vec3 apply(const glm::vec3& v) const { return glm::vec3{apply(glm::vec4{v, 1.0f})}; }
 	
 	template<typename T>
@@ -61,8 +63,8 @@ public:
 	void setParent(ComponentID t);
 
 private:
-	glm::mat4		_modelMatrix;
-	glm::mat4		_globalModelMatrix;
+	glm::mat4		_matrix;
+	glm::mat4		_globalMatrix;
 	
 	glm::vec3		_position;
 	glm::quat		_rotation;

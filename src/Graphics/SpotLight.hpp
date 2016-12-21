@@ -43,6 +43,8 @@ public:
 	 * Destructor
 	**/
 	~SpotLight() =default;
+	
+	nlohmann::json json() const;
 
 	/**
 	 * Initialize the shadow mapping attributes (Shaders, Framebuffer...)

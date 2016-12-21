@@ -37,6 +37,18 @@ SpotLight::SpotLight(const nlohmann::json& json) :
 	updateMatrices();
 	init();
 }
+	
+nlohmann::json SpotLight::json() const
+{
+	return {
+		{"color", tojson(getColor())},
+		{"range", getRange()},
+		{"angle", getAngle()},
+		{"resolution", getResolution()},
+		{"dynamic", dynamic},
+		{"downsampling", downsampling}
+	};
+}
 
 void SpotLight::setRange(float r)
 {
