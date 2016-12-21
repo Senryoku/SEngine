@@ -255,14 +255,7 @@ public:
 	}
 	
 	virtual void renderGUI() override
-	{	
-		static bool	win_imgui_stats = false,
-					win_stats = false,
-					win_rendering = false,
-					win_scene = true,
-					win_logs = false,
-					win_inspect = true;
-					
+	{
 		bool load_scene = false;
 		bool load_model = false;
 		
@@ -674,9 +667,15 @@ protected:
 		ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
 	}
 	
+	bool win_imgui_stats = false,
+		 win_stats = false,
+		 win_rendering = false,
+		 win_scene = true,
+		 win_logs = false,
+		 win_inspect = true;
 	float last_update = 2.0;
 	std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
-	constexpr size_t max_samples = 100;
+	const size_t max_samples = 100;
 	
 	void update_stats()
 	{
@@ -702,8 +701,8 @@ protected:
 	
 	void gui_stats()
 	{
-		//if(ImGui::Begin("Statistics", &win_stats))
-		if(ImGui::BeginDock("Statistics", &win_stats))
+		if(ImGui::Begin("Statistics", &win_stats))
+		//if(ImGui::BeginDock("Statistics", &win_stats))
 		{
 			ImGui::Text("%.4f ms/frame (%.1f FPS)", 
 				frametimes.back(), 
@@ -719,14 +718,14 @@ protected:
 			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
 			ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
 		}
-		ImGui::EndDock();
-		//ImGui::End();
+		//ImGui::EndDock();
+		ImGui::End();
 	}
 	
 	void gui_rendering()
 	{
-		//ImGui::Begin("Rendering Options", &win_rendering);
-		ImGui::BeginDock("Rendering Options", &win_rendering);
+		ImGui::Begin("Rendering Options", &win_rendering);
+		//ImGui::BeginDock("Rendering Options", &win_rendering);
 		{
 			if(ImGui::Checkbox("Fullscreen", &_fullscreen))
 				setFullscreen(_fullscreen);
@@ -767,14 +766,14 @@ protected:
 
 			ImGui::ColorEdit3("Ambiant Color", &_ambiant.r);
 		}
-		ImGui::EndDock();
-		//ImGui::End();
+		//ImGui::EndDock();
+		ImGui::End();
 	}
 	
 	void gui_inspect()
 	{
-		//if(ImGui::Begin("Entity Inspector", &win_inspect))
-		if(ImGui::BeginDock("Entity Inspector", &win_inspect))
+		if(ImGui::Begin("Entity Inspector", &win_inspect))
+		//if(ImGui::BeginDock("Entity Inspector", &win_inspect))
 		{
 			ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
 			ImGui::Separator();
@@ -934,14 +933,14 @@ protected:
 				}
 			}
 		}
-		ImGui::EndDock();
-		//ImGui::End();
+		//ImGui::EndDock();
+		ImGui::End();
 	}
 	
 	void gui_scene()
 	{
-		//ImGui::Begin("Scene", &win_scene);
-		ImGui::BeginDock("Scene", &win_scene);
+		ImGui::Begin("Scene", &win_scene);
+		//ImGui::BeginDock("Scene", &win_scene);
 		{
 			if(ImGui::TreeNode("Transformation Hierarchy"))
 			{
@@ -1074,14 +1073,14 @@ protected:
 				ImGui::TreePop();
 			}
 		}
-		ImGui::EndDock();
-		//ImGui::End();
+		//ImGui::EndDock();
+		ImGui::End();
 	}
 	
 	void gui_logs()
 	{
-		//ImGui::Begin("Logs", &win_logs);
-		ImGui::BeginDock("Logs", &win_logs);
+		ImGui::Begin("Logs", &win_logs);
+		//ImGui::BeginDock("Logs", &win_logs);
 		{
 			const ImVec4 LogColors[3] = {
 				ImVec4{1, 1, 1, 1},
@@ -1108,8 +1107,8 @@ protected:
 				}
 			ImGui::EndChild();
 		}
-		ImGui::EndDock();
-		//ImGui::End();
+		//ImGui::EndDock();
+		ImGui::End();
 	}
 };
 
