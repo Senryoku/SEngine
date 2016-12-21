@@ -108,6 +108,66 @@ void Application::clean()
 
 void Application::run_init()
 {
+	_shortcuts[{GLFW_KEY_N}] = [&]()
+	{				
+		Log::info(_camera.getPosition().x, "\t", _camera.getPosition().y, "\t", _camera.getPosition().z);
+	};
+	_shortcuts[{GLFW_KEY_ESCAPE}] = [&]()
+	{
+		_menu = !_menu;
+	};
+	_shortcuts[{GLFW_KEY_R}] = [&]()
+	{
+		Log::info("Reloading shaders...");
+		Resources::reloadShaders();
+		Log::info("Reloading shaders... Done !");
+	};
+	_shortcuts[{GLFW_KEY_SPACE}] = [&]()
+	{
+		if(!_controlCamera)
+		{
+			glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
+			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		} else {
+			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		_controlCamera = !_controlCamera;
+	};
+	_shortcuts[{GLFW_KEY_X}] = [&]()
+	{
+		_msaa = ! _msaa;
+		setMSAA(_msaa);
+	};
+	_shortcuts[{GLFW_KEY_ENTER, GLFW_PRESS, GLFW_MOD_ALT}] = [&]()
+	{
+		setFullscreen(!_fullscreen);
+	};
+	_shortcuts[{GLFW_KEY_P}] = [&]()
+	{
+		_paused = !_paused;
+	};
+	_shortcuts[{GLFW_KEY_L}] = [&]()
+	{
+		const std::string ScreenPath("out/screenshot.png");
+		Log::info("Saving a screenshot to ", ScreenPath, "...");
+		screen(ScreenPath);
+	};
+	_shortcuts[{GLFW_KEY_KP_ADD}] = [&]()
+	{
+		if(_camera.speed() < 1)
+			_camera.speed() += .1;
+		else
+			_camera.speed() += 1;
+		Log::info("Camera Speed: ", _camera.speed());
+	};
+	_shortcuts[{GLFW_KEY_KP_SUBTRACT}] = [&]()
+	{
+		if(_camera.speed() <= 1)
+			_camera.speed() -= .1;
+		else
+			_camera.speed() -= 1;
+		Log::info("Camera Speed: ", _camera.speed());
+	};
 }
 
 void Application::update()
@@ -279,83 +339,9 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 	if(ImGui::GetIO().WantCaptureKeyboard)
 		return;
 	
-	if(action == GLFW_PRESS)
-	{
-		switch(key)
-		{
-			case GLFW_KEY_N:
-			{				
-				Log::info(_camera.getPosition().x, "\t", _camera.getPosition().y, "\t", _camera.getPosition().z);
-				break;
-			}
-			case GLFW_KEY_ESCAPE:
-			{
-				_menu = !_menu;
-				break;
-			}
-			case GLFW_KEY_R:
-			{
-				Log::info("Reloading shaders...");
-				Resources::reloadShaders();
-				Log::info("Reloading shaders... Done !");
-				break;
-			}
-			case GLFW_KEY_SPACE:
-			{
-				if(!_controlCamera)
-				{
-					glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
-					glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-				} else {
-					glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-				}
-				_controlCamera = !_controlCamera;
-				break;
-			}
-			case GLFW_KEY_X:
-			{
-				_msaa = ! _msaa;
-				setMSAA(_msaa);
-				break;
-			}
-			case GLFW_KEY_ENTER:
-			{
-				if(mods & GLFW_MOD_ALT)
-					setFullscreen(!_fullscreen);
-				break;
-			}
-			case GLFW_KEY_P:
-			{
-				_paused = !_paused;
-				break;
-			}
-			case GLFW_KEY_L:
-			{
-				const std::string ScreenPath("out/screenshot.png");
-				Log::info("Saving a screenshot to ", ScreenPath, "...");
-				screen(ScreenPath);
-				break;
-			}
-			case GLFW_KEY_KP_ADD:
-			{
-				if(_camera.speed() < 1)
-					_camera.speed() += .1;
-				else
-					_camera.speed() += 1;
-				Log::info("Camera Speed: ", _camera.speed());
-				break;
-			}
-			case GLFW_KEY_KP_SUBTRACT:
-			{
-				if(_camera.speed() <= 1)
-					_camera.speed() -= .1;
-				else
-					_camera.speed() -= 1;
-				Log::info("Camera Speed: ", _camera.speed());
-				break;
-			}
-		}
-	}
+	auto it = _shortcuts.find({key, action, mods});
+	if(it != _shortcuts.end())
+		it->second();
 }
 
 void Application::char_callback(GLFWwindow* window, unsigned int codepoint)

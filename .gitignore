@@ -53,3 +53,4 @@ chrono.bat
 imgui.ini
 *.tmp
 RenderDocSettings.cap
+*.layout

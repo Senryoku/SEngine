@@ -252,6 +252,11 @@ public:
 				"in/Textures/skybox/negy.png",
 				"in/Textures/skybox/posz.png",
 				"in/Textures/skybox/negz.png"});
+
+		_shortcuts[{GLFW_KEY_S, GLFW_PRESS, GLFW_MOD_CONTROL}] = [&]()
+		{
+			saveScene(_scenePath);
+		};
 	}
 	
 	virtual void renderGUI() override
@@ -559,27 +564,6 @@ public:
 		}
 		
 		DeferredRenderer::renderGUI();
-	}
-	
-	void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
-	{
-		Application::key_callback(_window, key, scancode, action, mods);
-		
-		if(ImGui::GetIO().WantCaptureKeyboard)
-		return;
-	
-		if(action == GLFW_PRESS)
-		{
-			switch(key)
-			{
-				case GLFW_KEY_S:
-				{
-					if(mods & GLFW_MOD_CONTROL)
-						saveScene(_scenePath);
-					break;
-				}
-			}
-		}
 	}
 		
 protected:

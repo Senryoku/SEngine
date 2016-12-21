@@ -27,6 +27,8 @@ void DeferredRenderer::screen(const std::string& path) const
 
 void DeferredRenderer::run_init()
 {
+	Application::run_init();
+	
 	using Resources::load;
 	ComputeShader& DeferredShadowCS = load<ComputeShader>(
 		"DeferredShadowCS",
