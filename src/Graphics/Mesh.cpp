@@ -50,6 +50,9 @@ glm::vec3 Mesh::resetPivot()
 
 void Mesh::createVAO()
 {
+	if(_vao)
+		return;
+
 	_vao.init();
 	_vao.bind();
 	
@@ -69,6 +72,14 @@ void Mesh::createVAO()
 	_vao.unbind(); // Unbind first on purpose :)
 	_index_buffer.unbind();
 	_vertex_buffer.unbind();
+}
+
+void Mesh::update()
+{
+	_vertex_buffer.bind();
+	_vertex_buffer.data(&_vertices[0], sizeof(Vertex)*_vertices.size(), Buffer::Usage::StaticDraw);
+	_index_buffer.bind();
+	_index_buffer.data(&_triangles[0], sizeof(size_t) * _triangles.size() * 3, Buffer::Usage::StaticDraw);
 }
 
 void Mesh::draw() const
@@ -122,8 +133,6 @@ void Mesh::computeBoundingBox()
 
 ////////////////////// Static /////////////////////////////////////
 
-#include <RiggedMesh.hpp>
-
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
 	return load(path, Resources::getProgram("Deferred"));
@@ -135,14 +144,9 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 	std::vector<Mesh*> M;
 	std::string path_s = path;
 	std::replace(path_s.begin(), path_s.end(), '\\', '/');
-	if(Resources::isMesh(path_s))
-	{
-		M.push_back(&Resources::getMesh(path_s));
-		return M;
-	}
-	Log::info("Loading ", path_s, "...");
-
 	std::string rep = path_s.substr(0, path_s.find_last_of('/') + 1);
+	std::string filename = path_s.substr(path_s.find_last_of('/') + 1, path_s.size());
+	Log::info("Loading ", path_s, "...");
 
 	// OBJ Loading
 	tinyobj::attrib_t attrib;
@@ -161,7 +165,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 	M.resize(shapes.size());
 	for(size_t s = 0; s < shapes.size(); s++)
 	{
-		std::string name{path_s};
+		std::string name{filename};
 		name.append("::" + shapes[s].name + "[" + std::to_string(s) + "]");
 		if(Resources::isMesh(name))
 		{

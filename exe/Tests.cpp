@@ -61,8 +61,8 @@ std::experimental::filesystem::path explore(const std::experimental::filesystem:
 
 bool loadModel(const std::string& path)
 {
-	auto& base_entity = create_entity(path);
-	auto& base_transform = base_entity.add<Transformation>();
+	EntityID base_entity = create_entity(path).get_id();
+	ComponentID base_transform = get_id(get_entity(base_entity).add<Transformation>());
 
 	auto m = Mesh::load(path);
 	
@@ -75,12 +75,12 @@ bool loadModel(const std::string& path)
 		
 		if(m.size() == 1)
 		{
-			base_entity.set_name(part->getName());
-			base_entity.add<MeshRenderer>(*part);
+			get_entity(base_entity).set_name(part->getName());
+			get_entity(base_entity).add<MeshRenderer>(*part);
 		} else {
 			auto& entity = create_entity(part->getName());
 			auto& ent_transform = entity.add<Transformation>(t);
-			base_transform.addChild(ent_transform);
+			get_component<Transformation>(base_transform).addChild(ent_transform);
 			entity.add<MeshRenderer>(*part);
 		}
 	}

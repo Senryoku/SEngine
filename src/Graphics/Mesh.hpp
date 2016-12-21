@@ -48,7 +48,6 @@ public:
 	};
 	
 	Mesh();
-	virtual ~Mesh() =default;
 
 	inline std::vector<Vertex>&			getVertices()		{ return _vertices; }			///< @return Array of Vertices
 	inline std::vector<Triangle>& 		getTriangles()		{ return _triangles; }			///< @return Array of Triangles
@@ -69,7 +68,8 @@ public:
 	void computeNormals();
 	glm::vec3 resetPivot();
 	
-	virtual void createVAO();
+	void createVAO();
+	void update();
 	void draw() const;
 	
 	void computeBoundingBox();

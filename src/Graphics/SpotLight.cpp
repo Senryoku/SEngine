@@ -34,8 +34,8 @@ SpotLight::SpotLight(const nlohmann::json& json) :
 	_shadowMapResolution(json["resolution"]),
 	_shadowMapFramebuffer(_shadowMapResolution)
 {
-	updateMatrices();
 	init();
+	updateMatrices();
 }
 	
 nlohmann::json SpotLight::json() const
