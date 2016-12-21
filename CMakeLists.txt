@@ -60,6 +60,7 @@ INCLUDE_DIRECTORIES(${IMGUIGLFW_ROOT})
 set(SOURCE_FILES ${SOURCE_FILES}
 	${IMGUI_ROOT}/imgui.cpp
 	${IMGUI_ROOT}/imgui_draw.cpp
+	${IMGUI_ROOT}/imgui_dock.cpp
 	${IMGUIGLFW_ROOT}/imgui_impl_glfw_gl3.cpp
 )
 

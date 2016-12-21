@@ -6,6 +6,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glmext.hpp>
 #include <imgui.h>
+#include <imgui_dock.h>
 #include <imgui_internal.h>
 #include <fts_fuzzy_match.h>
 
@@ -266,325 +267,93 @@ public:
 		bool load_model = false;
 		
 		// Menu
-		if(_menu)
-			if(ImGui::BeginMainMenuBar())
+		int menu_height = 0;
+		if(ImGui::BeginMainMenuBar())
+		{
+			if(ImGui::BeginMenu("File"))
 			{
-				if(ImGui::BeginMenu("File"))
-				{
-					load_scene = ImGui::MenuItem("Load Scene");
-					if(ImGui::MenuItem("Reload Scene"))
-						loadScene(_scenePath);
-					if(ImGui::MenuItem("Save Scene", "Ctrl+S"))
-						saveScene(_scenePath);
-					ImGui::Separator();
-					load_model = ImGui::MenuItem("Load Model");
-					ImGui::Separator();
-					if(ImGui::MenuItem("Exit", "Alt+F4"))
-						glfwSetWindowShouldClose(_window, GL_TRUE);
-					ImGui::EndMenu();
-				}
-				if(ImGui::BeginMenu("Windows"))
-				{
-					if(ImGui::MenuItem("Rendering Options")) win_rendering = !win_rendering;
-					if(ImGui::MenuItem("Scene")) win_scene = !win_scene;
-					if(ImGui::MenuItem("Entity Inspector")) win_inspect = !win_inspect;
-					if(ImGui::MenuItem("Logs")) win_logs = !win_logs;
-					if(ImGui::MenuItem("Statistics")) win_stats = !win_stats;
-					if(ImGui::MenuItem("ImGui Statistics")) win_imgui_stats = !win_imgui_stats;
-					ImGui::EndMenu();
-				}
-				if(ImGui::BeginMenu("Debug Options"))
-				{
-					ImGui::Checkbox("Pause", &_paused);
-					ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
-					if(ImGui::Button("Update shadow maps"))
-					{
-						for(auto& it : ComponentIterator<SpotLight>{})
-						{
-							it.updateMatrices();
-							it.drawShadowMap(ComponentIterator<MeshRenderer>{});
-						}
-					}
-					ImGui::Separator(); 
-					ImGui::Checkbox("Toggle Debug", &_debug_buffers);
-					const char* debugbuffer_items[] = {"Color","Position", "Normal"};
-					const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
-					static int debugbuffer_item_current = 0;
-					if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
-						_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
-					ImGui::EndMenu();
-				}
-				ImGui::EndMainMenuBar();
+				load_scene = ImGui::MenuItem("Load Scene");
+				if(ImGui::MenuItem("Reload Scene"))
+					loadScene(_scenePath);
+				if(ImGui::MenuItem("Save Scene", "Ctrl+S"))
+					saveScene(_scenePath);
+				ImGui::Separator();
+				load_model = ImGui::MenuItem("Load Model");
+				ImGui::Separator();
+				if(ImGui::MenuItem("Exit", "Alt+F4"))
+					glfwSetWindowShouldClose(_window, GL_TRUE);
+				ImGui::EndMenu();
 			}
+			if(ImGui::BeginMenu("Windows"))
+			{
+				if(ImGui::MenuItem("Rendering Options")) win_rendering = !win_rendering;
+				if(ImGui::MenuItem("Scene")) win_scene = !win_scene;
+				if(ImGui::MenuItem("Entity Inspector")) win_inspect = !win_inspect;
+				if(ImGui::MenuItem("Logs")) win_logs = !win_logs;
+				if(ImGui::MenuItem("Statistics")) win_stats = !win_stats;
+				if(ImGui::MenuItem("ImGui Statistics")) win_imgui_stats = !win_imgui_stats;
+				ImGui::EndMenu();
+			}
+			if(ImGui::BeginMenu("Debug Options"))
+			{
+				ImGui::Checkbox("Pause", &_paused);
+				ImGui::SliderFloat("Time Scale", &_timescale, 0.0f, 5.0f);
+				if(ImGui::Button("Update shadow maps"))
+				{
+					for(auto& it : ComponentIterator<SpotLight>{})
+					{
+						it.updateMatrices();
+						it.drawShadowMap(ComponentIterator<MeshRenderer>{});
+					}
+				}
+				ImGui::Separator(); 
+				ImGui::Checkbox("Toggle Debug", &_debug_buffers);
+				const char* debugbuffer_items[] = {"Color","Position", "Normal"};
+				const Attachment debugbuffer_values[] = {Attachment::Color0, Attachment::Color1, Attachment::Color2};
+				static int debugbuffer_item_current = 0;
+				if(ImGui::Combo("Buffer to Display", &debugbuffer_item_current, debugbuffer_items, 3))
+					_framebufferToBlit = debugbuffer_values[debugbuffer_item_current];
+				ImGui::EndMenu();
+			}
+			menu_height = ImGui::GetWindowSize().y;
+			ImGui::EndMainMenuBar();
+		}
 			
+		if (ImGui::GetIO().DisplaySize.y > 0)
+		{
+			////////////////////////////////////////////////////
+			// Setup root docking window                      //
+			// taking into account menu height and status bar //
+			////////////////////////////////////////////////////
+			auto pos = ImVec2(0, menu_height);
+			auto size = ImGui::GetIO().DisplaySize;
+			size.y -= pos.y;
+			ImGui::RootDock(pos, ImVec2(size.x, size.y - 25.0f));
+
+			// Draw status bar (no docking)
+			ImGui::SetNextWindowSize(ImVec2(size.x, 25.0f), ImGuiSetCond_Always);
+			ImGui::SetNextWindowPos(ImVec2(0, size.y - 6.0f), ImGuiSetCond_Always);
+			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize);
+			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);
+			ImGui::End();
+		}
+
 		if(load_scene) ImGui::OpenPopup("Load Scene");
 		file_explorer("Load Scene", loadScene, ".json");
 			
 		if(load_model) ImGui::OpenPopup("Load Model");
 		file_explorer("Load Model", loadModel, ".obj");
 	
-		// Plots
-		static float last_update = 2.0;
-		last_update += TimeManager::getRealDeltaTime();
-		static std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
-		constexpr size_t max_samples = 100;
-		const float ms = TimeManager::getRealDeltaTime() * 1000;
-		if(last_update > 0.05 || frametimes.empty())
-		{
-			if(frametimes.size() > max_samples)			frametimes.pop_front();
-			if(updatetimes.size() > max_samples)		updatetimes.pop_front();
-			if(gbuffertimes.size() > max_samples)		gbuffertimes.pop_front();
-			if(lighttimes.size() > max_samples)			lighttimes.pop_front();
-			if(postprocesstimes.size() > max_samples)	postprocesstimes.pop_front();
-			if(guitimes.size() > max_samples)			guitimes.pop_front();
-			frametimes.push_back(ms);
-			updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
-			gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
-			lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
-			postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
-			guitimes.push_back(_lastGUITiming / 1000000.0);
-			last_update = 0.0;
-		}
-		
 		if(win_imgui_stats)
 			ImGui::ShowMetricsWindow();
 		
-		if(win_stats)
-		{
-			if(ImGui::Begin("Statistics", &win_stats))
-			{
-				ImGui::Text("%.4f ms/frame (%.1f FPS)", 
-					frametimes.back(), 
-					1000.0 / frametimes.back()
-				);
-				auto lamba_data = [](void* data, int idx) {
-					return static_cast<std::deque<float>*>(data)->at(idx);
-				};
-				ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, to_string(frametimes.back(), 4).c_str(), 0.0, 20.0); 
-				ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, to_string(updatetimes.back(), 4).c_str(), 0.0, 10.0);    
-				ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, to_string(gbuffertimes.back(), 4).c_str(), 0.0, 10.0);    
-				ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
-				ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
-				ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
-			}
-			ImGui::End();
-		}
+		update_stats();	
+		if(win_stats) gui_stats();
+		if(win_rendering) gui_rendering();
+		if(win_scene) gui_scene();
+		if(win_inspect) gui_inspect();
 		
-		if(win_rendering)
-		{
-			ImGui::Begin("Rendering Options", &win_rendering);
-			{
-				if(ImGui::Checkbox("Fullscreen", &_fullscreen))
-					setFullscreen(_fullscreen);
-				ImGui::SameLine();
-				if(ImGui::Checkbox("Vsync", &_vsync))
-					glfwSwapInterval(_vsync);
-				ImGui::Text("Window resolution: %d * %d", _width, _height);
-				const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
-				static int internal_resolution_item_current = 0;
-				if(ImGui::Combo("Internal Resolution", &internal_resolution_item_current, internal_resolution_items, 4))
-				{
-					switch(internal_resolution_item_current)
-					{
-						case 0: setInternalResolution(0, 0); break;
-						case 1: setInternalResolution(1920, 1080); break;
-						case 2: setInternalResolution(2715, 1527); break;
-						case 3: setInternalResolution(3840, 2160); break;
-					}
-				}
-				if(ImGui::DragFloat("FoV", &_fov, 1.0, 40.0, 110.0))
-					setFoV(_fov);
-				
-				ImGui::Separator();
-				
-				static bool bloom_toggle = _bloom > 0.0;
-				if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
-					_bloom = -_bloom;
-				ImGui::DragFloat("Bloom", &_bloom, 0.05, 0.0, 5.0);
-				ImGui::DragFloat("Exposure", &_exposure, 0.05, 0.0, 5.0);
-				ImGui::DragFloat("MinVariance (VSM)", &_minVariance, 0.000001, 0.0, 0.00005);
-				ImGui::DragInt("AOSamples", &_aoSamples, 1, 0, 32);
-				ImGui::DragFloat("AOThresold", &_aoThreshold, 0.05, 0.0, 5.0);
-				ImGui::DragFloat("AORadius", &_aoRadius, 1.0, 0.0, 400.0);
-				ImGui::DragInt("VolumeSamples", &_volumeSamples, 1, 0, 64);
-				ImGui::DragFloat("AtmosphericDensity", &_atmosphericDensity, 0.001, 0.0, 0.02);
-			
-				ImGui::Separator();
-
-				ImGui::ColorEdit3("Ambiant Color", &_ambiant.r);
-			}
-			ImGui::End();
-		}
-		
-		if(win_scene)
-		{
-			ImGui::Begin("Scene", &win_scene);
-			{
-				if(ImGui::TreeNode("Transformation Hierarchy"))
-				{
-					const static std::function<void(const Transformation&)> explore_hierarchy = [&] (const Transformation& tr)
-					{
-						ImGui::PushID(&tr);
-						auto entityID = get_owner(tr);
-						auto& entity = get_entity(entityID);
-						if(!tr.getChildren().empty())
-						{
-							bool expand = ImGui::TreeNodeEx(entity.get_name().c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
-							if(ImGui::IsItemClicked()) 
-								selectObject(entityID);
-							if(expand)
-							{
-								for(ComponentID child : tr.getChildren())
-									explore_hierarchy(get_component<Transformation>(child));
-								ImGui::TreePop();
-							}
-						} else {
-							if(ImGui::SmallButton(entity.get_name().c_str()))
-								selectObject(entityID);
-						}
-						ImGui::PopID();
-					};
-					
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-					ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
-					// Iterate over root (without parent) Transformations.
-					for(auto& tr : ComponentIterator<Transformation>{[] (const Transformation& t) { return t.getParent() == invalid_component_idx; }})
-						explore_hierarchy(tr);
-					ImGui::PopStyleColor(2);
-					ImGui::TreePop();
-				}
-				
-				if(ImGui::TreeNode("Entities"))
-				{
-					static char filter[256] = "\0";
-					ImGui::InputText("Filter", filter, 256);
-					/// TODO: Use score to order results
-					int score = 0;
-					/// TODO: Make the matching characters stand out?
-					for(auto& e : entities)
-					{
-						ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-						if(e.is_valid() && (filter[0] == '\0' || fts::fuzzy_match(filter, e.get_name().c_str(), score)))
-						{
-							ImGui::PushID(&e);
-							if(ImGui::SmallButton(e.get_name().c_str()))
-								selectObject(e.get_id());
-							ImGui::PopID();
-						}
-						ImGui::PopStyleColor();
-					}
-					ImGui::TreePop();
-				}
-				
-				if(ImGui::TreeNode(("Point Lights (" + std::to_string(_scene.getPointLights().size()) + ")").c_str()))
-				{
-					for(auto& l : _scene.getPointLights())
-					{
-						ImGui::PushID(&l);
-						ImGui::PushItemWidth(150);
-						ImGui::InputFloat3("Position", &l.position.x);
-						ImGui::SameLine();
-						ImGui::InputFloat3("Color", &l.color.r);
-						ImGui::SameLine();
-						ImGui::PushItemWidth(50);
-						ImGui::InputFloat("Range", &l.range);
-						ImGui::PopID();
-					}
-					ImGui::TreePop();
-				}
-				
-				if(ImGui::TreeNode("Resources"))
-				{
-					if(ImGui::TreeNode("Textures"))
-					{
-						for(auto& p : Resources::_textures)
-							if(ImGui::TreeNode(p.first.c_str()))
-							{
-								gui_display(*p.second);
-								ImGui::TreePop();
-							}
-						ImGui::TreePop();
-					}
-					if(ImGui::TreeNode("Shaders"))
-					{
-						for(auto& p : Resources::_shaders)
-						{
-							if(ImGui::TreeNode(p.first.c_str()))
-							{
-								ImGui::PushID(&p);
-								ImGui::Text("Path: %s", p.second->getPath().c_str());
-								ImGui::Text(p.second->isValid() ? "Valid" : "Invalid!");
-								ImGui::SameLine();
-								if(ImGui::SmallButton("Reload"))
-								{
-									Log::info("Reloading ", p.first, "...");
-									p.second->reload();
-									Log::info(p.first, " reloaded.");
-								}
-								ImGui::PopID();
-								ImGui::TreePop();
-							}
-						}
-						ImGui::TreePop();
-					}
-					if(ImGui::TreeNode("Programs"))
-					{
-						for(auto& p : Resources::_programs)
-						{
-							if(p.second.isValid())
-								ImGui::Text("%s: Valid", p.first.c_str());
-							else
-								ImGui::Text("%s: Invalid!", p.first.c_str());
-						}
-						ImGui::TreePop();
-					}
-					if(ImGui::TreeNode("Meshs"))
-					{
-						for(auto& p : Resources::_meshes)
-							if(ImGui::TreeNode(p.first.c_str()))
-							{
-								gui_display(*p.second);
-								ImGui::TreePop();
-							}
-						ImGui::TreePop();
-					}
-					ImGui::TreePop();
-				}
-			}
-			ImGui::End();
-		}
-		
-		if(win_logs)
-		{
-			ImGui::Begin("Logs", &win_logs);
-			{
-				const ImVec4 LogColors[3] = {
-					ImVec4{1, 1, 1, 1},
-					ImVec4{1, 1, 0, 1},
-					ImVec4{1, 0, 0, 1}
-				};
-				static int log_level_current = 0;
-				ImGui::Combo("Log Level", &log_level_current, Log::_log_types.data(), 3);
-				std::vector<Log::LogLine*> tmp_logs;
-				if(log_level_current > 0)
-					for(auto& l : Log::_logs)
-						if(log_level_current <= l.type)
-							tmp_logs.push_back(&l);
-				
-				ImGui::BeginChild("Logs Lines");
-				ImGuiListClipper clipper(log_level_current > 0 ? tmp_logs.size() : Log::_logs.size());
-				while(clipper.Step())
-					for(int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
-					{
-						if(log_level_current > 0)
-							ImGui::TextColored(LogColors[tmp_logs[i]->type], "%s", tmp_logs[i]->str().c_str());
-						else
-							ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
-					}
-				ImGui::EndChild();
-			}
-			ImGui::End();
-		}
+		if(win_logs) gui_logs();
 		
 		// On screen Gizmos (Position/Rotation)
 		if(_selectedObject != invalid_entity)
@@ -780,172 +549,6 @@ public:
 			}
 		}
 		
-		// Entity Inspector
-		if(win_inspect)
-		{
-			if(ImGui::Begin("Entity Inspector", &win_inspect))
-			{
-				ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
-				ImGui::Separator();
-				if(_selectedObject != invalid_entity)
-				{
-					auto selectedEntityPtr = &get_entity(_selectedObject);
-					char name_buffer[256];
-					std::strcpy(name_buffer, selectedEntityPtr->get_name().c_str());
-					if(ImGui::InputText("Name", name_buffer, 256))
-						selectedEntityPtr->set_name(name_buffer);
-					if(selectedEntityPtr->has<Transformation>())
-					{
-						if(ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
-						{
-							auto& transform = selectedEntityPtr->get<Transformation>();
-							
-							glm::vec3 p = transform.getPosition();
-							if(ImGui::InputFloat3("Position", &p.x))
-								transform.setPosition(p);
-							ImGui::SameLine();
-							if(ImGui::Button("Reset##Position"))
-								transform.setPosition(glm::vec3{0.0f});
-							
-							glm::quat r = transform.getRotation();
-							if(ImGui::InputFloat4("Rotation", &r.x))
-								transform.setRotation(r);
-							ImGui::SameLine();
-							if(ImGui::Button("Reset##Rotation"))
-								transform.setRotation(glm::quat{});
-							
-							glm::vec3 s = transform.getScale();
-							if(ImGui::InputFloat3("Scale", &s.x))
-								transform.setScale(s);
-							ImGui::SameLine();
-							if(ImGui::Button("Reset##Scale"))
-								transform.setScale(glm::vec3{1.0f});
-							
-							ImGui::Text("Parent: %d", transform.getParent());
-							
-							ImGui::TreePop();
-						}
-					} else {
-						if(ImGui::Button("Add Transformation component (WIP)"))
-						{
-							selectedEntityPtr->add<Transformation>();
-						}
-					}
-
-					if(selectedEntityPtr->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
-					{
-						auto edit_material = [&](Material& mat)
-						{
-							if(auto uniform_color = mat.searchUniform<glm::vec3>("Color"))
-							{
-								float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
-								if(ImGui::ColorEdit3("Color", col))
-									uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
-							}
-							if(auto uniform_r = mat.searchUniform<float>("R"))
-							{
-								float val = uniform_r->getValue();
-								if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
-									uniform_r->setValue(val);
-							}
-							if(auto uniform_f0 = mat.searchUniform<float>("F0"))
-							{
-								float val = uniform_f0->getValue();
-								if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
-									uniform_f0->setValue(val);
-							}
-							auto display_texture = [&](const std::string& name) 
-							{
-								if(auto uniform_tex = mat.searchUniform<Texture>(name))
-								{
-									ImGui::Text(name.c_str());
-									gui_display(uniform_tex->getValue());
-								}
-							};
-							display_texture("Texture");
-							display_texture("NormalMap");
-						};
-						
-						auto& mr = selectedEntityPtr->get<MeshRenderer>();
-						if(ImGui::TreeNode("Mesh"))
-						{
-							gui_display(mr.getMesh());
-							ImGui::TreePop();
-						}
-						if(ImGui::TreeNode("Material"))
-						{
-							edit_material(mr.getMaterial());
-							ImGui::TreePop();
-						}
-						ImGui::TreePop();
-					}
-					
-					if(selectedEntityPtr->has<SpotLight>())
-					{
-						if(ImGui::TreeNodeEx("SpotLight", ImGuiTreeNodeFlags_DefaultOpen))
-						{
-							auto& sl = selectedEntityPtr->get<SpotLight>();
-							
-							ImGui::Checkbox("Dynamic", &sl.dynamic);
-							int downsampling = sl.downsampling;
-							if(ImGui::SliderInt("Downsampling", &downsampling, 0, 16))
-								sl.downsampling = downsampling;
-
-							float col[3] = {sl.getColor().x, sl.getColor().y, sl.getColor().z};
-							if(ImGui::ColorEdit3("Color", col))
-								sl.setColor(glm::vec3{col[0], col[1], col[2]});
-							
-							float ran = sl.getRange();
-								if(ImGui::SliderFloat("Range", &ran, 1.0, 1000.0))
-									sl.setRange(ran);
-								
-							float ang = sl.getAngle();
-							if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
-								sl.setAngle(ang);
-							
-							int res = sl.getResolution();
-							if(ImGui::InputInt("Resolution", &res))
-								sl.setResolution(res);
-								
-							ImGui::Text("Depth Buffer");
-							gui_display(sl.getShadowMap());
-							
-							ImGui::TreePop();
-						}
-					} else {
-						if(ImGui::Button("Add SpotLight component (WIP)"))
-						{
-							if(!selectedEntityPtr->has<Transformation>())
-								selectedEntityPtr->add<Transformation>();
-							auto& spotlight = selectedEntityPtr->add<SpotLight>();
-							spotlight.init();
-							spotlight.dynamic = true;
-							spotlight.updateMatrices();
-							spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
-						}
-					}
-					
-					if(ImGui::Button("Delete Entity"))
-					{
-						destroy_entity(selectedEntityPtr->get_id());
-						deselectObject();
-					}
-					
-					if(ImGui::Button("Deselect Entity"))
-						deselectObject();
-				} else {
-					ImGui::Text("No object selected.");
-					
-					if(ImGui::Button("Create Entity"))
-					{
-						auto& new_ent = create_entity("EmptyEntity");
-						_selectedObject = new_ent.get_id();
-					}
-				}
-			}
-			ImGui::End();
-		}
-		
 		// Entity Selection
 		if(!ImGui::GetIO().WantCaptureMouse)
 		{
@@ -1069,6 +672,444 @@ protected:
 		Context::viewport(0, 0, _width, _height);
 		
 		ImGui::Image(reinterpret_cast<void*>(model_render.getColor().getName()), ImVec2{256, 256});
+	}
+	
+	float last_update = 2.0;
+	std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
+	constexpr size_t max_samples = 100;
+	
+	void update_stats()
+	{
+		last_update += TimeManager::getRealDeltaTime();
+		const float ms = TimeManager::getRealDeltaTime() * 1000;
+		if(last_update > 0.05 || frametimes.empty())
+		{
+			if(frametimes.size() > max_samples)			frametimes.pop_front();
+			if(updatetimes.size() > max_samples)		updatetimes.pop_front();
+			if(gbuffertimes.size() > max_samples)		gbuffertimes.pop_front();
+			if(lighttimes.size() > max_samples)			lighttimes.pop_front();
+			if(postprocesstimes.size() > max_samples)	postprocesstimes.pop_front();
+			if(guitimes.size() > max_samples)			guitimes.pop_front();
+			frametimes.push_back(ms);
+			updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
+			gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
+			lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
+			postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
+			guitimes.push_back(_lastGUITiming / 1000000.0);
+			last_update = 0.0;
+		}
+	}
+	
+	void gui_stats()
+	{
+		//if(ImGui::Begin("Statistics", &win_stats))
+		if(ImGui::BeginDock("Statistics", &win_stats))
+		{
+			ImGui::Text("%.4f ms/frame (%.1f FPS)", 
+				frametimes.back(), 
+				1000.0 / frametimes.back()
+			);
+			auto lamba_data = [](void* data, int idx) {
+				return static_cast<std::deque<float>*>(data)->at(idx);
+			};
+			ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, to_string(frametimes.back(), 4).c_str(), 0.0, 20.0); 
+			ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, to_string(updatetimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, to_string(gbuffertimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("GUI", lamba_data, &guitimes, guitimes.size(), 0, to_string(guitimes.back(), 4).c_str(), 0.0, 10.0);         
+		}
+		ImGui::EndDock();
+		//ImGui::End();
+	}
+	
+	void gui_rendering()
+	{
+		//ImGui::Begin("Rendering Options", &win_rendering);
+		ImGui::BeginDock("Rendering Options", &win_rendering);
+		{
+			if(ImGui::Checkbox("Fullscreen", &_fullscreen))
+				setFullscreen(_fullscreen);
+			ImGui::SameLine();
+			if(ImGui::Checkbox("Vsync", &_vsync))
+				glfwSwapInterval(_vsync);
+			ImGui::Text("Window resolution: %d * %d", _width, _height);
+			const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
+			static int internal_resolution_item_current = 0;
+			if(ImGui::Combo("Internal Resolution", &internal_resolution_item_current, internal_resolution_items, 4))
+			{
+				switch(internal_resolution_item_current)
+				{
+					case 0: setInternalResolution(0, 0); break;
+					case 1: setInternalResolution(1920, 1080); break;
+					case 2: setInternalResolution(2715, 1527); break;
+					case 3: setInternalResolution(3840, 2160); break;
+				}
+			}
+			if(ImGui::DragFloat("FoV", &_fov, 1.0, 40.0, 110.0))
+				setFoV(_fov);
+			
+			ImGui::Separator();
+			
+			static bool bloom_toggle = _bloom > 0.0;
+			if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
+				_bloom = -_bloom;
+			ImGui::DragFloat("Bloom", &_bloom, 0.05, 0.0, 5.0);
+			ImGui::DragFloat("Exposure", &_exposure, 0.05, 0.0, 5.0);
+			ImGui::DragFloat("MinVariance (VSM)", &_minVariance, 0.000001, 0.0, 0.00005);
+			ImGui::DragInt("AOSamples", &_aoSamples, 1, 0, 32);
+			ImGui::DragFloat("AOThresold", &_aoThreshold, 0.05, 0.0, 5.0);
+			ImGui::DragFloat("AORadius", &_aoRadius, 1.0, 0.0, 400.0);
+			ImGui::DragInt("VolumeSamples", &_volumeSamples, 1, 0, 64);
+			ImGui::DragFloat("AtmosphericDensity", &_atmosphericDensity, 0.001, 0.0, 0.02);
+		
+			ImGui::Separator();
+
+			ImGui::ColorEdit3("Ambiant Color", &_ambiant.r);
+		}
+		ImGui::EndDock();
+		//ImGui::End();
+	}
+	
+	void gui_inspect()
+	{
+		//if(ImGui::Begin("Entity Inspector", &win_inspect))
+		if(ImGui::BeginDock("Entity Inspector", &win_inspect))
+		{
+			ImGui::ColorEdit4("Highlight color", &_selectedObjectColor.x);
+			ImGui::Separator();
+			if(_selectedObject != invalid_entity)
+			{
+				auto selectedEntityPtr = &get_entity(_selectedObject);
+				char name_buffer[256];
+				std::strcpy(name_buffer, selectedEntityPtr->get_name().c_str());
+				if(ImGui::InputText("Name", name_buffer, 256))
+					selectedEntityPtr->set_name(name_buffer);
+				if(selectedEntityPtr->has<Transformation>())
+				{
+					if(ImGui::TreeNodeEx("Transformation", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						auto& transform = selectedEntityPtr->get<Transformation>();
+						
+						glm::vec3 p = transform.getPosition();
+						if(ImGui::InputFloat3("Position", &p.x))
+							transform.setPosition(p);
+						ImGui::SameLine();
+						if(ImGui::Button("Reset##Position"))
+							transform.setPosition(glm::vec3{0.0f});
+						
+						glm::quat r = transform.getRotation();
+						if(ImGui::InputFloat4("Rotation", &r.x))
+							transform.setRotation(r);
+						ImGui::SameLine();
+						if(ImGui::Button("Reset##Rotation"))
+							transform.setRotation(glm::quat{});
+						
+						glm::vec3 s = transform.getScale();
+						if(ImGui::InputFloat3("Scale", &s.x))
+							transform.setScale(s);
+						ImGui::SameLine();
+						if(ImGui::Button("Reset##Scale"))
+							transform.setScale(glm::vec3{1.0f});
+						
+						ImGui::Text("Parent: %d", transform.getParent());
+						
+						ImGui::TreePop();
+					}
+				} else {
+					if(ImGui::Button("Add Transformation component (WIP)"))
+					{
+						selectedEntityPtr->add<Transformation>();
+					}
+				}
+
+				if(selectedEntityPtr->has<MeshRenderer>() && ImGui::TreeNodeEx("MeshRenderer", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					auto edit_material = [&](Material& mat)
+					{
+						if(auto uniform_color = mat.searchUniform<glm::vec3>("Color"))
+						{
+							float col[3] = {uniform_color->getValue().x, uniform_color->getValue().y, uniform_color->getValue().z};
+							if(ImGui::ColorEdit3("Color", col))
+								uniform_color->setValue(glm::vec3{col[0], col[1], col[2]});
+						}
+						if(auto uniform_r = mat.searchUniform<float>("R"))
+						{
+							float val = uniform_r->getValue();
+							if(ImGui::SliderFloat("R", &val, 0.0, 1.0))
+								uniform_r->setValue(val);
+						}
+						if(auto uniform_f0 = mat.searchUniform<float>("F0"))
+						{
+							float val = uniform_f0->getValue();
+							if(ImGui::SliderFloat("F0", &val, 0.0, 1.0))
+								uniform_f0->setValue(val);
+						}
+						auto display_texture = [&](const std::string& name) 
+						{
+							if(auto uniform_tex = mat.searchUniform<Texture>(name))
+							{
+								ImGui::Text(name.c_str());
+								gui_display(uniform_tex->getValue());
+							}
+						};
+						display_texture("Texture");
+						display_texture("NormalMap");
+					};
+					
+					auto& mr = selectedEntityPtr->get<MeshRenderer>();
+					if(ImGui::TreeNode("Mesh"))
+					{
+						gui_display(mr.getMesh());
+						ImGui::TreePop();
+					}
+					if(ImGui::TreeNode("Material"))
+					{
+						edit_material(mr.getMaterial());
+						ImGui::TreePop();
+					}
+					ImGui::TreePop();
+				}
+				
+				if(selectedEntityPtr->has<SpotLight>())
+				{
+					if(ImGui::TreeNodeEx("SpotLight", ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						auto& sl = selectedEntityPtr->get<SpotLight>();
+						
+						ImGui::Checkbox("Dynamic", &sl.dynamic);
+						int downsampling = sl.downsampling;
+						if(ImGui::SliderInt("Downsampling", &downsampling, 0, 16))
+							sl.downsampling = downsampling;
+
+						float col[3] = {sl.getColor().x, sl.getColor().y, sl.getColor().z};
+						if(ImGui::ColorEdit3("Color", col))
+							sl.setColor(glm::vec3{col[0], col[1], col[2]});
+						
+						float ran = sl.getRange();
+							if(ImGui::SliderFloat("Range", &ran, 1.0, 1000.0))
+								sl.setRange(ran);
+							
+						float ang = sl.getAngle();
+						if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
+							sl.setAngle(ang);
+						
+						int res = sl.getResolution();
+						if(ImGui::InputInt("Resolution", &res))
+							sl.setResolution(res);
+							
+						ImGui::Text("Depth Buffer");
+						gui_display(sl.getShadowMap());
+						
+						ImGui::TreePop();
+					}
+				} else {
+					if(ImGui::Button("Add SpotLight component (WIP)"))
+					{
+						if(!selectedEntityPtr->has<Transformation>())
+							selectedEntityPtr->add<Transformation>();
+						auto& spotlight = selectedEntityPtr->add<SpotLight>();
+						spotlight.init();
+						spotlight.dynamic = true;
+						spotlight.updateMatrices();
+						spotlight.drawShadowMap(ComponentIterator<MeshRenderer>{});
+					}
+				}
+				
+				if(ImGui::Button("Delete Entity"))
+				{
+					destroy_entity(selectedEntityPtr->get_id());
+					deselectObject();
+				}
+				
+				if(ImGui::Button("Deselect Entity"))
+					deselectObject();
+			} else {
+				ImGui::Text("No object selected.");
+				
+				if(ImGui::Button("Create Entity"))
+				{
+					auto& new_ent = create_entity("EmptyEntity");
+					_selectedObject = new_ent.get_id();
+				}
+			}
+		}
+		ImGui::EndDock();
+		//ImGui::End();
+	}
+	
+	void gui_scene()
+	{
+		//ImGui::Begin("Scene", &win_scene);
+		ImGui::BeginDock("Scene", &win_scene);
+		{
+			if(ImGui::TreeNode("Transformation Hierarchy"))
+			{
+				const static std::function<void(const Transformation&)> explore_hierarchy = [&] (const Transformation& tr)
+				{
+					ImGui::PushID(&tr);
+					auto entityID = get_owner(tr);
+					auto& entity = get_entity(entityID);
+					if(!tr.getChildren().empty())
+					{
+						bool expand = ImGui::TreeNodeEx(entity.get_name().c_str(), ImGuiTreeNodeFlags_OpenOnArrow);
+						if(ImGui::IsItemClicked()) 
+							selectObject(entityID);
+						if(expand)
+						{
+							for(ComponentID child : tr.getChildren())
+								explore_hierarchy(get_component<Transformation>(child));
+							ImGui::TreePop();
+						}
+					} else {
+						if(ImGui::SmallButton(entity.get_name().c_str()))
+							selectObject(entityID);
+					}
+					ImGui::PopID();
+				};
+				
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
+				// Iterate over root (without parent) Transformations.
+				for(auto& tr : ComponentIterator<Transformation>{[] (const Transformation& t) { return t.getParent() == invalid_component_idx; }})
+					explore_hierarchy(tr);
+				ImGui::PopStyleColor(2);
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode("Entities"))
+			{
+				static char filter[256] = "\0";
+				ImGui::InputText("Filter", filter, 256);
+				/// TODO: Use score to order results
+				int score = 0;
+				/// TODO: Make the matching characters stand out?
+				for(auto& e : entities)
+				{
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+					if(e.is_valid() && (filter[0] == '\0' || fts::fuzzy_match(filter, e.get_name().c_str(), score)))
+					{
+						ImGui::PushID(&e);
+						if(ImGui::SmallButton(e.get_name().c_str()))
+							selectObject(e.get_id());
+						ImGui::PopID();
+					}
+					ImGui::PopStyleColor();
+				}
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode(("Point Lights (" + std::to_string(_scene.getPointLights().size()) + ")").c_str()))
+			{
+				for(auto& l : _scene.getPointLights())
+				{
+					ImGui::PushID(&l);
+					ImGui::PushItemWidth(150);
+					ImGui::InputFloat3("Position", &l.position.x);
+					ImGui::SameLine();
+					ImGui::InputFloat3("Color", &l.color.r);
+					ImGui::SameLine();
+					ImGui::PushItemWidth(50);
+					ImGui::InputFloat("Range", &l.range);
+					ImGui::PopID();
+				}
+				ImGui::TreePop();
+			}
+			
+			if(ImGui::TreeNode("Resources"))
+			{
+				if(ImGui::TreeNode("Textures"))
+				{
+					for(auto& p : Resources::_textures)
+						if(ImGui::TreeNode(p.first.c_str()))
+						{
+							gui_display(*p.second);
+							ImGui::TreePop();
+						}
+					ImGui::TreePop();
+				}
+				if(ImGui::TreeNode("Shaders"))
+				{
+					for(auto& p : Resources::_shaders)
+					{
+						if(ImGui::TreeNode(p.first.c_str()))
+						{
+							ImGui::PushID(&p);
+							ImGui::Text("Path: %s", p.second->getPath().c_str());
+							ImGui::Text(p.second->isValid() ? "Valid" : "Invalid!");
+							ImGui::SameLine();
+							if(ImGui::SmallButton("Reload"))
+							{
+								Log::info("Reloading ", p.first, "...");
+								p.second->reload();
+								Log::info(p.first, " reloaded.");
+							}
+							ImGui::PopID();
+							ImGui::TreePop();
+						}
+					}
+					ImGui::TreePop();
+				}
+				if(ImGui::TreeNode("Programs"))
+				{
+					for(auto& p : Resources::_programs)
+					{
+						if(p.second.isValid())
+							ImGui::Text("%s: Valid", p.first.c_str());
+						else
+							ImGui::Text("%s: Invalid!", p.first.c_str());
+					}
+					ImGui::TreePop();
+				}
+				if(ImGui::TreeNode("Meshs"))
+				{
+					for(auto& p : Resources::_meshes)
+						if(ImGui::TreeNode(p.first.c_str()))
+						{
+							gui_display(*p.second);
+							ImGui::TreePop();
+						}
+					ImGui::TreePop();
+				}
+				ImGui::TreePop();
+			}
+		}
+		ImGui::EndDock();
+		//ImGui::End();
+	}
+	
+	void gui_logs()
+	{
+		//ImGui::Begin("Logs", &win_logs);
+		ImGui::BeginDock("Logs", &win_logs);
+		{
+			const ImVec4 LogColors[3] = {
+				ImVec4{1, 1, 1, 1},
+				ImVec4{1, 1, 0, 1},
+				ImVec4{1, 0, 0, 1}
+			};
+			static int log_level_current = 0;
+			ImGui::Combo("Log Level", &log_level_current, Log::_log_types.data(), 3);
+			std::vector<Log::LogLine*> tmp_logs;
+			if(log_level_current > 0)
+				for(auto& l : Log::_logs)
+					if(log_level_current <= l.type)
+						tmp_logs.push_back(&l);
+			
+			ImGui::BeginChild("Logs Lines");
+			ImGuiListClipper clipper(log_level_current > 0 ? tmp_logs.size() : Log::_logs.size());
+			while(clipper.Step())
+				for(int i = clipper.DisplayStart; i < clipper.DisplayEnd; ++i)
+				{
+					if(log_level_current > 0)
+						ImGui::TextColored(LogColors[tmp_logs[i]->type], "%s", tmp_logs[i]->str().c_str());
+					else
+						ImGui::TextColored(LogColors[Log::_logs[i].type], "%s", std::string(Log::_logs[i]).c_str());
+				}
+			ImGui::EndChild();
+		}
+		ImGui::EndDock();
+		//ImGui::End();
 	}
 };
 

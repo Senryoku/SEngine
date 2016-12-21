@@ -6,6 +6,7 @@
 #include <glm/gtx/transform.hpp>
 
 #include <imgui.h>
+#include <imgui_dock.h>
 #include <imgui_impl_glfw_gl3.h>
 
 Application* Application::s_instance = nullptr;
@@ -87,6 +88,7 @@ void Application::init(const std::string& windowName)
 	
 	ImGui_ImplGlfwGL3_Init(_window, false);
 	ImGui::GetIO().MouseDrawCursor = false;
+	ImGui::LoadDock();
 	
 	Context::enable(Capability::DepthTest);
 	
@@ -98,6 +100,7 @@ void Application::init(const std::string& windowName)
 
 void Application::clean()
 {
+	ImGui::SaveDock();
 	ImGui_ImplGlfwGL3_Shutdown();
 	glfwDestroyWindow(_window);
 	glfwTerminate();
