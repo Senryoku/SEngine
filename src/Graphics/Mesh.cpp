@@ -131,6 +131,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path)
 
 std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 {
+	// TODO: Buggy as hell
 	std::vector<Mesh*> M;
 	std::string path_s = path;
 	std::replace(path_s.begin(), path_s.end(), '\\', '/');

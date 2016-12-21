@@ -195,6 +195,30 @@ bool saveScene(const std::string& path)
 	return true;
 }
 
+template<typename Func, typename... Args>
+void file_explorer(const char* name, Func&& lambda, Args&&... exts)
+{
+	if(ImGui::BeginPopup(name))
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
+		namespace fs = std::experimental::filesystem;
+		static char root_path[256] = ".";
+		ImGui::InputText("Root", root_path, 256);
+		auto p = explore(root_path, {exts...});
+		if(!p.empty())
+		{
+			lambda(p.string());
+			// @todo Not so sure about that...
+			ImGui::GetIO().WantCaptureKeyboard = ImGui::GetIO().WantTextInput = false;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::PopStyleColor(2);
+		if(ImGui::Button("Cancel"))
+			ImGui::CloseCurrentPopup();
+		ImGui::EndPopup();
+	}
+}
 
 class Editor : public DeferredRenderer
 {
@@ -292,50 +316,12 @@ public:
 				}
 				ImGui::EndMainMenuBar();
 			}
-
+			
 		if(load_scene) ImGui::OpenPopup("Load Scene");
-		if(ImGui::BeginPopup("Load Scene"))
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
-			namespace fs = std::experimental::filesystem;
-			static char root_path[256] = ".";
-			ImGui::InputText("Root", root_path, 256);
-			auto p = explore(root_path, {".json"});
-			if(!p.empty())
-			{
-				loadScene(p.string());
-				// @todo Not so sure about that...
-				ImGui::GetIO().WantCaptureKeyboard = ImGui::GetIO().WantTextInput = false;
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::PopStyleColor(2);
-			if(ImGui::Button("Cancel"))
-				ImGui::CloseCurrentPopup();
-			ImGui::EndPopup();
-		}
+		file_explorer("Load Scene", loadScene, ".json");
 			
 		if(load_model) ImGui::OpenPopup("Load Model");
-		if(ImGui::BeginPopup("Load Model"))
-		{
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.0, 0.0, 0.0, 0.0});
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3647, 0.3607, 0.7176, 1.0});
-			namespace fs = std::experimental::filesystem;
-			static char root_path[256] = ".";
-			ImGui::InputText("Root", root_path, 256);
-			auto p = explore(root_path, {".obj"});
-			if(!p.empty())
-			{
-				loadModel(p.string());
-				// @todo Not so sure about that...
-				ImGui::GetIO().WantCaptureKeyboard = ImGui::GetIO().WantTextInput = false;
-				ImGui::CloseCurrentPopup();
-			}
-			ImGui::PopStyleColor(2);
-			if(ImGui::Button("Cancel"))
-				ImGui::CloseCurrentPopup();
-			ImGui::EndPopup();
-		}
+		file_explorer("Load Model", loadModel, ".obj");
 	
 		// Plots
 		static float last_update = 2.0;
