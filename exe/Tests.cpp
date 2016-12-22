@@ -23,6 +23,12 @@
 #include <Meta.hpp>
 #include <ComponentValidation.hpp>
 
+static const ImVec4 LogColors[3] = {
+	ImVec4{1, 1, 1, 1},
+	ImVec4{1, 1, 0, 1},
+	ImVec4{1, 0, 0, 1}
+};
+	
 template <typename T>
 std::string to_string(const T a_value, const int n = 6)
 {
@@ -222,7 +228,7 @@ void file_explorer(const char* name, Func&& lambda, Args&&... exts)
 
 class Editor : public DeferredRenderer
 {
-public:
+public:		
 	Editor(int argc, char* argv[]) : 
 		DeferredRenderer(argc, argv)
 	{
@@ -323,6 +329,8 @@ public:
 			ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 20.f), ImGuiSetCond_Always);
 			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize);
 			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);
+			ImGui::SameLine(125, 0);
+			ImGui::TextColored(LogColors[Log::_logs.front().type], "%s", Log::_logs.front().str().c_str());
 			ImGui::End();
 			ImGui::PopStyleVar(2);
 		}
@@ -977,16 +985,20 @@ protected:
 				for(auto& l : _scene.getPointLights())
 				{
 					ImGui::PushID(&l);
-					ImGui::PushItemWidth(150);
 					ImGui::InputFloat3("Position", &l.position.x);
-					ImGui::SameLine();
 					ImGui::InputFloat3("Color", &l.color.r);
-					ImGui::SameLine();
-					ImGui::PushItemWidth(50);
 					ImGui::InputFloat("Range", &l.range);
+					ImGui::Separator();
 					ImGui::PopID();
 				}
 				ImGui::TreePop();
+				ImGui::Separator();
+				PointLight l;
+				ImGui::InputFloat3("Position", &l.position.x);
+				ImGui::InputFloat3("Color", &l.color.r);
+				ImGui::InputFloat("Range", &l.range);
+				if(ImGui::Button("Add PointLight"))
+					_scene.getPointLights().push_back(l);
 			}
 			
 			if(ImGui::TreeNode("Resources"))
@@ -1056,11 +1068,6 @@ protected:
 		ImGui::Begin("Logs", &win_logs);
 		//ImGui::BeginDock("Logs", &win_logs);
 		{
-			const ImVec4 LogColors[3] = {
-				ImVec4{1, 1, 1, 1},
-				ImVec4{1, 1, 0, 1},
-				ImVec4{1, 0, 0, 1}
-			};
 			static int log_level_current = 0;
 			ImGui::Combo("Log Level", &log_level_current, Log::_log_types.data(), 3);
 			std::vector<Log::LogLine*> tmp_logs;
