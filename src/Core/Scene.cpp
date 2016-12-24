@@ -32,12 +32,11 @@ void Scene::updateLights()
 
 void Scene::update()
 {
+	for_each<deletion_pass_wrapper, ComponentTypes>{}();
+	
 	updateLights();
 	if(_dirtyPointLights)
 		updatePointLightBuffer();
-	
-	/// @todo Move elsewhere?
-	for_each<deletion_pass_wrapper, ComponentTypes>{}();
 }
 
 void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
