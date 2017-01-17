@@ -26,6 +26,9 @@
 //---- Don't define obsolete functions names
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
+//---- Pack colors to BGRA instead of RGBA (remove need to post process vertex buffer in back ends)
+//#define IMGUI_USE_BGRA_PACKED_COLOR
+
 //---- Implement STB libraries in a namespace to avoid conflicts
 //#define IMGUI_STB_NAMESPACE     ImGuiStb
 
@@ -38,7 +41,7 @@
 #include <glm/vec4.hpp>
 #define IM_VEC4_CLASS_EXTRA                                         \
 	ImVec4(const glm::vec4& f) : x(f.x), y(f.y), z(f.z), w(f.w) {}	\
-	operator glm::vec4() const { return glm::vec4(x,y,z,w); }
+operator glm::vec4() const { return glm::vec4(x,y,z,w); }
 
 //---- Tip: You can add extra functions within the ImGui:: namespace, here or in your own headers files.
 //---- e.g. create variants of the ImGui::Value() helper for your low-level math types, or your own widgets/helpers.
