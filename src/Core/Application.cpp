@@ -3,6 +3,8 @@
 #include <functional>
 
 #include <stb_image_write.hpp>
+
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 
 #include <imgui.h>
@@ -82,11 +84,10 @@ void Application::init(const std::string& windowName)
 	glfwSetScrollCallback(_window, s_scroll_callback);
 	glfwSetDropCallback(_window, s_drop_callback);
 	
-	if(_controlCamera)
-		glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	
 	ImGui_ImplGlfwGL3_Init(_window, false);
-	ImGui::GetIO().MouseDrawCursor = false;
+	ImGui::GetIO().MouseDrawCursor = !_controlCamera;
 	ImGuiStyle& style = ImGui::GetStyle();
 
     ImVec4 col_text{1.0, 1.0, 1.0, 1.0};
@@ -142,8 +143,9 @@ void Application::init(const std::string& windowName)
 	
 	_scene.init();
 	
-	_camera_buffer.init();
-	_camera_buffer.bind(0);
+	_camera.getGPUBuffer().init();
+	_camera.getGPUBuffer().bind(0);
+	_camera.updateGPUBuffer();
 }
 
 void Application::clean()
@@ -171,14 +173,16 @@ void Application::run_init()
 	};
 	_shortcuts[{GLFW_KEY_SPACE}] = [&]()
 	{
-		if(!_controlCamera)
+		_controlCamera = !_controlCamera;
+		if(_controlCamera)
 		{
 			glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
+			ImGui::GetIO().MouseDrawCursor = false;
 			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		} else {
-			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			ImGui::GetIO().MouseDrawCursor = true;
+			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 		}
-		_controlCamera = !_controlCamera;
 	};
 	_shortcuts[{GLFW_KEY_X}] = [&]()
 	{
@@ -273,12 +277,7 @@ void Application::update()
 			_camera.look(glm::vec2(_mouse_x - mx, my - _mouse_y));
 	}
 	_camera.updateView();
-	_invViewMatrix = glm::inverse(_camera.getMatrix());
-	_invViewProjection = _invViewMatrix * _invProjection;
-	
-	_gpuCameraData = {_camera.getMatrix(), _projection};
-	_camera_buffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
-	_camera_buffer.unbind();
+	_camera.updateGPUBuffer();
 
 	if(!_paused || _time == 0.0f)
 		_scene.update();
@@ -359,7 +358,7 @@ void Application::resize_callback(GLFWwindow* _window, int width, int height)
 	Context::viewport(0, 0, _width, _height);
 	_resolution = glm::vec3(_width, _height, 0.0);
 	
-	update_projection();
+	_camera.updateProjection((float) _width/_height);
 }
 
 void Application::setMSAA(bool val)
@@ -414,30 +413,23 @@ Ray Application::getMouseRay() const
 
 glm::vec3 Application::getMouseProjection(float depth) const
 {
-	auto o = _invProjection * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), depth, 1.0);
+	auto o = _camera.getInvProjection() * glm::vec4(2.0 * _mouse.x / _resolution.x - 1.0, -(2.0 * _mouse.y / _resolution.y - 1.0), depth, 1.0);
 	o /= o.w;
-	o = _invViewMatrix * o;
+	o = _camera.getInvViewMatrix() * o;
 	return glm::vec3(o);
 }
 
 glm::vec2 Application::project(const glm::vec4& v) const
 {
-	auto t = _camera.getMatrix() * v;
+	auto t = _camera.getViewMatrix() * v;
 	if(t.z > 0.0) // Truncate is point is behind camera
 		t.z = 0.0;
-	t = _projection * t;
+	t = _camera.getProjectionMatrix() * t;
 	auto r = glm::vec2{t.x, -t.y} / t.w;
 	r = 0.5f * (r + 1.0f);
 	r.x *= _width;
 	r.y *= _height;
 	return r;
-}
-
-void Application::update_projection()
-{
-	float inRad = _fov * glm::pi<float>()/180.f;
-	_projection = glm::perspective(inRad, (float) _width/_height, _near, _far);
-	_invProjection = glm::inverse(_projection);
 }
 
 void Application::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)

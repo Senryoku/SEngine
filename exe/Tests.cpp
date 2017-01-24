@@ -3,8 +3,10 @@
 #include <deque>
 #include <experimental/filesystem>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/transform.hpp>
 #include <glmext.hpp>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <fts_fuzzy_match.h>
@@ -244,7 +246,7 @@ public:
 		);
 		
 		_camera.speed() = 15;
-		Simple.bindUniformBlock("Camera", _camera_buffer); 
+		Simple.bindUniformBlock("Camera", _camera.getGPUBuffer()); 
 		
 		loadScene(_scenePath);
 		
@@ -728,8 +730,9 @@ protected:
 					case 3: setInternalResolution(3840, 2160); break;
 				}
 			}
-			if(ImGui::DragFloat("FoV", &_fov, 1.0, 40.0, 110.0))
-				setFoV(_fov);
+			float fov = _camera.getFoV();
+			if(ImGui::DragFloat("FoV", &fov, 1.0, 40.0, 110.0))
+				_camera.setFoV(fov);
 			
 			ImGui::Separator();
 			

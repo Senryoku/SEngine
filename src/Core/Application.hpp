@@ -2,6 +2,7 @@
 
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/random.hpp>
 #include <random>
 
@@ -12,7 +13,6 @@
 #include <Framebuffer.hpp>
 #include <Camera.hpp>
 #include <Query.hpp>
-#include <Buffer.hpp>
 #include <Blur.hpp>
 
 struct KeyboardShortcut
@@ -86,23 +86,12 @@ public:
 	glm::vec2 project(const glm::vec4&) const;
 	inline glm::vec2 project(const glm::vec3& v) const { return project(glm::vec4{v, 1.0}); };
 	
-	inline void setFoV(float fov)
-	{
-		_fov = fov;
-		update_projection();
-	}
-	
-protected:
-	struct GPUViewProjection
-	{
-		glm::mat4	view;
-		glm::mat4	projection;
-	};
-	
+protected:	
 	// Window settings
 	GLFWwindow*		_window;
 	int				_width = 1366;
 	int				_height = 720;
+	glm::vec3 		_resolution;  // Get rid of this eventually?
 	bool 			_fullscreen = false;
 	bool 			_vsync = false;
 	bool 			_msaa = false;
@@ -113,18 +102,8 @@ protected:
 	// MainCamera
 	bool			_cameraMoved = true;
 	Camera			_camera;
-	float			_fov = 60.0;
-	float 			_near = 0.1f;
-	float 			_far = 1000.0f;
-	glm::vec3 		_resolution;
-	glm::mat4 		_projection;
-	glm::mat4 		_invProjection;
-	glm::mat4 		_invViewMatrix;
-	glm::mat4		_invViewProjection;
+
 	glm::vec4 		_mouse = glm::vec4(0.0);
-	
-	GPUViewProjection	_gpuCameraData;
-	UniformBuffer		_camera_buffer;
 
 	bool 	_menu = false;
 	bool 	_controlCamera = false;
@@ -139,8 +118,6 @@ protected:
 	float	_frameTime;
 	float	_frameRate;
 	bool	_paused = false;
-
-	void update_projection();
 
 	// Callbacks (GLFW)
 	virtual void error_callback(int error, const char* description);

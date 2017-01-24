@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp> // glm::lookAt
 #include <glm/gtc/type_ptr.hpp> // glm::value_ptr
 
@@ -61,10 +62,10 @@ void Camera::look(glm::vec2 v)
 	_moveMouvement += v*_sensitivity;
 	if(_moveMouvement.y > 89) _moveMouvement.y = 89;
 	else if (_moveMouvement.y < -89) _moveMouvement.y = -89;
-	double r_temp = std::cos(_moveMouvement.y*pi()/180);
-	_direction.x += r_temp*std::cos(_moveMouvement.x*pi()/180);
-	_direction.y += std::sin(_moveMouvement.y*pi()/180);
-	_direction.z += r_temp*std::sin(_moveMouvement.x*pi()/180);
+	double r_temp = std::cos(_moveMouvement.y * pi() / 180.);
+	_direction.x += r_temp * std::cos(_moveMouvement.x * pi() / 180.);
+	_direction.y += std::sin(_moveMouvement.y * pi() / 180.);
+	_direction.z += r_temp * std::sin(_moveMouvement.x * pi() / 180.);
 
 	_direction = glm::normalize(_direction);
 	_cross = glm::normalize(glm::cross(_direction, _up));
@@ -81,5 +82,22 @@ void Camera::reset()
 
 void Camera::updateView()
 {
-	_matrix = glm::lookAt(_position, _position + _direction, _up);
+	_viewMatrix = glm::lookAt(_position, _position + _direction, _up);
+	_invViewMatrix = glm::inverse(_viewMatrix);
+	_invViewProjection = _invViewMatrix * _invProjection;
+}
+
+void Camera::updateProjection(float ratio)
+{
+	float inRad = _fov * glm::pi<float>()/180.f;
+	_projection = glm::perspective(inRad, ratio, _near, _far);
+	_invProjection = glm::inverse(_projection);
+	_invViewProjection = _invViewMatrix * _invProjection;
+}
+
+void Camera::updateGPUBuffer()
+{
+	_gpuCameraData = {_viewMatrix, _projection};
+	_cameraBuffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
+	_cameraBuffer.unbind();
 }

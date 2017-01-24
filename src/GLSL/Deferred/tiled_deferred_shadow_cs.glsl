@@ -373,24 +373,24 @@ void main(void)
 		{
 			uint i = gl_LocalInvocationIndex;
 			vec2 m = vec2(local_pixel.x > 0 ? 1.0 : 0.0,
-							local_pixel.y > 0 ? 1.0 : 0.0);
+						  local_pixel.y > 0 ? 1.0 : 0.0);
 			vec2 p = vec2(local_pixel.x < WORKGROUP_SIZE - 1 && pixel.x < image_size.x - 1 ? 1.0 : 0.0,
-							local_pixel.y < WORKGROUP_SIZE - 1 && pixel.y < image_size.y - 1 ? 1.0 : 0.0);
+						  local_pixel.y < WORKGROUP_SIZE - 1 && pixel.y < image_size.y - 1 ? 1.0 : 0.0);
 			float gathered_pixels = 1.0 / (1.0 + p.x + p.y + (p.x * p.y)
 									+ m.x + m.y + (m.x * m.y)
 									+ (m.x * p.y) + (p.x * m.y));
 									
 			mat3 pixels = mat3(
-				(m.x * m.y),	m.y,	(p.x * m.y),
-				m.x,			1.0,	p.x,
-				(m.x * p.y),	p.y,	(p.x * p.y)
+				(m.x * m.y), m.y, (p.x * m.y),
+				m.x,         1.0, p.x,
+				(m.x * p.y), p.y, (p.x * p.y)
 			);
 
 			for(int shadow = 0; shadow < ShadowCount; ++shadow)
 			{
 				mat3 values = mat3(
 					vol_lights[shadow][i - WORKGROUP_SIZE - 1], vol_lights[shadow][i - WORKGROUP_SIZE], vol_lights[shadow][i - WORKGROUP_SIZE + 1],
-					vol_lights[shadow][i - 1], vol_lights[shadow][i], vol_lights[shadow][i + 1],
+					vol_lights[shadow][i - 1],                  vol_lights[shadow][i],                  vol_lights[shadow][i + 1],
 					vol_lights[shadow][i + WORKGROUP_SIZE - 1], vol_lights[shadow][i + WORKGROUP_SIZE], vol_lights[shadow][i + WORKGROUP_SIZE + 1]
 				);
 				mat3 tmp = matrixCompMult(pixels, values);
@@ -402,7 +402,7 @@ void main(void)
 			{
 				mat3 values = mat3(
 					vol_cube_lights[shadow][i - WORKGROUP_SIZE - 1], vol_cube_lights[shadow][i - WORKGROUP_SIZE], vol_cube_lights[shadow][i - WORKGROUP_SIZE + 1],
-					vol_cube_lights[shadow][i - 1], vol_cube_lights[shadow][i], vol_cube_lights[shadow][i + 1],
+					vol_cube_lights[shadow][i - 1],                  vol_cube_lights[shadow][i],                  vol_cube_lights[shadow][i + 1],
 					vol_cube_lights[shadow][i + WORKGROUP_SIZE - 1], vol_cube_lights[shadow][i + WORKGROUP_SIZE], vol_cube_lights[shadow][i + WORKGROUP_SIZE + 1]
 				);
 				mat3 tmp = matrixCompMult(pixels, values);

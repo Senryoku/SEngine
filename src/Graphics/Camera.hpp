@@ -3,6 +3,8 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
+#include <Buffer.hpp>
+
 class Camera
 {
 public:
@@ -24,14 +26,24 @@ public:
 	void look(glm::vec2 v);
 	
 	void updateView();
+	void updateProjection(float ratio);
+	void updateGPUBuffer();
 	
 	void reset();
 	
-	inline const glm::mat4& getMatrix() const { return _matrix; }
+	inline const glm::mat4& getViewMatrix() const { return _viewMatrix; }
+	inline const glm::mat4& getProjectionMatrix() const { return _projection; }
+	inline const glm::mat4& getInvProjection() const { return _invProjection; }
+	inline const glm::mat4& getInvViewMatrix() const { return _invViewMatrix; }
+	inline auto& getGPUBuffer() { return _cameraBuffer; }
+	inline const auto& getGPUBuffer() const { return _cameraBuffer; }
 	
 	inline void setPosition(const glm::vec3& pos) { _position = pos; }
 	inline void setDirection(const glm::vec3& dir) { _direction = dir; }
 	inline void lookAt(const glm::vec3& at) { _direction = glm::normalize(at - _position); }
+	
+	inline float getFoV() const { return _fov; }
+	inline void setFoV(float fov) { _fov = fov; }
 	
 	inline glm::vec3& getPosition() { return _position; }
 	inline const glm::vec3& getPosition() const { return _position; }
@@ -42,17 +54,38 @@ public:
 	inline float& sensitivity() { return _sensitivity; }
 	
 private:
-	float		_speed;
-	float		_sensitivity;
-
-	glm::vec3	_position;
-	glm::vec3	_direction;
-	glm::vec3	_up;
+	struct GPUViewProjection
+	{
+		glm::mat4	view;
+		glm::mat4	projection;
+	};
 	
-	glm::vec3	_cross;
-	glm::vec2	_moveMouvement;
+	float			_speed;
+	float			_sensitivity;
 	
-	glm::mat4	_matrix;
+	glm::vec3		_position;
+	glm::vec3		_direction;
+	glm::vec3		_up;
+		
+	glm::vec3		_cross;
+	glm::vec2		_moveMouvement;
+		
+	glm::mat4		_viewMatrix;
+	
+	// Projection data
+	float			_fov = 60.0;
+	float 			_near = 0.1f;
+	float 			_far = 1000.0f;
+	glm::mat4 		_projection;
+	
+	// Cache
+	glm::mat4 		_invProjection;
+	glm::mat4 		_invViewMatrix;
+	glm::mat4		_invViewProjection;
+	
+	// GPU Data
+	GPUViewProjection	_gpuCameraData;
+	UniformBuffer		_cameraBuffer;
 	
 	static const glm::vec3 BasePosition;
 	static const glm::vec3 BaseDirection;

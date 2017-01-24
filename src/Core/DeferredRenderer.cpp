@@ -45,7 +45,8 @@ void DeferredRenderer::run_init()
 		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
 		load<FragmentShader>("src/GLSL/Deferred/deferred_fs.glsl")
 	);
-	Deferred.bindUniformBlock("Camera", _camera_buffer); 
+	
+	Deferred.bindUniformBlock("Camera", _camera.getGPUBuffer()); 
 }
 
 void DeferredRenderer::renderGBuffer()
@@ -54,7 +55,7 @@ void DeferredRenderer::renderGBuffer()
 	_offscreenRender.bind();
 	_offscreenRender.clear();
 	
-	_scene.draw(_projection, _camera.getMatrix());
+	_scene.draw(_camera.getProjectionMatrix(), _camera.getViewMatrix());
 	
 	renderGBufferPost();
 
