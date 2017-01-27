@@ -17,8 +17,9 @@ public:
 	
 	inline void draw() const;
 	
-	inline Material& getMaterial() { return _material; }
-	inline const Mesh& getMesh() const { return *_mesh; }
+	inline Material& getMaterial()             { return _material; }
+	inline const Material& getMaterial() const { return _material; }
+	inline const Mesh& getMesh()         const { return *_mesh; }
 	
 	inline const Transformation& getTransformation() const { return entities[_entity].get<Transformation>(); }
 	

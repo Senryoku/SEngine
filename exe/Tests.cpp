@@ -121,9 +121,6 @@ bool loadScene(const std::string& path)
 		{
 			part->resetPivot();
 			part->createVAO();
-			// TEMP Not necessary.
-			part->getMaterial().setUniform("R", 0.95f);
-			part->getMaterial().setUniform("F0", 0.15f);
 		}
 	}
 	
@@ -245,7 +242,7 @@ public:
 			Resources::load<FragmentShader>("src/GLSL/fs.glsl")
 		);
 		
-		_camera.speed() = 15;
+		_camera.speed = 15;
 		Simple.bindUniformBlock("Camera", _camera.getGPUBuffer()); 
 		
 		loadScene(_scenePath);

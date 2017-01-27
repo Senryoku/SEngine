@@ -15,10 +15,10 @@ const float Camera::BaseSensitivity = 0.1f;
 Camera::Camera(glm::vec3 position,
 			   glm::vec3 direction,
 			   glm::vec3 up,
-			   float speed,
-			   float sensitivity) :
-	_speed(speed),
-	_sensitivity(sensitivity),
+			   float _speed,
+			   float _sensitivity) :
+	speed(_speed),
+	sensitivity(_sensitivity),
 	_position(position),
 	_direction(direction),
 	_up(up)
@@ -29,37 +29,37 @@ Camera::Camera(glm::vec3 position,
 
 void Camera::strafeRight(float dt)
 {
-	_position += dt * _speed * _cross;
+	_position += dt * speed * _cross;
 }
 
 void Camera::strafeLeft(float dt)
 {
-	_position -= dt * _speed * _cross;
+	_position -= dt * speed * _cross;
 }
 
 void Camera::moveForward(float dt)
 {
-	_position += dt * _speed * _direction;
+	_position += dt * speed * _direction;
 }
 
 void Camera::moveBackward(float dt)
 {
-	_position -= dt * _speed * _direction;
+	_position -= dt * speed * _direction;
 }
 
 void Camera::moveUp(float dt)
 {
-	_position += dt * _speed * _up;
+	_position += dt * speed * _up;
 }
 
 void Camera::moveDown(float dt)
 {
-	_position -= dt * _speed * _up;
+	_position -= dt * speed * _up;
 }
 
 void Camera::look(glm::vec2 v)
 {
-	_moveMouvement += v*_sensitivity;
+	_moveMouvement += v * sensitivity;
 	if(_moveMouvement.y > 89) _moveMouvement.y = 89;
 	else if (_moveMouvement.y < -89) _moveMouvement.y = -89;
 	double r_temp = std::cos(_moveMouvement.y * pi() / 180.);
@@ -73,8 +73,8 @@ void Camera::look(glm::vec2 v)
 
 void Camera::reset()
 {
-	_speed = BaseSpeed;
-	_sensitivity = BaseSensitivity;
+	speed = BaseSpeed;
+	sensitivity = BaseSensitivity;
 	_position = BasePosition;
 	_direction = BaseDirection;
 	_up = BaseUp;

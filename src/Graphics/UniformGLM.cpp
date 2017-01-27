@@ -17,6 +17,11 @@ void setUniform(GLint program, GLuint location, const glm::vec4& value)
 	glProgramUniform4fv(program, location, 1, glm::value_ptr(value));
 }
 
+void setUniform(GLint program, GLuint location, const glm::quat& value)
+{
+	glProgramUniform4fv(program, location, 1, glm::value_ptr(value));
+}
+
 void setUniform(GLint program, GLuint location, const glm::mat2& value)
 {
 	glProgramUniformMatrix2fv(program, location, 1, false, glm::value_ptr(value));
@@ -46,6 +51,11 @@ void setUniform(GLint program, GLuint location, const glm::vec3* value)
 }
 
 void setUniform(GLint program, GLuint location, const glm::vec4* value)
+{
+	glProgramUniform4fv(program, location, 1, glm::value_ptr(*value));
+}
+
+void setUniform(GLint program, GLuint location, const glm::quat* value)
 {
 	glProgramUniform4fv(program, location, 1, glm::value_ptr(*value));
 }
@@ -83,6 +93,11 @@ void setUniform(GLuint location, const glm::vec4& value)
 	glUniform4fv(location, 1, glm::value_ptr(value));
 }
 
+void setUniform(GLuint location, const glm::quat& value)
+{
+	glUniform4fv(location, 1, glm::value_ptr(value));
+}
+
 void setUniform(GLuint location, const glm::mat2& value)
 {
 	glUniformMatrix2fv(location, 1, false, glm::value_ptr(value));
@@ -112,6 +127,11 @@ void setUniform(GLuint location, const glm::vec3* value)
 }
 
 void setUniform(GLuint location, const glm::vec4* value)
+{
+	glUniform4fv(location, 1, glm::value_ptr(*value));
+}
+
+void setUniform(GLuint location, const glm::quat* value)
 {
 	glUniform4fv(location, 1, glm::value_ptr(*value));
 }

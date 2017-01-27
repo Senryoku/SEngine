@@ -1,6 +1,7 @@
 #pragma once
 
 #include <UniformBinding.hpp>
+#include <UniformGLM.hpp>
 
 class GenericUniform
 {
@@ -38,6 +39,8 @@ template<typename T>
 class Uniform : public GenericUniform
 {
 public:
+	using value_t = T;
+
 	Uniform() =default;
 	Uniform(Uniform&&) =default;
 	Uniform(const std::string& N, GLuint L, const T& V) :
@@ -76,6 +79,8 @@ template<>
 class Uniform<Texture> : public GenericUniform
 {
 public:
+	using value_t = Texture;
+	
 	Uniform() =default;
 	Uniform(const std::string& N, GLuint L, GLuint U, const Texture& V) :
 		GenericUniform(N, L),

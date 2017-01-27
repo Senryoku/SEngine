@@ -46,8 +46,7 @@ public:
 	inline void setPosition(const glm::vec3& p) { _position = p; computeMatrix(); }
 	inline void setRotation(const glm::quat& r) { _rotation = r; computeMatrix(); }
 	inline void setScale(const glm::vec3& s)    { _scale = s;    computeMatrix(); }
-	
-	inline void setScale(float s) { setScale(glm::vec3{s, s, s}); }
+	inline void setScale(float s)               { setScale(glm::vec3{s, s, s}); }
 	
 	inline glm::vec4 apply(const glm::vec4& v) const { return _globalMatrix * v; }
 	inline glm::vec3 apply(const glm::vec3& v) const { return glm::vec3{apply(glm::vec4{v, 1.0f})}; }

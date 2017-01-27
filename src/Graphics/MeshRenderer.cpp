@@ -23,18 +23,15 @@ MeshRenderer::MeshRenderer(const nlohmann::json& json) :
 	_material{_mesh->getMaterial()},
 	_entity{get_owner<MeshRenderer>(*this)}
 {
-	/// TODO: Load MATERIAL
-	/*
-	for (auto it = json["material"].begin(); it != json["material"].end(); ++it)
-		_material.setUniform(it.key(), it.value());
-	*/
+	if(json.count("material") > 0)
+		update_material(json["material"], _material);
 }
 
 nlohmann::json MeshRenderer::json() const
 {
 	return {
-		{"mesh", getMesh().getName()}
-		/// TODO: Save MATERIAL
+		{"mesh", getMesh().getName()},
+		{"material", tojson(getMaterial())}
 	};
 }
 

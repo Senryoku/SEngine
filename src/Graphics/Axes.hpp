@@ -91,8 +91,8 @@ public:
 
 private:
 	static VertexArray		_vao;
-	static Buffer				_vertex_buffer;
+	static Buffer			_vertex_buffer;
 	
 	static VertexArray		_vao_marks;
-	static Buffer				_vertex_buffer_marks;
+	static Buffer			_vertex_buffer_marks;
 };

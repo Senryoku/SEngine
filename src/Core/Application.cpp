@@ -205,19 +205,19 @@ void Application::run_init()
 	};
 	_shortcuts[{GLFW_KEY_KP_ADD}] = [&]()
 	{
-		if(_camera.speed() < 1)
-			_camera.speed() += .1;
+		if(_camera.speed < 1)
+			_camera.speed += .1;
 		else
-			_camera.speed() += 1;
-		Log::info("Camera Speed: ", _camera.speed());
+			_camera.speed += 1;
+		Log::info("Camera Speed: ", _camera.speed);
 	};
 	_shortcuts[{GLFW_KEY_KP_SUBTRACT}] = [&]()
 	{
-		if(_camera.speed() <= 1)
-			_camera.speed() -= .1;
+		if(_camera.speed <= 1)
+			_camera.speed -= .1;
 		else
-			_camera.speed() -= 1;
-		Log::info("Camera Speed: ", _camera.speed());
+			_camera.speed -= 1;
+		Log::info("Camera Speed: ", _camera.speed);
 	};
 }
 

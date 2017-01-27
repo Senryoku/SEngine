@@ -31,38 +31,38 @@ public:
 	
 	void reset();
 	
-	inline const glm::mat4& getViewMatrix() const { return _viewMatrix; }
+	inline float getFoV()                         const { return _fov; }
+	inline const glm::mat4& getViewMatrix()       const { return _viewMatrix; }
 	inline const glm::mat4& getProjectionMatrix() const { return _projection; }
-	inline const glm::mat4& getInvProjection() const { return _invProjection; }
-	inline const glm::mat4& getInvViewMatrix() const { return _invViewMatrix; }
-	inline auto& getGPUBuffer() { return _cameraBuffer; }
-	inline const auto& getGPUBuffer() const { return _cameraBuffer; }
+	inline const glm::mat4& getInvProjection()    const { return _invProjection; }
+	inline const glm::mat4& getInvViewMatrix()    const { return _invViewMatrix; }
+	inline auto& getGPUBuffer()                         { return _cameraBuffer; }
+	inline const auto& getGPUBuffer()             const { return _cameraBuffer; }
 	
-	inline void setPosition(const glm::vec3& pos) { _position = pos; }
+	inline void setPosition(const glm::vec3& pos)  { _position = pos; }
 	inline void setDirection(const glm::vec3& dir) { _direction = dir; }
-	inline void lookAt(const glm::vec3& at) { _direction = glm::normalize(at - _position); }
+	inline void lookAt(const glm::vec3& at)        { _direction = glm::normalize(at - _position); }
 	
-	inline float getFoV() const { return _fov; }
-	inline void setFoV(float fov) { _fov = fov; }
+	inline void setFoV(float fov)                       { _fov = fov; }
 	
-	inline glm::vec3& getPosition() { return _position; }
-	inline const glm::vec3& getPosition() const { return _position; }
+	inline glm::vec3& getPosition()              { return _position; }
+	inline const glm::vec3& getPosition()  const { return _position; }
 	inline const glm::vec3& getDirection() const { return _direction; }
-	inline const glm::vec3& getUp() const { return _up; }
-	inline const glm::vec3& getRight() const { return _cross; }
-	inline float& speed() { return _speed; }
-	inline float& sensitivity() { return _sensitivity; }
+	inline const glm::vec3& getUp()        const { return _up; }
+	inline const glm::vec3& getRight()     const { return _cross; }
 	
-private:
-	struct GPUViewProjection
-	{
-		glm::mat4	view;
-		glm::mat4	projection;
-	};
+	// Public attributes
 	
-	float			_speed;
-	float			_sensitivity;
+	float speed;
+	float sensitivity;
 	
+	static const glm::vec3 BasePosition;
+	static const glm::vec3 BaseDirection;
+	static const glm::vec3 BaseUp;
+	static const float     BaseSpeed;
+	static const float     BaseSensitivity;
+	
+private:	
 	glm::vec3		_position;
 	glm::vec3		_direction;
 	glm::vec3		_up;
@@ -83,13 +83,12 @@ private:
 	glm::mat4 		_invViewMatrix;
 	glm::mat4		_invViewProjection;
 	
-	// GPU Data
+	// GPU Data (Move it in application/renderer?)
+	struct GPUViewProjection
+	{
+		glm::mat4	view;
+		glm::mat4	projection;
+	};
 	GPUViewProjection	_gpuCameraData;
 	UniformBuffer		_cameraBuffer;
-	
-	static const glm::vec3 BasePosition;
-	static const glm::vec3 BaseDirection;
-	static const glm::vec3 BaseUp;
-	static const float BaseSpeed;
-	static const float BaseSensitivity;
 };
