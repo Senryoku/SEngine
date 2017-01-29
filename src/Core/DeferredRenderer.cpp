@@ -41,7 +41,7 @@ void DeferredRenderer::run_init()
 		load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl")
 	);
 	
-	auto& Deferred = Resources::loadProgram("Deferred",
+	auto& Deferred = Resources::loadProgram("Default",
 		load<VertexShader>("src/GLSL/Deferred/deferred_vs.glsl"),
 		load<FragmentShader>("src/GLSL/Deferred/deferred_fs.glsl")
 	);

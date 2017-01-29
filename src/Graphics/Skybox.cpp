@@ -119,7 +119,7 @@ void Skybox::init()
 	
 	s_vertex_buffer.data(vertices, sizeof(float) * 24.0, Buffer::Usage::StaticDraw);
 
-	s_vao.attribute(0, 3, GL_FLOAT, GL_FALSE, 3.0 * sizeof(float), (GLvoid *) 0);
+	s_vao.attribute(0, 3, Type::Float, false, 3.0 * sizeof(float));
 
 	s_index_buffer.init();
 	s_index_buffer.bind();

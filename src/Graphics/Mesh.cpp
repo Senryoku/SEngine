@@ -5,6 +5,8 @@
 
 #include <tiny_obj_loader.h>
 
+#include <Context.hpp>
+
 #include <Resources.hpp>
 
 //////////////////////// Mesh::Triangle ///////////////////////////
@@ -61,9 +63,9 @@ void Mesh::createVAO()
 	
 	_vertex_buffer.data(&_vertices[0], sizeof(Vertex)*_vertices.size(), Buffer::Usage::StaticDraw);
 
-    _vao.attribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(struct Vertex, position));
-    _vao.attribute(1, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex), (GLvoid *) offsetof(struct Vertex, normal));
-    _vao.attribute(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(struct Vertex, texcoord));
+    _vao.attribute(0, 3, Type::Float, false, sizeof(Vertex), offsetof(struct Vertex, position));
+    _vao.attribute(1, 3, Type::Float, true, sizeof(Vertex), offsetof(struct Vertex, normal));
+    _vao.attribute(2, 2, Type::Float, false, sizeof(Vertex), offsetof(struct Vertex, texcoord));
 
 	_index_buffer.init();
 	_index_buffer.bind();
@@ -90,7 +92,7 @@ void Mesh::draw() const
 		return;
 	}
 	_vao.bind();
-	glDrawElements(GL_TRIANGLES, _triangles.size() * 3,  GL_UNSIGNED_INT, 0);
+	Context::drawElements(Primitive::Triangles, _triangles.size() * 3, IndexType::UInt);
 	_vao.unbind();
 }
 
@@ -135,7 +137,7 @@ void Mesh::computeBoundingBox()
 
 std::vector<Mesh*> Mesh::load(const std::string& path)
 {
-	return load(path, Resources::getProgram("Deferred"));
+	return load(path, Resources::getProgram("Default"));
 }
 
 std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
@@ -251,6 +253,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 		};
 		auto min = minmax;
 		auto max = minmax;
+		M[s]->getVertices().reserve(shapes[s].mesh.indices.size());
 		for(const auto& i : shapes[s].mesh.indices)
 		{
 			const glm::vec3 v{
@@ -271,7 +274,7 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 					1.0f - attrib.texcoords[2 * i.texcoord_index + 1] // !
 				} : 
 				glm::vec2{0.0f};
-			M[s]->getVertices().push_back(Mesh::Vertex{v, n, t});
+			M[s]->getVertices().emplace_back(v, n, t);
 			
 			min = glm::min(min, v);
 			max = glm::max(max, v);
@@ -279,14 +282,15 @@ std::vector<Mesh*> Mesh::load(const std::string& path, const Program& p)
 		
 		M[s]->setBoundingBox({min, max});
 		
+		M[s]->getTriangles().reserve(shapes[s].mesh.num_face_vertices.size());
 		for(size_t i = 0; i < shapes[s].mesh.num_face_vertices.size(); ++i)
 		{
 			assert(shapes[s].mesh.num_face_vertices[i] == 3);
-			M[s]->getTriangles().push_back(Mesh::Triangle{
+			M[s]->getTriangles().emplace_back(
 				3 * i + 0,
 				3 * i + 1,
 				3 * i + 2
-			});
+			);
 		}
 		
 		if(attrib.normals.empty())

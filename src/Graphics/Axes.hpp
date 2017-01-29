@@ -32,7 +32,7 @@ public:
 
 			_vertex_buffer.data(&_vertices[0], sizeof(glm::vec3)*_vertices.size(), Buffer::Usage::StaticDraw);
 
-			_vao.attribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid *) 0);
+			_vao.attribute(0, 3, Type::Float, false, sizeof(glm::vec3));
 
 			_vao.unbind();
 			_vertex_buffer.unbind();
@@ -69,7 +69,7 @@ public:
 					
 			_vertex_buffer_marks.data(&_vertices[0], sizeof(glm::vec3)*_vertices.size(), Buffer::Usage::StaticDraw);
 
-			_vao_marks.attribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (GLvoid *) 0);
+			_vao_marks.attribute(0, 3, Type::Float, false, sizeof(glm::vec3));
 
 			_vao_marks.unbind();
 			_vertex_buffer_marks.unbind();

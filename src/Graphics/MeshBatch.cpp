@@ -21,9 +21,9 @@ void MeshBatch::createVAO()
 		glEnableVertexAttribArray(i);
 
 	// Basic mesh attributes
-    _vao.attribute(0, 3, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (GLvoid *) offsetof(struct Mesh::Vertex, position));
-    _vao.attribute(1, 3, GL_FLOAT, GL_TRUE, sizeof(Mesh::Vertex), (GLvoid *) offsetof(struct Mesh::Vertex, normal));
-    _vao.attribute(2, 2, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (GLvoid *) offsetof(struct Mesh::Vertex, texcoord));
+    _vao.attribute(0, 3, Type::Float, false, sizeof(Mesh::Vertex), offsetof(struct Mesh::Vertex, position));
+    _vao.attribute(1, 3, Type::Float, true, sizeof(Mesh::Vertex), offsetof(struct Mesh::Vertex, normal));
+    _vao.attribute(2, 2, Type::Float, false, sizeof(Mesh::Vertex), offsetof(struct Mesh::Vertex, texcoord));
 
 	// Per instance attributes
 	_instances_attributes.init();
@@ -31,7 +31,7 @@ void MeshBatch::createVAO()
 	_instances_attributes.data(_instances_data.data(), sizeof(InstanceData) * _instances_data.size(), Buffer::Usage::StaticDraw);
 	for(int i = 0; i < 4; ++i)
 	{
-		_vao.attribute(PerVertexAttributesCount + i, 4, GL_FLOAT, GL_FALSE, sizeof(InstanceData), (const GLvoid*) (sizeof(float) * i * 4));
+		_vao.attribute(PerVertexAttributesCount + i, 4, Type::Float, false, sizeof(InstanceData), (sizeof(float) * i * 4));
 		glVertexAttribDivisor(PerVertexAttributesCount + i, 1);
 	}
 	
