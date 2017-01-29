@@ -8,9 +8,8 @@
 #include <GL/gl3w.h>
 #include <GLFW/glfw3.h>
 
-#include <Graphics/UniformGLM.hpp>
-#include <Shaders.hpp>
 #include <Uniform.hpp>
+#include <Shaders.hpp>
 #include <Texture2D.hpp>
 #include <Texture3D.hpp>
 
