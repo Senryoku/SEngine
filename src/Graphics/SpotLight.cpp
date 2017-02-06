@@ -21,7 +21,6 @@ SpotLight::SpotLight(unsigned int shadowMapResolution) :
 	_shadowMapResolution(shadowMapResolution),
 	_shadowMapFramebuffer(_shadowMapResolution)
 {
-	updateMatrices();
 }
 
 SpotLight::SpotLight(const nlohmann::json& json) :

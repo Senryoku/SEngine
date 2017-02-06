@@ -103,9 +103,9 @@ void Mesh::computeNormals()
 	for(auto& v : _vertices)
 		v.normal = glm::vec3{0.0f};
 
-	for(Triangle& t : _triangles)
+	for(const Triangle& t : _triangles)
 	{
-		std::array<size_t, 3>& v = t.vertices;
+		const auto& v = t.vertices;
 		// Normal of this triangle
 		glm::vec3 norm = glm::normalize(
 							glm::cross(_vertices[v[1]].position - _vertices[v[0]].position,
