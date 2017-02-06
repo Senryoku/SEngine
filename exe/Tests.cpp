@@ -876,9 +876,10 @@ protected:
 						if(ImGui::SliderFloat("Angle", &ang, 0.0, 3.0))
 							sl.setAngle(ang);
 						
-						int res = sl.getResolution();
-						if(ImGui::InputInt("Resolution", &res))
-							sl.setResolution(res);
+						const char* resolution_items[] = {"128", "256", "512", "1024", "2048", "4096"};
+						static int resolution_item_current = log2(sl.getResolution()) - 7;
+						if(ImGui::Combo("Resolution", &resolution_item_current, resolution_items, 6))
+							sl.setResolution(pow(2, resolution_item_current + 7));
 							
 						ImGui::Text("Depth Buffer");
 						gui_display(sl.getShadowMap());
