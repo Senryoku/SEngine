@@ -16,6 +16,7 @@ public:
 	}
 	
 	Entity(const Entity&) =delete;
+	
 	Entity(Entity&& old) :
 		_id{old._id},
 		_name{old._name},
@@ -42,9 +43,9 @@ public:
 	}
 	
 	inline std::string get_name() const { return _name; }
+	inline EntityID get_id()      const { return _id; }
+	
 	inline void set_name(const std::string& n) { _name = n; }
-
-	inline EntityID get_id() const { return _id; }
 	
 	template<typename T>
 	inline bool has() const
