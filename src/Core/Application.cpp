@@ -84,10 +84,11 @@ void Application::init(const std::string& windowName)
 	glfwSetScrollCallback(_window, s_scroll_callback);
 	glfwSetDropCallback(_window, s_drop_callback);
 	
-	glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-	
 	ImGui_ImplGlfwGL3_Init(_window, false);
-	ImGui::GetIO().MouseDrawCursor = !_controlCamera;
+	ImGui::GetIO().MouseDrawCursor = false; // Let the OS draw the cursor
+	glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
+	glfwSetInputMode(_window, GLFW_CURSOR, _controlCamera ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	
 	ImGuiStyle& style = ImGui::GetStyle();
 
     ImVec4 col_text{1.0, 1.0, 1.0, 1.0};
@@ -177,11 +178,9 @@ void Application::run_init()
 		if(_controlCamera)
 		{
 			glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
-			ImGui::GetIO().MouseDrawCursor = false;
 			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		} else {
-			ImGui::GetIO().MouseDrawCursor = true;
-			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+			glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		}
 	};
 	_shortcuts[{GLFW_KEY_X}] = [&]()
