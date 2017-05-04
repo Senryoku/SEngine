@@ -1,6 +1,7 @@
 #include <sstream>
 #include <iomanip>
 #include <deque>
+#include <set>
 #include <experimental/filesystem>
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -170,11 +171,11 @@ bool saveScene(const std::string& path)
 	
 	nlohmann::json j;
 	
+	std::set<std::string> temp_mesh_paths;
 	for(const auto& m : Resources::_meshes)
-	{
-		j["models"].push_back(m.second->getPath());
-	}
-	j["models"].erase(std::unique(j["models"].begin(), j["models"].end()), j["models"].end());
+		temp_mesh_paths.insert(m.second->getPath());
+	for(const auto& p : temp_mesh_paths)
+		j["models"].push_back(p);
 	
 	for(const auto& e : entities)
 	{

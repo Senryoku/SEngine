@@ -54,3 +54,4 @@ imgui.ini
 *.tmp
 RenderDocSettings.cap
 *.layout
+build/*
