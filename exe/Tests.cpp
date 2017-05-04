@@ -262,6 +262,15 @@ public:
 		{
 			saveScene(_scenePath);
 		};
+		_shortcuts[{GLFW_KEY_DELETE}] = [&]()
+		{
+			if(_selectedObject)
+			{
+				auto selectedEntityPtr = &get_entity(_selectedObject);
+				destroy_entity(selectedEntityPtr->get_id());
+				deselectObject();
+			}
+		};
 	}
 	
 	virtual void renderGUI() override
