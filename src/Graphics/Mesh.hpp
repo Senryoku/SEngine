@@ -73,7 +73,13 @@ public:
 	void draw() const;
 	
 	void computeBoundingBox();
-	inline void setBoundingBox(const BoundingBox& bbox)	{ _bbox = bbox; }
+	inline void setBoundingBox(const BoundingBox& bbox)
+	{
+		_bbox = bbox;
+		if(_bbox.min.x == _bbox.max.x) _bbox.max.x = stdext::next_representable(_bbox.max.x);
+		if(_bbox.min.y == _bbox.max.y) _bbox.max.y = stdext::next_representable(_bbox.max.y);
+		if(_bbox.min.z == _bbox.max.z) _bbox.max.z = stdext::next_representable(_bbox.max.z);
+	}
 	inline const BoundingBox& getBoundingBox() const	{ return _bbox; }
 
 	static std::vector<Mesh*> load(const std::string& path);

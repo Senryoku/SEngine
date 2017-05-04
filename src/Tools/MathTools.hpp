@@ -113,4 +113,13 @@ H min(H h, T... t)
 	return min(h, min(t...));
 }
 
+/**
+ * @return The next value representable in this type.
+**/
+template<typename T>
+T next_representable(const T& val)
+{
+	return std::nextafter(val, std::numeric_limits<T>::max());
+}
+
 }

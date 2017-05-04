@@ -56,5 +56,8 @@ inline AABB<glm::vec3> MeshRenderer::getAABB() const
 		min = glm::min(min, v);
 		max = glm::max(max, v);
 	}
+	if(min.x == max.x) max.x = stdext::next_representable(max.x);
+	if(min.y == max.y) max.y = stdext::next_representable(max.y);
+	if(min.z == max.z) max.z = stdext::next_representable(max.z);
 	return AABB<glm::vec3>{min, max};
 }
