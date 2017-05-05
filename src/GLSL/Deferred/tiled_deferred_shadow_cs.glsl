@@ -332,12 +332,15 @@ void main(void)
 				// Starting point is slitghly moved to avoid visible patterns (banding)
 				vec3 p = CameraPosition - volume_tile_indexes[local_pixel.x % 3 + 3 * (local_pixel.y % 3)] / 9.0 * d;
 				vol_lights[shadow][gl_LocalInvocationIndex] = 0.0;
+					bool spotlight = Shadows[shadow].position_range.w > 0.0;
 				for(int i = 0; i < VolumeSamples; ++i)
 				{
 					p += d;
 					vec4 sc = Shadows[shadow].depthMVP * vec4(p, 1.0);
 					sc /= sc.w;
-					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f)) || sc.z < 0.0)
+					float r = (!spotlight) ? 0.0 :
+									(sc.x - 0.5) * (sc.x - 0.5) + (sc.y - 0.5) * (sc.y - 0.5); // Spot Light
+					if(!((sc.x >= 0 && sc.x <= 1.f) && (sc.y >= 0 && sc.y <= 1.f) && r < 0.25) || sc.z < 0.0)
 						continue;
 					vec2 moments = texture2D(ShadowMaps[shadow], sc.xy).xy;
 					vol_lights[shadow][gl_LocalInvocationIndex] += VSM(sc.z, moments) * ATMOSPHERIC_FUNC(p);
