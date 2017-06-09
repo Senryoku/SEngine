@@ -4,7 +4,7 @@
 //  uniform int offset[kernel_radius + 1];
 //  uniform float weight[kernel_radius + 1];
 // and define HORIZONTAL_PASS or VERTICAL_PASS
-// then include this file to our shader
+// then include this file to your shader
 
 layout(binding = 0, rgba32f) uniform image2D Texture;
 
