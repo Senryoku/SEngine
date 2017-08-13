@@ -28,32 +28,10 @@ bool Frustum::isIntersecting(const AABB<glm::vec3>& aabb) const
 	glm::vec3 d = aabb.max - m;
     for(int i = 0; i < 6; ++i)
     {
-		// First version
 		float mf = glm::dot(m, planes[i].getNormal()) + planes[i][3];
 		float n = glm::dot(d, glm::abs(planes[i].getNormal()));
-		if(mf + n < 0) return false;
-		
-		/*
-		// Optimized with p-vertex and n-vertex
-		const auto& n = planes[i].getNormal();
-		const auto& a = aabb.min;
-		const auto& b = aabb.max;
-		glm::vec3 pv, nv;
-		
-		const bool nx = n.x > 0, ny = n.y > 0, nz = n.z > 0;
-		if( nx &&  ny &&  nz) { pv = b;             nv = a;             }
-		if( nx &&  ny && !nz) { pv = {b.x,b.y,a.z}; nv = {a.x,a.y,b.z}; }
-		if( nx && !ny &&  nz) { pv = {b.x,a.y,b.z}; nv = {a.x,b.y,a.z}; }
-		if( nx && !ny && !nz) { pv = {b.x,a.y,a.z}; nv = {a.x,b.y,b.z}; }
-		if(!nx &&  ny &&  nz) { pv = {a.x,b.y,b.z}; nv = {b.x,a.y,a.z}; }
-		if(!nx &&  ny && !nz) { pv = {a.x,b.y,a.z}; nv = {b.x,a.y,b.z}; }
-		if(!nx && !ny &&  nz) { pv = {a.x,a.y,b.z}; nv = {b.x,b.y,a.z}; }
-		if(!nx && !ny && !nz) { pv = a;             nv = b;             }
-		
-		if(glm::dot(n, nv) > planes[i][3]) return false;
-		
-		if(glm::dot(n, pv) > planes[i][3]) return true; // Intersection
-		*/
+		if(mf + n < 0) return false; // Strictly outside
+		if(mf - n < 0) return true; // Intersecting
     }
 	return true;
 }
