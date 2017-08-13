@@ -45,6 +45,11 @@ nlohmann::json MeshRenderer::json() const
 	};
 }
 
+bool MeshRenderer::isVisible(const Frustum& f) const
+{
+    return f.isIntersecting(getAABB());
+}
+
 /**
  * FIXME: This is way too slow, and the result should be cached somehow
 **/
@@ -97,11 +102,6 @@ bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4&
 void MeshRenderer::update_aabb_vertices()
 {
 	auto aabb = _mesh->getBoundingBox().getBounds();
-	auto copy_vertex = [&] (int s, int d) {
-		_aabb_vertices[3 * d + 0] = aabb[s][0];
-		_aabb_vertices[3 * d + 1] = aabb[s][1];
-		_aabb_vertices[3 * d + 2] = aabb[s][2];
-	};
 	static constexpr std::array<int, 12 * 3> indexes = {
 		0, 1, 3,
 		0, 3, 2,
@@ -117,7 +117,7 @@ void MeshRenderer::update_aabb_vertices()
 		2, 7, 6
 	};
 	for(int i = 0; i < 12 * 3; ++i)
-		copy_vertex(indexes[i], i);
+		_aabb_vertices[i] = aabb[indexes[i]];
 	_aabb_vertices_buffer.data(&_aabb_vertices[0], sizeof(GLfloat) * _aabb_vertices.size(), Buffer::Usage::DynamicDraw);
 }
 

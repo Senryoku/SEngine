@@ -76,6 +76,8 @@ protected:
 	GLuint64	_lastPostProcessTiming = 0;
 	GLuint64	_lastGUITiming = 0;
 	
+	unsigned int _scene_draw_calls = 0;
+	
 	virtual void initGBuffer(size_t width, size_t height);
 
 	virtual void render() override;
@@ -84,6 +86,8 @@ protected:
 	virtual void renderGBufferPost() {};
 	virtual void renderLightPass();
 	virtual void renderPostProcess();
+	
+	void updateGPUTimings();
 	
 	virtual void resize_callback(GLFWwindow* _window, int width, int height) override;
 };

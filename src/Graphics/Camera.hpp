@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include <Buffer.hpp>
+#include <Frustum.hpp>
 
 class Camera
 {
@@ -51,6 +52,12 @@ public:
 	inline const glm::vec3& getUp()        const { return _up; }
 	inline const glm::vec3& getRight()     const { return _cross; }
 	
+	inline const Frustum& getFrustum() const { return _frustum; }
+	inline void updateFrustum()
+	{
+		_frustum = Frustum(getProjectionMatrix() * getViewMatrix());
+	}
+	
 	// Public attributes
 	
 	float speed;
@@ -74,9 +81,12 @@ private:
 	
 	// Projection data
 	float			_fov = 60.0;
+	float 			_ratio = 16.0/9.0;
 	float 			_near = 0.1f;
 	float 			_far = 1000.0f;
 	glm::mat4 		_projection;
+	
+	Frustum			_frustum;
 	
 	// Cache
 	glm::mat4 		_invProjection;

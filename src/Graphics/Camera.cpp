@@ -89,14 +89,16 @@ void Camera::updateView()
 
 void Camera::updateProjection(float ratio)
 {
+	_ratio = ratio;
 	float inRad = _fov * glm::pi<float>()/180.f;
-	_projection = glm::perspective(inRad, ratio, _near, _far);
+	_projection = glm::perspective(inRad, _ratio, _near, _far);
 	_invProjection = glm::inverse(_projection);
 	_invViewProjection = _invViewMatrix * _invProjection;
 }
 
 void Camera::updateGPUBuffer()
 {
+	updateFrustum();
 	_gpuCameraData = {_viewMatrix, _projection};
 	_cameraBuffer.data(&_gpuCameraData, sizeof(GPUViewProjection), Buffer::Usage::DynamicDraw);
 	_cameraBuffer.unbind();

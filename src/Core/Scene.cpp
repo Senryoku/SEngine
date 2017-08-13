@@ -54,16 +54,26 @@ void Scene::occlusion_query()
 	shader.useNone();
 }
 
-void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
+unsigned int Scene::draw(const Camera& c) const
 {
+	unsigned int draw_calls = 0;
 	if(_skybox)
-		_skybox.draw(p, v);
-
+	{
+		_skybox.draw(c.getProjectionMatrix(), c.getViewMatrix());
+		++draw_calls;
+	}
+	
 	for(const auto& it : ComponentIterator<MeshRenderer>{})
 	{
 		if(UseOcclusionCulling)
+		{
 			it.draw_occlusion_culled();
-		else if(!UseFrustumCulling || it.isVisible(p, v))
+			++draw_calls;
+		} else if(!UseFrustumCulling || it.isVisible(c.getFrustum())) {
 			it.draw();
+			++draw_calls;
+		}
 	}
+	
+	return draw_calls;
 }

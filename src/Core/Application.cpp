@@ -10,6 +10,8 @@
 #include <imgui.h>
 #include <imgui_impl_glfw_gl3.h>
 
+#include <stdext.hpp>
+
 Application* Application::s_instance = nullptr;
 
 Application::Application() :
@@ -224,9 +226,9 @@ void Application::update()
 {
 	glfwSetWindowTitle(_window,
 		std::string("SEngine - ")
-			.append(std::to_string(1000.f * TimeManager::getRealDeltaTime()))
+			.append(stdext::to_string(1000.f * TimeManager::getRealDeltaTime(), 6))
 			.append("ms - FPS: ")
-			.append(std::to_string(TimeManager::getInstantFrameRate()))
+			.append(stdext::to_string(TimeManager::getInstantFrameRate(), 6))
 			.c_str());
 	
 	_cameraMoved = false;

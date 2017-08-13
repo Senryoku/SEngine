@@ -27,17 +27,18 @@ void DeferredRenderer::screen(const std::string& path) const
 
 void DeferredRenderer::update()
 {
+	updateGPUTimings();
+	
 	// Occlusion Culling needs to use last frame camera position
 	// ... or not, doesn't solves the flickering
 	_OcclusionCullingTiming.begin(Query::Target::TimeElapsed);
 	if(_scene.UseOcclusionCulling)
 	{
 		_offscreenRender.bind();
-		_scene.occlusion_query();
+		_scene.occlusion_query( );
 		//glFinish();
 	}
 	_OcclusionCullingTiming.end();
-	_lastOcclusionCullingTiming = _OcclusionCullingTiming.get<GLuint64>();
 		
 	Application::update();
 }
@@ -78,7 +79,7 @@ void DeferredRenderer::renderGBuffer()
 	_offscreenRender.bind();
 	_offscreenRender.clear();
 	
-	_scene.draw(_camera.getProjectionMatrix(), _camera.getViewMatrix());
+	_scene_draw_calls = _scene.draw(_camera);
 	
 	renderGBufferPost();
 
@@ -182,22 +183,27 @@ void DeferredRenderer::render()
 	_GBufferPassTiming.begin(Query::Target::TimeElapsed);
 	renderGBuffer();
 	_GBufferPassTiming.end();
-	_lastGBufferPassTiming = _GBufferPassTiming.get<GLuint64>();
 	
 	_lightPassTiming.begin(Query::Target::TimeElapsed);
 	if(!_debug_buffers)
 		renderLightPass();
 	_lightPassTiming.end();
-	_lastLightPassTiming = _lightPassTiming.get<GLuint64>();
 	
 	_postProcessTiming.begin(Query::Target::TimeElapsed);
 	renderPostProcess();
 	_postProcessTiming.end();
-	_lastPostProcessTiming = _postProcessTiming.get<GLuint64>();
 
 	_GUITiming.begin(Query::Target::TimeElapsed);
 	renderGUI();
 	_GUITiming.end();
+}
+
+void DeferredRenderer::updateGPUTimings()
+{
+	_lastOcclusionCullingTiming = _OcclusionCullingTiming.get<GLuint64>();
+	_lastGBufferPassTiming = _GBufferPassTiming.get<GLuint64>();
+	_lastLightPassTiming = _lightPassTiming.get<GLuint64>();
+	_lastPostProcessTiming = _postProcessTiming.get<GLuint64>();
 	_lastGUITiming = _GUITiming.get<GLuint64>();
 }
 

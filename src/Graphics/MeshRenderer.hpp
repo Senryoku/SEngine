@@ -5,6 +5,7 @@
 #include <Entity.hpp>
 #include <serialization.hpp>
 #include <Query.hpp>
+#include <Frustum.hpp>
 
 class MeshRenderer
 {
@@ -27,6 +28,7 @@ public:
 	
 	inline const Transformation& getTransformation() const { return entities[_entity].get<Transformation>(); }
 	
+	bool isVisible(const Frustum& f) const;
 	bool isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const;
 	
 	inline AABB<glm::vec3> getAABB() const;
@@ -37,7 +39,7 @@ private:
 	EntityID				_entity = invalid_entity;
 	
 	Query 							_occlusion_query;
-	std::array<GLfloat, 12 * 3 * 3>	_aabb_vertices;
+	std::array<glm::vec3, 12 * 3>	_aabb_vertices;
 	Buffer							_aabb_vertices_buffer;
 	
 	void update_aabb_vertices();

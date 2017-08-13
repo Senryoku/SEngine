@@ -3,7 +3,6 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
-#include <Frustum.hpp>
 #include <Texture2D.hpp>
 #include <Framebuffer.hpp>
 #include <MeshRenderer.hpp>

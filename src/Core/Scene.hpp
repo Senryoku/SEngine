@@ -4,6 +4,7 @@
 
 #include <PointLight.hpp>
 #include <Skybox.hpp>
+#include <Camera.hpp>
 
 #include <Meta.hpp>
 
@@ -30,7 +31,8 @@ public:
 	void updateLights();
 	void update();
 	void occlusion_query();
-	void draw(const glm::mat4& p, const glm::mat4& v) const;
+	/// @return The number of draw calls generated.
+	unsigned int draw(const Camera& c) const;
 	
 	inline Skybox& getSkybox() { return _skybox; }
 	
