@@ -332,7 +332,7 @@ void main(void)
 				// Starting point is slitghly moved to avoid visible patterns (banding)
 				vec3 p = CameraPosition - volume_tile_indexes[local_pixel.x % 3 + 3 * (local_pixel.y % 3)] / 9.0 * d;
 				vol_lights[shadow][gl_LocalInvocationIndex] = 0.0;
-					bool spotlight = Shadows[shadow].position_range.w > 0.0;
+				bool spotlight = Shadows[shadow].position_range.w > 0.0;
 				for(int i = 0; i < VolumeSamples; ++i)
 				{
 					p += d;

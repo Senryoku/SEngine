@@ -1,5 +1,6 @@
 #include <MeshRenderer.hpp>
 
+#include <Context.hpp>
 #include <Resources.hpp>
 
 MeshRenderer::MeshRenderer(const Mesh& mesh) :
@@ -7,6 +8,9 @@ MeshRenderer::MeshRenderer(const Mesh& mesh) :
 	_material{mesh.getMaterial()},
 	_entity{get_owner<MeshRenderer>(*this)}
 {
+	_occlusion_query.init();
+	_aabb_vertices_buffer.init();
+	update_aabb_vertices();
 }
 
 MeshRenderer::MeshRenderer(MeshRenderer&& m) :
@@ -16,6 +20,9 @@ MeshRenderer::MeshRenderer(MeshRenderer&& m) :
 {
 	m._mesh = nullptr;
 	m._entity = invalid_entity;
+	_occlusion_query.init();
+	_aabb_vertices_buffer.init();
+	update_aabb_vertices();
 }
 
 MeshRenderer::MeshRenderer(const nlohmann::json& json) :
@@ -25,6 +32,9 @@ MeshRenderer::MeshRenderer(const nlohmann::json& json) :
 {
 	if(json.count("material") > 0)
 		update_material(json["material"], _material);
+	_occlusion_query.init();
+	_aabb_vertices_buffer.init();
+	update_aabb_vertices();
 }
 
 nlohmann::json MeshRenderer::json() const
@@ -35,6 +45,9 @@ nlohmann::json MeshRenderer::json() const
 	};
 }
 
+/**
+ * FIXME: This is way too slow, and the result should be cached somehow
+**/
 bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4& ViewMatrix) const
 {
 	assert(_mesh != nullptr);
@@ -79,4 +92,55 @@ bool MeshRenderer::isVisible(const glm::mat4& ProjectionMatrix, const glm::mat4&
 
 	return !(max.x < -1.0 || max.y < -1.0 ||
 			 min.x >  1.0 || min.y >  1.0);
+}
+
+void MeshRenderer::update_aabb_vertices()
+{
+	auto aabb = _mesh->getBoundingBox().getBounds();
+	auto copy_vertex = [&] (int s, int d) {
+		_aabb_vertices[3 * d + 0] = aabb[s][0];
+		_aabb_vertices[3 * d + 1] = aabb[s][1];
+		_aabb_vertices[3 * d + 2] = aabb[s][2];
+	};
+	static constexpr std::array<int, 12 * 3> indexes = {
+		0, 1, 3,
+		0, 3, 2,
+		0, 5, 1,
+		0, 4, 5,
+		0, 6, 4,
+		0, 2, 6,
+		1, 5, 7,
+		1, 7, 3,
+		4, 6, 7,
+		4, 7, 5,
+		2, 3, 7,
+		2, 7, 6
+	};
+	for(int i = 0; i < 12 * 3; ++i)
+		copy_vertex(indexes[i], i);
+	_aabb_vertices_buffer.data(&_aabb_vertices[0], sizeof(GLfloat) * _aabb_vertices.size(), Buffer::Usage::DynamicDraw);
+}
+
+void MeshRenderer::draw_aabb() const
+{
+	_aabb_vertices_buffer.bind();
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	setUniform("ModelMatrix", getTransformation().getGlobalMatrix());
+	glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+}
+
+void MeshRenderer::occlusion_query()
+{
+	glDepthFunc(GL_LEQUAL);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glDepthMask(GL_FALSE);
+	Context::disable(Capability::CullFace);
+	_occlusion_query.begin(Query::Target::AnySamplesPassed);
+	draw_aabb();
+	_occlusion_query.end();
+	Context::enable(Capability::CullFace);
+	glDepthMask(GL_TRUE);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDepthFunc(GL_LESS);
 }

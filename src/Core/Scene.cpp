@@ -3,6 +3,8 @@
 #include <Meta.hpp>
 #include <ComponentValidation.hpp>
 
+#include <Resources.hpp>
+
 #include <SpotLight.hpp>
 
 Scene::~Scene()
@@ -39,6 +41,19 @@ void Scene::update()
 		updatePointLightBuffer();
 }
 
+void Scene::occlusion_query()
+{
+	if(!UseOcclusionCulling) return;
+
+	static auto& shader = Resources::getProgram("AABB");
+	shader.use();
+	for(auto& it : ComponentIterator<MeshRenderer>{})
+	{
+		it.occlusion_query();
+	}
+	shader.useNone();
+}
+
 void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
 {
 	if(_skybox)
@@ -46,7 +61,9 @@ void Scene::draw(const glm::mat4& p, const glm::mat4& v) const
 
 	for(const auto& it : ComponentIterator<MeshRenderer>{})
 	{
-		if(it.isVisible(p, v))
+		if(UseOcclusionCulling)
+			it.draw_occlusion_culled();
+		else if(!UseFrustumCulling || it.isVisible(p, v))
 			it.draw();
 	}
 }

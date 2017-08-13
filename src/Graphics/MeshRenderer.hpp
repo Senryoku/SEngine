@@ -4,6 +4,7 @@
 #include <Transformation.hpp>
 #include <Entity.hpp>
 #include <serialization.hpp>
+#include <Query.hpp>
 
 class MeshRenderer
 {
@@ -15,8 +16,11 @@ public:
 	
 	nlohmann::json json() const;
 	
+	void occlusion_query();
 	inline void draw() const;
-	
+	inline void draw_occlusion_culled() const;
+	void draw_aabb() const;
+
 	inline Material& getMaterial()             { return _material; }
 	inline const Material& getMaterial() const { return _material; }
 	inline const Mesh& getMesh()         const { return *_mesh; }
@@ -31,15 +35,31 @@ private:
 	const Mesh*				_mesh = nullptr;	
 	Material				_material;
 	EntityID				_entity = invalid_entity;
+	
+	Query 							_occlusion_query;
+	std::array<GLfloat, 12 * 3 * 3>	_aabb_vertices;
+	Buffer							_aabb_vertices_buffer;
+	
+	void update_aabb_vertices();
 };
 
 inline void MeshRenderer::draw() const
 {
 	assert(_mesh != nullptr);
 	assert(_entity != invalid_entity);
+	
 	_material.use();
 	setUniform("ModelMatrix", getTransformation().getGlobalMatrix());
 	_mesh->draw();
+}
+
+inline void MeshRenderer::draw_occlusion_culled() const
+{
+	glBeginConditionalRender(_occlusion_query.getName(), GL_QUERY_NO_WAIT);
+	
+	draw();
+		
+	glEndConditionalRender();
 }
 
 inline AABB<glm::vec3> MeshRenderer::getAABB() const

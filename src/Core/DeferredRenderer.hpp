@@ -21,6 +21,8 @@ public:
 				_internalHeight : _height;
 	}
 	
+	virtual void update() override;
+	
 	virtual void screen(const std::string& path) const override;
 	
 	void setInternalResolution(size_t width, size_t height);
@@ -63,10 +65,12 @@ protected:
 	Attachment	_framebufferToBlit	= Attachment::Color0;
 	
 	Query		_updateTiming;
+	Query		_OcclusionCullingTiming;
 	Query		_GBufferPassTiming;
 	Query		_lightPassTiming;
 	Query		_postProcessTiming;
 	Query		_GUITiming;
+	GLuint64	_lastOcclusionCullingTiming = 0;
 	GLuint64	_lastGBufferPassTiming = 0;
 	GLuint64	_lastLightPassTiming = 0;
 	GLuint64	_lastPostProcessTiming = 0;

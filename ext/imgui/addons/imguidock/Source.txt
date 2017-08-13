@@ -1,0 +1,1 @@
+https://github.com/Flix01/imgui/tree/2015-10-Addons/addons/imguidock

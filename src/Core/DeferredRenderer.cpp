@@ -25,6 +25,23 @@ void DeferredRenderer::screen(const std::string& path) const
 	delete[] pixels;
 }
 
+void DeferredRenderer::update()
+{
+	// Occlusion Culling needs to use last frame camera position
+	// ... or not, doesn't solves the flickering
+	_OcclusionCullingTiming.begin(Query::Target::TimeElapsed);
+	if(_scene.UseOcclusionCulling)
+	{
+		_offscreenRender.bind();
+		_scene.occlusion_query();
+		//glFinish();
+	}
+	_OcclusionCullingTiming.end();
+	_lastOcclusionCullingTiming = _OcclusionCullingTiming.get<GLuint64>();
+		
+	Application::update();
+}
+
 void DeferredRenderer::run_init()
 {
 	Application::run_init();
@@ -47,10 +64,16 @@ void DeferredRenderer::run_init()
 	);
 	
 	Deferred.bindUniformBlock("Camera", _camera.getGPUBuffer()); 
+	
+	auto& aabb = Resources::loadProgram("AABB",
+		Resources::load<VertexShader>("src/GLSL/vs.glsl"),
+		Resources::load<FragmentShader>("src/GLSL/fs.glsl")
+	);
+	aabb.bindUniformBlock("Camera", _camera.getGPUBuffer());
 }
 
 void DeferredRenderer::renderGBuffer()
-{
+{	
 	// Fill G-Buffer
 	_offscreenRender.bind();
 	_offscreenRender.clear();
@@ -148,8 +171,9 @@ void DeferredRenderer::renderPostProcess()
 		// No post process, just blit the result of the light pass.
 		_offscreenRender.bind(FramebufferTarget::Read);
 		glBlitFramebuffer(0, 0, getInternalWidth(), getInternalHeight(), 
-							0, 0, _width, _height, 
-							GL_COLOR_BUFFER_BIT, GL_LINEAR);
+						0, 0, _width, _height,
+						GL_COLOR_BUFFER_BIT,
+						GL_LINEAR);
 	}
 }
 
@@ -170,7 +194,7 @@ void DeferredRenderer::render()
 	renderPostProcess();
 	_postProcessTiming.end();
 	_lastPostProcessTiming = _postProcessTiming.get<GLuint64>();
-	
+
 	_GUITiming.begin(Query::Target::TimeElapsed);
 	renderGUI();
 	_GUITiming.end();

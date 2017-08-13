@@ -29,9 +29,13 @@ public:
 
 	void updateLights();
 	void update();
+	void occlusion_query();
 	void draw(const glm::mat4& p, const glm::mat4& v) const;
 	
 	inline Skybox& getSkybox() { return _skybox; }
+	
+	bool UseFrustumCulling = true;
+	bool UseOcclusionCulling = false;
 	
 private:
 	bool							_dirtyPointLights = true;

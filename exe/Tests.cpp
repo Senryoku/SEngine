@@ -389,10 +389,14 @@ public:
 					blend.setUniform("Color", _selectedObjectColor);
 					blend.setUniform("ModelMatrix", transform.getGlobalMatrix());
 					mr.getMesh().draw();
+					
+					blend.setUniform("Color", glm::vec4(1.0, 1.0, 1.0, 0.1));
+					mr.draw_aabb();
+					
 					Program::useNone();
 					Context::disable(Capability::Blend);
 					Context::enable(Capability::DepthTest);
-				
+					
 					auto aabb = mr.getAABB().getBounds();
 					std::array<ImVec2, 8> screen_aabb;
 					for(int i = 0; i < 8; ++i)
@@ -666,7 +670,7 @@ protected:
 		 win_inspect = true;
 	bool _status_bar = true;
 	float last_update = 2.0;
-	std::deque<float> frametimes, updatetimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
+	std::deque<float> frametimes, updatetimes, occlusiontimes, gbuffertimes, lighttimes, postprocesstimes, guitimes;
 	const size_t max_samples = 100;
 	
 	void update_stats()
@@ -677,12 +681,14 @@ protected:
 		{
 			if(frametimes.size() > max_samples)			frametimes.pop_front();
 			if(updatetimes.size() > max_samples)		updatetimes.pop_front();
+			if(occlusiontimes.size() > max_samples)		occlusiontimes.pop_front();
 			if(gbuffertimes.size() > max_samples)		gbuffertimes.pop_front();
 			if(lighttimes.size() > max_samples)			lighttimes.pop_front();
 			if(postprocesstimes.size() > max_samples)	postprocesstimes.pop_front();
 			if(guitimes.size() > max_samples)			guitimes.pop_front();
 			frametimes.push_back(ms);
 			updatetimes.push_back(_updateTiming.get<GLuint64>() / 1000000.0);
+			occlusiontimes.push_back(_OcclusionCullingTiming.get<GLuint64>() / 1000000.0);
 			gbuffertimes.push_back(_GBufferPassTiming.get<GLuint64>() / 1000000.0);
 			lighttimes.push_back(_lightPassTiming.get<GLuint64>() / 1000000.0);
 			postprocesstimes.push_back(_postProcessTiming.get<GLuint64>() / 1000000.0);
@@ -705,6 +711,7 @@ protected:
 			};
 			ImGui::PlotLines("FrameTime", lamba_data, &frametimes, frametimes.size(), 0, to_string(frametimes.back(), 4).c_str(), 0.0, 20.0); 
 			ImGui::PlotLines("Update", lamba_data, &updatetimes, updatetimes.size(), 0, to_string(updatetimes.back(), 4).c_str(), 0.0, 10.0);    
+			ImGui::PlotLines("Occlusion Culling", lamba_data, &occlusiontimes, occlusiontimes.size(), 0, to_string(occlusiontimes.back(), 4).c_str(), 0.0, 10.0);    
 			ImGui::PlotLines("GBuffer", lamba_data, &gbuffertimes, gbuffertimes.size(), 0, to_string(gbuffertimes.back(), 4).c_str(), 0.0, 10.0);    
 			ImGui::PlotLines("Lights", lamba_data, &lighttimes, lighttimes.size(), 0, to_string(lighttimes.back(), 4).c_str(), 0.0, 10.0);    
 			ImGui::PlotLines("Post Process",lamba_data, &postprocesstimes, postprocesstimes.size(), 0, to_string(postprocesstimes.back(), 4).c_str(), 0.0, 10.0);    
@@ -724,6 +731,9 @@ protected:
 			ImGui::SameLine();
 			if(ImGui::Checkbox("Vsync", &_vsync))
 				glfwSwapInterval(_vsync);
+			ImGui::Checkbox("Frustum Culling", &_scene.UseFrustumCulling);
+			ImGui::SameLine();
+			ImGui::Checkbox("Occlusion Culling", &_scene.UseOcclusionCulling);
 			ImGui::Text("Window resolution: %d * %d", _width, _height);
 			const char* internal_resolution_items[] = {"Windows resolution", "1920 * 1080", "2715 * 1527", "3840 * 2160"};
 			static int internal_resolution_item_current = 0;
