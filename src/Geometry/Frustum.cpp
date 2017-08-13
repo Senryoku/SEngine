@@ -6,13 +6,16 @@ Frustum::Frustum(const glm::mat4& projmat)
 	// Gribb & Hartmann
 	// http://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf
 	// https://stackoverflow.com/questions/12836967/extracting-view-frustum-planes-hartmann-gribbs-method
-	std::array<std::array<float, 4>, 6> coeff{};
-    for(int i = 4; --i;) coeff[Top][i]       = projmat[i][3] - projmat[i][1];
-    for(int i = 4; --i;) coeff[Bottom][i]    = projmat[i][3] + projmat[i][1];
-	for(int i = 4; --i;) coeff[Left][i]      = projmat[i][3] + projmat[i][0];
-    for(int i = 4; --i;) coeff[Right][i]     = projmat[i][3] - projmat[i][0]; 
-    for(int i = 4; --i;) coeff[Near][i]      = projmat[i][3] + projmat[i][2];
-    for(int i = 4; --i;) coeff[Far][i]       = projmat[i][3] - projmat[i][2];
+	std::array<std::array<float, 4>, 6> coeff;
+    for(int i = 0; i < 4; ++i) 
+	{
+		coeff[Top][i]    = projmat[i][3] - projmat[i][1];
+		coeff[Bottom][i] = projmat[i][3] + projmat[i][1];
+		coeff[Left][i]   = projmat[i][3] + projmat[i][0];
+		coeff[Right][i]  = projmat[i][3] - projmat[i][0]; 
+		coeff[Near][i]   = projmat[i][3] + projmat[i][2];
+		coeff[Far][i]    = projmat[i][3] - projmat[i][2];
+	}
 	
 	for(int i = 0; i < 6; ++i)
 		planes[i].setCoefficients(coeff[i]);

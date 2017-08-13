@@ -55,7 +55,12 @@ private:
 	void updateNormalPoint()
 	{
 		_normal = {_coefficients[0], _coefficients[1], _coefficients[2]};
-		_point = {_coefficients[3] / _coefficients[0], 0.0f, 0.0f};
+		if(_coefficients[0] != 0.0f)
+			_point = {_coefficients[3] / _coefficients[0], 0.0f, 0.0f};
+		else if(_coefficients[1] != 0.0f)
+			_point = {0.0f, _coefficients[3] / _coefficients[1], 0.0f};
+		else
+			_point = {0.0f, 0.0f, _coefficients[3] / _coefficients[0]};
 	}
 	
 	std::array<float, 4>	_coefficients;
@@ -69,6 +74,7 @@ private:
 	
 	void normalizeCoefficients()
 	{
+		//assert(!(_coefficients[0] == 0.0f && _coefficients[1] == 0.0f && _coefficients[2] == 0.0f));
 		float n = std::sqrt(_coefficients[0] * _coefficients[0]
 			              + _coefficients[1] * _coefficients[1]
 			              + _coefficients[2] * _coefficients[2]);
