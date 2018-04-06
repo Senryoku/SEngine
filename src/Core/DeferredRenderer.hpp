@@ -39,11 +39,14 @@ protected:
 	 *  Color2 : Encoded Normal (xy), F0 (z) and R (w)
 	**/
 	Framebuffer<Texture2D, 3>		_offscreenRender;
+	Framebuffer<Texture2D, 1>		_postProcessBuffer;
 	
 	// Downsampling
 	bool		_postProcessBlur = false;
 	size_t		_internalWidth = 0;
 	size_t		_internalHeight = 0;
+	
+	glm::vec3	_ambiant = glm::vec3(0.06);
 	
 	// Post Process settings
 	float		_exposure = 2.0f;
@@ -55,12 +58,13 @@ protected:
 	float 		_fxaa_minReduce = 128.0;
 	float 		_fxaa_maxSpan = 8.0;
 	
-	float		_bloom = 1.2f;
+	bool 		_bloom = true;
+	float		_bloom_strength = 1.2f;
 	int			_bloomBlur = 2;
 	int			_bloomDownsampling = 3;
-	glm::vec3	_ambiant = glm::vec3(0.06);
 	
 	float		_minVariance = 0.0000001f;
+	
 	int			_aoSamples = 16;
 	float		_aoThreshold = 1.0f;
 	float		_aoRadius = 200.0f;

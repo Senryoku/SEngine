@@ -121,7 +121,7 @@ void DeferredRenderer::renderLightPass()
 	
 	DeferredShadowCS.getProgram().setUniform("CameraPosition", _camera.getPosition());
 	DeferredShadowCS.getProgram().setUniform("Exposure", _exposure);
-	DeferredShadowCS.getProgram().setUniform("Bloom", _bloom);
+	DeferredShadowCS.getProgram().setUniform("Bloom", _bloom_strength);
 	DeferredShadowCS.getProgram().setUniform("Ambiant", _ambiant);
 	DeferredShadowCS.getProgram().setUniform("MinVariance", _minVariance);
 	DeferredShadowCS.getProgram().setUniform("AOSamples", _aoSamples);
@@ -139,6 +139,7 @@ void DeferredRenderer::renderLightPass()
 void DeferredRenderer::renderPostProcess()
 {
 	Framebuffer<>::unbind(FramebufferTarget::Draw);
+	Program::useNone();
 	
 	if(_debug_buffers) // Blit offscreen buffers.
 	{
@@ -149,12 +150,31 @@ void DeferredRenderer::renderPostProcess()
 		return;
 	}
 	
-	// FXAA
-	// @TODO: currently doesn't work with Bloom as it output directly to the main framebuffer...
-	// I should think of a better way to compose post processings
+	bool write_to_post_buffer = true;
+	_postProcessBuffer.clear();
+	
+	// Alternate between two color buffers to compose post processes
+	auto select_buffer = [&]() {
+		if(write_to_post_buffer)
+		{
+			_postProcessBuffer.bind();
+			_offscreenRender.getColor(0).bind(0);
+		} else {
+			_offscreenRender.bind();
+			_postProcessBuffer.getColor(0).bind(0);
+		}
+		write_to_post_buffer = !write_to_post_buffer;
+	};
+	
+	// This looks really good with downsampling (but is obviously really expensive)
+	/// @todo The amount of blur (i.e. its kernel) should be customizable.
+	if(_postProcessBlur)
+		blur(_offscreenRender.getColor(0), getInternalWidth(), getInternalHeight(), 0);
+	
+	// FXAA, implementation from https://github.com/McNopper/OpenGL/blob/master/Example42/shader/fxaa.frag.glsl
 	if(_fxaa)
 	{
-		_offscreenRender.getColor(0).bind(0);
+		select_buffer();
 		Program& FXAA = Resources::getProgram("FXAA");
 		FXAA.use();
 		FXAA.setUniform("u_texelStep", glm::vec2(1.0f / getInternalWidth(), 1.0f / getInternalHeight()));
@@ -166,14 +186,10 @@ void DeferredRenderer::renderPostProcess()
 		FXAA.setUniform("u_maxSpan", _fxaa_maxSpan);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
 		FXAA.useNone();
+		Framebuffer<>::unbind(FramebufferTarget::Draw);
 	}
 	
-	// This looks really good with downsampling (but is obviously really expensive)
-	/// @todo The amount of blur (i.e. its kernel) should be customizable.
-	if(_postProcessBlur)
-		blur(_offscreenRender.getColor(0), getInternalWidth(), getInternalHeight(), 0);
-	
-	if(_bloom > 0.0)
+	if(_bloom)
 	{
 		// Downsampling and blur
 		_offscreenRender.getColor(2).generateMipmaps();
@@ -182,24 +198,32 @@ void DeferredRenderer::renderPostProcess()
 			blur(_offscreenRender.getColor(2), getInternalWidth(), getInternalHeight(), _bloomDownsampling);
 		_offscreenRender.getColor(2).generateMipmaps();
 		
-		// Blend and display (writes directly on main framebuffer)
-		_offscreenRender.getColor(0).bind(0);
+		// Blend and display
+		select_buffer();
 		_offscreenRender.getColor(2).bind(1);
 		Program& BloomBlend = Resources::getProgram("BloomBlend");
 		BloomBlend.use();
 		BloomBlend.setUniform("Exposure", _exposure);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
-		BloomBlend.useNone();
-		
 		_offscreenRender.getColor(2).set(Texture::Parameter::BaseLevel, 0);
-	} else {
-		// No post process, just blit the result of the light pass.
-		_offscreenRender.bind(FramebufferTarget::Read);
-		glBlitFramebuffer(0, 0, getInternalWidth(), getInternalHeight(), 
-						0, 0, _width, _height,
-						GL_COLOR_BUFFER_BIT,
-						GL_LINEAR);
+		BloomBlend.useNone();
+		Framebuffer<>::unbind(FramebufferTarget::Draw);
 	}
+	
+	// Blit the result of the light pass.
+	Framebuffer<>::unbind(FramebufferTarget::Draw);
+	if(write_to_post_buffer) // Select the last color buffer we wrote to.
+	{
+		_offscreenRender.bind(FramebufferTarget::Read);
+		_offscreenRender.getColor(0).bind(0);
+	} else {
+		_postProcessBuffer.bind(FramebufferTarget::Read);
+		_postProcessBuffer.getColor(0).bind(0);
+	}
+	glBlitFramebuffer(0, 0, getInternalWidth(), getInternalHeight(), 
+					0, 0, _width, _height,
+					GL_COLOR_BUFFER_BIT,
+					GL_LINEAR);
 }
 
 void DeferredRenderer::render()
@@ -259,6 +283,13 @@ void DeferredRenderer::initGBuffer(size_t width, size_t height)
 	_offscreenRender.getColor(2).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
 	_offscreenRender.getColor(2).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
 	_offscreenRender.init();
+	
+	_postProcessBuffer = Framebuffer<Texture2D, 1>(width, height);
+	_postProcessBuffer.getColor(0).setPixelType(Texture::PixelType::Float);
+	_postProcessBuffer.getColor(0).create(nullptr, width, height, GL_RGBA32F, GL_RGBA, false);
+	_postProcessBuffer.getColor(0).set(Texture::Parameter::WrapS, GL_CLAMP_TO_EDGE);
+	_postProcessBuffer.getColor(0).set(Texture::Parameter::WrapT, GL_CLAMP_TO_EDGE);
+	_postProcessBuffer.init();
 }
 	
 void DeferredRenderer::resize_callback(GLFWwindow* _window, int width, int height)

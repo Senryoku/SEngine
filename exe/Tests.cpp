@@ -273,6 +273,12 @@ public:
 				deselectObject();
 			}
 		};
+		
+		for(auto& it : ComponentIterator<SpotLight>{})
+		{
+			it.updateMatrices();
+			it.drawShadowMap(ComponentIterator<MeshRenderer>{});
+		}
 	}
 	
 	virtual void renderGUI() override
@@ -762,15 +768,28 @@ protected:
 			ImGui::DragFloat("FXAA LumaThreshold", &_fxaa_lumaThreshold, 0.05, 0.0, 2.0);
 			ImGui::DragFloat("FXAA MulReduce", &_fxaa_mulReduce, 1.0, 0.0, 1024.0);
 			ImGui::DragFloat("FXAA MinReduce", &_fxaa_minReduce, 1.0, 0.0, 1024.0);
-			static bool bloom_toggle = _bloom > 0.0;
-			if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
-				_bloom = -_bloom;
-			ImGui::DragFloat("Bloom", &_bloom, 0.05, 0.0, 5.0);
+			
+			ImGui::Separator();
+			
+			ImGui::Checkbox("Bloom", &_bloom);
+			ImGui::DragFloat("Bloom Strength", &_bloom_strength, 0.05, 0.0, 5.0);
+			
+			ImGui::Separator();
+			
 			ImGui::DragFloat("Exposure", &_exposure, 0.05, 0.0, 5.0);
+			
+			ImGui::Separator();
+			
 			ImGui::DragFloat("MinVariance (VSM)", &_minVariance, 0.000001, 0.0, 0.00005);
+			
+			ImGui::Separator();
+			
 			ImGui::DragInt("AOSamples", &_aoSamples, 1, 0, 32);
 			ImGui::DragFloat("AOThresold", &_aoThreshold, 0.05, 0.0, 5.0);
 			ImGui::DragFloat("AORadius", &_aoRadius, 1.0, 0.0, 400.0);
+			
+			ImGui::Separator();
+			
 			ImGui::DragInt("VolumeSamples", &_volumeSamples, 1, 0, 64);
 			ImGui::DragFloat("AtmosphericDensity", &_atmosphericDensity, 0.001, 0.0, 0.02);
 		
