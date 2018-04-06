@@ -18,12 +18,12 @@ extern std::unordered_map<std::string, Program>						_programs;
 
 extern std::unordered_map<std::string, std::unique_ptr<Mesh>>		_meshes;
 
-Shader& getShader(const std::string& name) throw(std::runtime_error);
+Shader& getShader(const std::string& name) noexcept(false);
 
 template<typename ShaderType>
 inline ShaderType& getShader(const std::string& name);
 
-Texture& getTexture(const std::string& name) throw(std::runtime_error);
+Texture& getTexture(const std::string& name) noexcept(false);
 
 template<typename T>
 inline T& getTexture(const std::string& name);

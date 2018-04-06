@@ -1,0 +1,2854 @@
+{
+  "variant": {
+    "label": "Release",
+    "keywordSettings": {
+      "buildType": "release"
+    },
+    "description": "Enable optimizations, omit debug info"
+  },
+  "activeEnvironments": [],
+  "codeModel": {
+    "configurations": [
+      {
+        "name": "Release",
+        "projects": [
+          {
+            "buildDirectory": "D:/Source/SEngine/build",
+            "name": "SEngine",
+            "sourceDirectory": "D:/Source/SEngine",
+            "targets": [
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/lib/libSEngine.a",
+                  "D:/Source/SEngine/build/lib/libSEngine.a",
+                  "D:/Source/SEngine/build/lib/libSEngine.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 109,
+                      "name": "add_library",
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 32,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 33,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 34,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 35,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 36,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 46,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 53,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 57,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 59,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 73,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": "-std=c++17 -fopenmp -Wall  -O3 -DNDEBUG -O3  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/shaders"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/textures"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/stb_image"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      },
+                      {
+                        "path": "D:/Source/_Others/glfw/include"
+                      },
+                      {
+                        "path": "D:/Source/_Others/glm"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/imgui"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/imgui-glfw"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/tinyobjloader"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/json"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Core"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/ECS"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Debug"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Deferred"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Forward"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Skybox"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Geometry"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Geometry/Terrain"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Graphics"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Tools"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Tools/range"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "ext/imgui/imgui.cpp",
+                      "ext/imgui/imgui_draw.cpp",
+                      "ext/imgui-glfw/imgui_impl_glfw_gl3.cpp",
+                      "ext/tinyobjloader/tiny_obj_loader.cc",
+                      "src/Core/Application.cpp",
+                      "src/Core/Clock.cpp",
+                      "src/Core/DeferredRenderer.cpp",
+                      "src/Core/ForwardRenderer.cpp",
+                      "src/Core/Resources.cpp",
+                      "src/Core/Scene.cpp",
+                      "src/Core/TimeManager.cpp",
+                      "src/Core/log.cpp",
+                      "src/Core/serialization.cpp",
+                      "src/ECS/Component.cpp",
+                      "src/ECS/Entity.cpp",
+                      "src/Geometry/Frustum.cpp",
+                      "src/Geometry/Transformation.cpp",
+                      "src/Geometry/Terrain/NoisyTerrain.cpp",
+                      "src/Geometry/Terrain/RadialTerrain.cpp",
+                      "src/Geometry/Terrain/Terrain.cpp",
+                      "src/Graphics/Axes.cpp",
+                      "src/Graphics/Blur.cpp",
+                      "src/Graphics/Camera.cpp",
+                      "src/Graphics/Material.cpp",
+                      "src/Graphics/Mesh.cpp",
+                      "src/Graphics/MeshBatch.cpp",
+                      "src/Graphics/MeshRenderer.cpp",
+                      "src/Graphics/Skybox.cpp",
+                      "src/Graphics/SpotLight.cpp",
+                      "src/Graphics/UniformGLM.cpp",
+                      "src/Tools/PerlinNoise.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "libSEngine.a",
+                "linkerLanguage": "CXX",
+                "name": "SEngine",
+                "sourceDirectory": "D:/Source/SEngine",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/bin/Tests.exe",
+                  "D:/Source/SEngine/build/lib/libTests.dll.a",
+                  "D:/Source/SEngine/build/bin/Tests.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 114,
+                      "name": "add_executable",
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 32,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 33,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 34,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 35,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 36,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 46,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 53,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 57,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 59,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 73,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 117,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 117,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 121,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 121,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 121,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": "-std=c++17 -fopenmp -Wall  -O3 -DNDEBUG -O3  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/shaders"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/textures"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/stb_image"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      },
+                      {
+                        "path": "D:/Source/_Others/glfw/include"
+                      },
+                      {
+                        "path": "D:/Source/_Others/glm"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/imgui"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/imgui-glfw"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/tinyobjloader"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/json"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Core"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/ECS"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Debug"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Deferred"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Forward"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/GLSL/Skybox"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Geometry"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Geometry/Terrain"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Graphics"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Tools"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/src/Tools/range"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "exe/Tests.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "Tests.exe",
+                "linkLanguageFlags": "-std=c++17 -fopenmp -Wall  -O3 -DNDEBUG -O3",
+                "linkLibraries": "-lstdc++fs -lKtmW32 lib\\libSEngine.a -lglfw3 lib\\libSenOGL.a lib\\libgl3w.a -lopengl32 -lglu32 -lgcc_eh -lgcc_eh -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32",
+                "linkPath": "-LD:\\Source\\_Others\\glfw\\lib",
+                "linkerLanguage": "CXX",
+                "name": "Tests",
+                "sourceDirectory": "D:/Source/SEngine",
+                "type": "EXECUTABLE"
+              },
+              {
+                "buildDirectory": "D:/Source/SEngine/build",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 132,
+                      "name": "add_custom_target",
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 32,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 33,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 34,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 35,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 36,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 46,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 53,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 57,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 59,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 73,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "isGenerated": true,
+                    "sources": [
+                      "build/CMakeFiles/doc",
+                      "build/CMakeFiles/doc.rule"
+                    ]
+                  }
+                ],
+                "fullName": "doc",
+                "name": "doc",
+                "sourceDirectory": "D:/Source/SEngine",
+                "type": "UTILITY"
+              },
+              {
+                "buildDirectory": "D:/Source/SEngine/build",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 126,
+                      "name": "add_custom_target",
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 32,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 33,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 34,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 35,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 36,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 46,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 53,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 57,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 59,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 73,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 90,
+                          "name": "INCLUDE_DIRECTORIES",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 96,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "line": 101,
+                          "name": "REC_SOURCE",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "isGenerated": true,
+                    "sources": [
+                      "build/CMakeFiles/run",
+                      "build/CMakeFiles/run.rule"
+                    ]
+                  }
+                ],
+                "fullName": "run",
+                "name": "run",
+                "sourceDirectory": "D:/Source/SEngine",
+                "type": "UTILITY"
+              },
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/lib/libSenOGL.a",
+                  "D:/Source/SEngine/build/lib/libSenOGL.a",
+                  "D:/Source/SEngine/build/lib/libSenOGL.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 66,
+                      "name": "add_library",
+                      "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 68,
+                          "name": "target_include_directories",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": " --std=c++17 -Wall -O3 -DNDEBUG  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/shaders"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/textures"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/stb_image"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/Buffer.cpp",
+                      "src/Context.cpp",
+                      "src/OpenGLObject.cpp",
+                      "src/ParameterBinding.cpp",
+                      "src/ProgramPipeline.cpp",
+                      "src/Query.cpp",
+                      "src/Renderbuffer.cpp",
+                      "src/TransformFeedback.cpp",
+                      "src/UniformBinding.cpp",
+                      "src/VertexArray.cpp",
+                      "src/shaders/ComputeShader.cpp",
+                      "src/shaders/FragmentShader.cpp",
+                      "src/shaders/GeometryShader.cpp",
+                      "src/shaders/Program.cpp",
+                      "src/shaders/Shader.cpp",
+                      "src/shaders/TesselationControlShader.cpp",
+                      "src/shaders/TesselationEvaluationShader.cpp",
+                      "src/shaders/VertexShader.cpp",
+                      "src/textures/CubeMap.cpp",
+                      "src/textures/Sampler.cpp",
+                      "src/textures/Texture.cpp",
+                      "src/textures/Texture2D.cpp",
+                      "src/textures/Texture3D.cpp",
+                      "external/stb_image/stb_image.cpp",
+                      "external/stb_image/stb_image_write.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "libSenOGL.a",
+                "linkerLanguage": "CXX",
+                "name": "SenOGL",
+                "sourceDirectory": "D:/Source/SEngine/ext/SenOGL",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/lib/libgl3w.a",
+                  "D:/Source/SEngine/build/lib/libgl3w.a",
+                  "D:/Source/SEngine/build/lib/libgl3w.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL/external/gl3w",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 7,
+                      "name": "add_library",
+                      "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 5,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": "-O3 -DNDEBUG  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "C",
+                    "sources": [
+                      "src/gl3w.c"
+                    ]
+                  }
+                ],
+                "fullName": "libgl3w.a",
+                "linkerLanguage": "C",
+                "name": "gl3w",
+                "sourceDirectory": "D:/Source/SEngine/ext/SenOGL/external/gl3w",
+                "type": "STATIC_LIBRARY"
+              }
+            ]
+          },
+          {
+            "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL",
+            "name": "SenOGL",
+            "sourceDirectory": "D:/Source/SEngine/ext/SenOGL",
+            "targets": [
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/lib/libSenOGL.a",
+                  "D:/Source/SEngine/build/lib/libSenOGL.a",
+                  "D:/Source/SEngine/build/lib/libSenOGL.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 66,
+                      "name": "add_library",
+                      "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 68,
+                          "name": "target_include_directories",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 67,
+                          "name": "target_link_libraries",
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_link_libraries"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": " --std=c++17 -Wall -O3 -DNDEBUG  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/shaders"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/include/textures"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/stb_image"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "CXX",
+                    "sources": [
+                      "src/Buffer.cpp",
+                      "src/Context.cpp",
+                      "src/OpenGLObject.cpp",
+                      "src/ParameterBinding.cpp",
+                      "src/ProgramPipeline.cpp",
+                      "src/Query.cpp",
+                      "src/Renderbuffer.cpp",
+                      "src/TransformFeedback.cpp",
+                      "src/UniformBinding.cpp",
+                      "src/VertexArray.cpp",
+                      "src/shaders/ComputeShader.cpp",
+                      "src/shaders/FragmentShader.cpp",
+                      "src/shaders/GeometryShader.cpp",
+                      "src/shaders/Program.cpp",
+                      "src/shaders/Shader.cpp",
+                      "src/shaders/TesselationControlShader.cpp",
+                      "src/shaders/TesselationEvaluationShader.cpp",
+                      "src/shaders/VertexShader.cpp",
+                      "src/textures/CubeMap.cpp",
+                      "src/textures/Sampler.cpp",
+                      "src/textures/Texture.cpp",
+                      "src/textures/Texture2D.cpp",
+                      "src/textures/Texture3D.cpp",
+                      "external/stb_image/stb_image.cpp",
+                      "external/stb_image/stb_image_write.cpp"
+                    ]
+                  }
+                ],
+                "fullName": "libSenOGL.a",
+                "linkerLanguage": "CXX",
+                "name": "SenOGL",
+                "sourceDirectory": "D:/Source/SEngine/ext/SenOGL",
+                "type": "STATIC_LIBRARY"
+              },
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/lib/libgl3w.a",
+                  "D:/Source/SEngine/build/lib/libgl3w.a",
+                  "D:/Source/SEngine/build/lib/libgl3w.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL/external/gl3w",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 7,
+                      "name": "add_library",
+                      "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 5,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": "-O3 -DNDEBUG  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "C",
+                    "sources": [
+                      "src/gl3w.c"
+                    ]
+                  }
+                ],
+                "fullName": "libgl3w.a",
+                "linkerLanguage": "C",
+                "name": "gl3w",
+                "sourceDirectory": "D:/Source/SEngine/ext/SenOGL/external/gl3w",
+                "type": "STATIC_LIBRARY"
+              }
+            ]
+          },
+          {
+            "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL/external/gl3w",
+            "name": "gl3w",
+            "sourceDirectory": "D:/Source/SEngine/ext/SenOGL/external/gl3w",
+            "targets": [
+              {
+                "artifacts": [
+                  "D:/Source/SEngine/build/lib/libgl3w.a",
+                  "D:/Source/SEngine/build/lib/libgl3w.a",
+                  "D:/Source/SEngine/build/lib/libgl3w.pdb"
+                ],
+                "buildDirectory": "D:/Source/SEngine/build/ext/SenOGL/external/gl3w",
+                "crossReferences": {
+                  "backtrace": [
+                    {
+                      "line": 7,
+                      "name": "add_library",
+                      "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                    },
+                    {
+                      "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                    }
+                  ],
+                  "relatedStatements": [
+                    {
+                      "backtrace": [
+                        {
+                          "line": 27,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    },
+                    {
+                      "backtrace": [
+                        {
+                          "line": 5,
+                          "name": "include_directories",
+                          "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                        },
+                        {
+                          "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/CMakeLists.txt"
+                        }
+                      ],
+                      "type": "target_include_directories"
+                    }
+                  ]
+                },
+                "fileGroups": [
+                  {
+                    "compileFlags": "-O3 -DNDEBUG  ",
+                    "includePath": [
+                      {
+                        "path": "D:/Source/SEngine/ext"
+                      },
+                      {
+                        "path": "D:/Source/SEngine/ext/SenOGL/external/gl3w/include"
+                      }
+                    ],
+                    "isGenerated": false,
+                    "language": "C",
+                    "sources": [
+                      "src/gl3w.c"
+                    ]
+                  }
+                ],
+                "fullName": "libgl3w.a",
+                "linkerLanguage": "C",
+                "name": "gl3w",
+                "sourceDirectory": "D:/Source/SEngine/ext/SenOGL/external/gl3w",
+                "type": "STATIC_LIBRARY"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "cookie": "0.3753846339074851",
+    "inReplyTo": "codemodel",
+    "type": "reply"
+  }
+}

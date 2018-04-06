@@ -7,7 +7,7 @@ std::unordered_map<std::string, Program>					Resources::_programs;
 
 std::unordered_map<std::string, std::unique_ptr<Mesh>>		Resources::_meshes;
 
-Shader& Resources::getShader(const std::string& name) throw(std::runtime_error)
+Shader& Resources::getShader(const std::string& name) noexcept(false)
 {
 	auto it = _shaders.find(name);
 	if(it != _shaders.end())
@@ -18,7 +18,7 @@ Shader& Resources::getShader(const std::string& name) throw(std::runtime_error)
 	}
 }
 
-Texture& Resources::getTexture(const std::string& name) throw(std::runtime_error)
+Texture& Resources::getTexture(const std::string& name) noexcept(false)
 {
 	auto it = _textures.find(name);
 	if(it != _textures.end())

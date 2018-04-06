@@ -74,4 +74,4 @@ inline void error(Args... args)
 	_log(LogType::Error, args...);
 }
 
-};
+}
