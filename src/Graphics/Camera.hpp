@@ -44,7 +44,7 @@ public:
 	inline void setDirection(const glm::vec3& dir) { _direction = dir; }
 	inline void lookAt(const glm::vec3& at)        { _direction = glm::normalize(at - _position); }
 	
-	inline void setFoV(float fov)                       { _fov = fov; }
+	inline void setFoV(float fov)                       { _fov = fov; updateProjection(_ratio); }
 	
 	inline glm::vec3& getPosition()              { return _position; }
 	inline const glm::vec3& getPosition()  const { return _position; }
