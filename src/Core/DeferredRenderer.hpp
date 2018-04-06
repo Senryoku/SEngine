@@ -47,6 +47,14 @@ protected:
 	
 	// Post Process settings
 	float		_exposure = 2.0f;
+	
+	bool		_fxaa = true;
+	bool 		_fxaa_showEdges = false;
+	float 		_fxaa_lumaThreshold = 0.5;
+	float 		_fxaa_mulReduce = 8.0;
+	float 		_fxaa_minReduce = 128.0;
+	float 		_fxaa_maxSpan = 8.0;
+	
 	float		_bloom = 1.2f;
 	int			_bloomBlur = 2;
 	int			_bloomDownsampling = 3;

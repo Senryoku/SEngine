@@ -54,6 +54,11 @@ void DeferredRenderer::run_init()
 	);
 	DeferredShadowCS.getProgram().bindUniformBlock("LightBlock", _scene.getPointLightBuffer());
 		
+	Resources::loadProgram("FXAA",
+		load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
+		load<FragmentShader>("src/GLSL/fxaa_fs.glsl")
+	);
+	
 	Resources::loadProgram("BloomBlend",
 		load<VertexShader>("src/GLSL/fullscreen_vs.glsl"),
 		load<FragmentShader>("src/GLSL/bloom_blend_fs.glsl")
@@ -142,6 +147,25 @@ void DeferredRenderer::renderPostProcess()
 							0, 0, _width, _height, 
 							GL_COLOR_BUFFER_BIT, GL_LINEAR);
 		return;
+	}
+	
+	// FXAA
+	// @TODO: currently doesn't work with Bloom as it output directly to the main framebuffer...
+	// I should think of a better way to compose post processings
+	if(_fxaa)
+	{
+		_offscreenRender.getColor(0).bind(0);
+		Program& FXAA = Resources::getProgram("FXAA");
+		FXAA.use();
+		FXAA.setUniform("u_texelStep", glm::vec2(1.0f / getInternalWidth(), 1.0f / getInternalHeight()));
+		FXAA.setUniform("u_showEdges", _fxaa_showEdges ? 1 : 0);
+		FXAA.setUniform("u_fxaaOn", _fxaa ? 1 : 0);
+		FXAA.setUniform("u_lumaThreshold", _fxaa_lumaThreshold);
+		FXAA.setUniform("u_mulReduce", 1.0f / _fxaa_mulReduce);
+		FXAA.setUniform("u_minReduce", 1.0f / _fxaa_minReduce);
+		FXAA.setUniform("u_maxSpan", _fxaa_maxSpan);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // Dummy draw call
+		FXAA.useNone();
 	}
 	
 	// This looks really good with downsampling (but is obviously really expensive)

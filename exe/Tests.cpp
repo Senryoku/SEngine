@@ -757,6 +757,11 @@ protected:
 			
 			ImGui::Separator();
 			
+			ImGui::Checkbox("FXAA", &_fxaa);
+			ImGui::Checkbox("FXAA Show Edges", &_fxaa_showEdges);
+			ImGui::DragFloat("FXAA LumaThreshold", &_fxaa_lumaThreshold, 0.05, 0.0, 2.0);
+			ImGui::DragFloat("FXAA MulReduce", &_fxaa_mulReduce, 1.0, 0.0, 1024.0);
+			ImGui::DragFloat("FXAA MinReduce", &_fxaa_minReduce, 1.0, 0.0, 1024.0);
 			static bool bloom_toggle = _bloom > 0.0;
 			if(ImGui::Checkbox("Toggle Bloom", &bloom_toggle))
 				_bloom = -_bloom;
