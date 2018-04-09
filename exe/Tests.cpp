@@ -342,8 +342,8 @@ public:
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0, 2.5));
-			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20.0f), ImGuiSetCond_Always);
-			ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 20.f), ImGuiSetCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20.0f), ImGuiCond_Always);
+			ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 20.f), ImGuiCond_Always);
 			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize);
 			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);
 			ImGui::SameLine(125, 0);
@@ -378,7 +378,8 @@ public:
 				
 				// Dummy Window for "on field" widgets
 				ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});
-				ImGui::Begin("SelectedObject", nullptr, ImVec2{static_cast<float>(_width), static_cast<float>(_height)}, 0.0,
+				ImGui::SetNextWindowBgAlpha(0.0);
+				ImGui::Begin("SelectedObject", nullptr,
 					ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
 				
 				ImGuiContext* g = ImGui::GetCurrentContext();

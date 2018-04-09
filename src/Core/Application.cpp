@@ -46,7 +46,7 @@ void Application::init(const std::string& windowName)
 		exit(EXIT_FAILURE);
 	}
 	glfwWindowHint(GLFW_SAMPLES, _multisampling);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
 	if(_fullscreen)
@@ -86,10 +86,13 @@ void Application::init(const std::string& windowName)
 	glfwSetScrollCallback(_window, s_scroll_callback);
 	glfwSetDropCallback(_window, s_drop_callback);
 	
+	ImGui::CreateContext();
 	ImGui_ImplGlfwGL3_Init(_window, false);
 	ImGui::GetIO().MouseDrawCursor = false; // Let the OS draw the cursor
 	glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
 	glfwSetInputMode(_window, GLFW_CURSOR, _controlCamera ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	
+    ImGui::StyleColorsDark();
 	
 	ImGuiStyle& style = ImGui::GetStyle();
 
@@ -101,7 +104,7 @@ void Application::init(const std::string& windowName)
     style.Colors[ImGuiCol_Text]                  = ImVec4(col_text.x, col_text.y, col_text.z, 1.00f);
     style.Colors[ImGuiCol_TextDisabled]          = ImVec4(col_text.x, col_text.y, col_text.z, 0.58f);
     style.Colors[ImGuiCol_WindowBg]              = ImVec4(col_back.x, col_back.y, col_back.z, col_back.w);
-    style.Colors[ImGuiCol_ChildWindowBg]         = ImVec4(col_area.x, col_area.y, col_area.z, 0.00f);
+    style.Colors[ImGuiCol_ChildBg]               = ImVec4(col_area.x, col_area.y, col_area.z, 0.00f);
     style.Colors[ImGuiCol_PopupBg]               = ImVec4(col_back.x, col_back.y, col_back.z, 0.90f);
     style.Colors[ImGuiCol_Border]                = ImVec4(col_text.x, col_text.y, col_text.z, 0.30f);
     style.Colors[ImGuiCol_BorderShadow]          = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
@@ -116,7 +119,6 @@ void Application::init(const std::string& windowName)
     style.Colors[ImGuiCol_ScrollbarGrab]         = ImVec4(col_main.x, col_main.y, col_main.z, 0.31f);
     style.Colors[ImGuiCol_ScrollbarGrabHovered]  = ImVec4(col_main.x, col_main.y, col_main.z, 0.78f);
     style.Colors[ImGuiCol_ScrollbarGrabActive]   = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
-    style.Colors[ImGuiCol_ComboBg]               = ImVec4(col_area.x, col_area.y, col_area.z, 1.00f);
     style.Colors[ImGuiCol_CheckMark]             = ImVec4(col_main.x, col_main.y, col_main.z, 0.80f);
     style.Colors[ImGuiCol_SliderGrab]            = ImVec4(col_main.x, col_main.y, col_main.z, 0.24f);
     style.Colors[ImGuiCol_SliderGrabActive]      = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
@@ -126,15 +128,12 @@ void Application::init(const std::string& windowName)
     style.Colors[ImGuiCol_Header]                = ImVec4(col_main.x, col_main.y, col_main.z, 0.76f);
     style.Colors[ImGuiCol_HeaderHovered]         = ImVec4(col_main.x, col_main.y, col_main.z, 0.86f);
     style.Colors[ImGuiCol_HeaderActive]          = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
-    style.Colors[ImGuiCol_Column]                = ImVec4(col_text.x, col_text.y, col_text.z, 0.32f);
-    style.Colors[ImGuiCol_ColumnHovered]         = ImVec4(col_text.x, col_text.y, col_text.z, 0.78f);
-    style.Colors[ImGuiCol_ColumnActive]          = ImVec4(col_text.x, col_text.y, col_text.z, 1.00f);
+    style.Colors[ImGuiCol_Separator]             = ImVec4(col_text.x, col_text.y, col_text.z, 0.32f);
+    style.Colors[ImGuiCol_SeparatorHovered]      = ImVec4(col_text.x, col_text.y, col_text.z, 0.78f);
+    style.Colors[ImGuiCol_SeparatorActive]       = ImVec4(col_text.x, col_text.y, col_text.z, 1.00f);
     style.Colors[ImGuiCol_ResizeGrip]            = ImVec4(col_main.x, col_main.y, col_main.z, 0.20f);
     style.Colors[ImGuiCol_ResizeGripHovered]     = ImVec4(col_main.x, col_main.y, col_main.z, 0.78f);
     style.Colors[ImGuiCol_ResizeGripActive]      = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
-    style.Colors[ImGuiCol_CloseButton]           = ImVec4(col_text.x, col_text.y, col_text.z, 0.16f);
-    style.Colors[ImGuiCol_CloseButtonHovered]    = ImVec4(col_text.x, col_text.y, col_text.z, 0.39f);
-    style.Colors[ImGuiCol_CloseButtonActive]     = ImVec4(col_text.x, col_text.y, col_text.z, 1.00f);
     style.Colors[ImGuiCol_PlotLines]             = ImVec4(col_text.x, col_text.y, col_text.z, 0.63f);
     style.Colors[ImGuiCol_PlotLinesHovered]      = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
     style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(col_text.x, col_text.y, col_text.z, 0.63f);
@@ -154,6 +153,7 @@ void Application::init(const std::string& windowName)
 void Application::clean()
 {
 	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui::DestroyContext();
 	glfwDestroyWindow(_window);
 	glfwTerminate();
 }
@@ -287,6 +287,7 @@ void Application::update()
 void Application::renderGUI()
 {
 	ImGui::Render();
+    ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void Application::run()
@@ -382,7 +383,7 @@ void Application::setMSAA(bool val)
 void Application::key_callback(GLFWwindow* _window, int key, int scancode, int action, int mods)
 {
 	if(!_controlCamera)
-		ImGui_ImplGlfwGL3_KeyCallback(_window, key, scancode, action, mods);
+		ImGui_ImplGlfw_KeyCallback(_window, key, scancode, action, mods);
 	if(ImGui::GetIO().WantCaptureKeyboard)
 		return;
 	
@@ -394,7 +395,7 @@ void Application::key_callback(GLFWwindow* _window, int key, int scancode, int a
 void Application::char_callback(GLFWwindow* window, unsigned int codepoint)
 {
 	if(!_controlCamera)
-		ImGui_ImplGlfwGL3_CharCallback(window, codepoint);
+		ImGui_ImplGlfw_CharCallback(window, codepoint);
 	if(ImGui::GetIO().WantCaptureKeyboard)
 		return;
 }
@@ -439,7 +440,7 @@ void Application::mouse_button_callback(GLFWwindow* window, int button, int acti
 	float w = _mouse.w;
 
 	if(!_controlCamera)
-		ImGui_ImplGlfwGL3_MouseButtonCallback(_window, button, action, mods);
+		ImGui_ImplGlfw_MouseButtonCallback(_window, button, action, mods);
 	if(ImGui::GetIO().WantCaptureMouse)
 		return;
 	
@@ -471,7 +472,7 @@ void Application::mouse_position_callback(GLFWwindow* window, double xpos, doubl
 void Application::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	if(!_controlCamera)
-		ImGui_ImplGlfwGL3_ScrollCallback(window, xoffset, yoffset);
+		ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
 }
 
 void Application::drop_callback(GLFWwindow* window, int count, const char ** paths)
