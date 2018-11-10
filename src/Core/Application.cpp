@@ -8,7 +8,8 @@
 #include <glm/gtx/transform.hpp>
 
 #include <imgui.h>
-#include <imgui_impl_glfw_gl3.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 
 #include <stdext.hpp>
 
@@ -46,7 +47,7 @@ void Application::init(const std::string& windowName)
 		exit(EXIT_FAILURE);
 	}
 	glfwWindowHint(GLFW_SAMPLES, _multisampling);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 
 	if(_fullscreen)
@@ -86,14 +87,23 @@ void Application::init(const std::string& windowName)
 	glfwSetScrollCallback(_window, s_scroll_callback);
 	glfwSetDropCallback(_window, s_drop_callback);
 	
-	ImGui::CreateContext();
-	ImGui_ImplGlfwGL3_Init(_window, false);
+	IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoTaskBarIcons;
+    //io.ConfigFlags |= ImGuiConfigFlags_ViewportsNoMerge;
+	
+	ImGui_ImplGlfw_InitForOpenGL(_window, false);
+    ImGui_ImplOpenGL3_Init("#version 150");
 	ImGui::GetIO().MouseDrawCursor = false; // Let the OS draw the cursor
 	glfwGetCursorPos(_window, &_mouse_x, &_mouse_y); // Avoid camera jumps
 	glfwSetInputMode(_window, GLFW_CURSOR, _controlCamera ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	
     ImGui::StyleColorsDark();
-	
 	ImGuiStyle& style = ImGui::GetStyle();
 
     ImVec4 col_text{1.0, 1.0, 1.0, 1.0};
@@ -139,8 +149,7 @@ void Application::init(const std::string& windowName)
     style.Colors[ImGuiCol_PlotHistogram]         = ImVec4(col_text.x, col_text.y, col_text.z, 0.63f);
     style.Colors[ImGuiCol_PlotHistogramHovered]  = ImVec4(col_main.x, col_main.y, col_main.z, 1.00f);
     style.Colors[ImGuiCol_TextSelectedBg]        = ImVec4(col_main.x, col_main.y, col_main.z, 0.43f);
-    style.Colors[ImGuiCol_ModalWindowDarkening]  = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
-	
+    style.Colors[ImGuiCol_ModalWindowDimBg]  = ImVec4(0.20f, 0.20f, 0.20f, 0.35f);
 	Context::enable(Capability::DepthTest);
 	
 	_scene.init();
@@ -152,8 +161,9 @@ void Application::init(const std::string& windowName)
 
 void Application::clean()
 {
-	ImGui_ImplGlfwGL3_Shutdown();
-	ImGui::DestroyContext();
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 	glfwDestroyWindow(_window);
 	glfwTerminate();
 }
@@ -287,7 +297,14 @@ void Application::update()
 void Application::renderGUI()
 {
 	ImGui::Render();
-    ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	
+	// Update and Render additional Platform Windows
+	if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault();
+	}
 }
 
 void Application::run()
@@ -309,12 +326,16 @@ void Application::run()
 			if(_frameTime > 1.0/60.0) _frameTime = 1.0/60.0; // In case the _window is moved
 		} else _frameTime = 0.0;
 		
-		ImGui_ImplGlfwGL3_NewFrame();
+        glfwMakeContextCurrent(_window);
+		
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 	
 		update();
 		
 		render();
-
+		
 		glfwSwapBuffers(_window);
 		glfwPollEvents();
 	}

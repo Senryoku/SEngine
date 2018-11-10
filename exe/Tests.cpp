@@ -148,6 +148,10 @@ bool loadScene(const std::string& path)
 			auto spotlight = e.find("SpotLight");
 			if(spotlight != e.end())
 				base_entity.add<SpotLight>(*spotlight);
+			
+			auto collisionbox = e.find("CollisionBox");
+			if(collisionbox != e.end())
+				base_entity.add<CollisionBox>(*collisionbox);
 		}
 	}
 	
@@ -286,6 +290,9 @@ public:
 		bool load_scene = false;
 		bool load_model = false;
 		
+		auto winpos = ImGui::GetMainViewport()->Pos;
+		glm::vec2 glmwinpos{winpos.x, winpos.y};
+		
 		// Menu
 		if(ImGui::BeginMainMenuBar())
 		{
@@ -343,8 +350,8 @@ public:
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0, 2.5));
 			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 20.f), ImGuiCond_Always);
-			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize);
+			ImGui::SetNextWindowPos(ImVec2(winpos.x, winpos.y + ImGui::GetIO().DisplaySize.y - 20.f), ImGuiCond_Always);
+			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);
 			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);
 			ImGui::SameLine(125, 0);
 			ImGui::TextColored(LogColors[Log::_logs.front().type], "%s", Log::_logs.front().str().c_str());
@@ -377,16 +384,19 @@ public:
 				auto& transform = selectedEntityPtr->get<Transformation>();
 				
 				// Dummy Window for "on field" widgets
+				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->Pos, ImGuiCond_Always);
 				ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});
 				ImGui::SetNextWindowBgAlpha(0.0);
 				ImGui::Begin("SelectedObject", nullptr,
-					ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
+					ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoNav|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
 				
 				ImGuiContext* g = ImGui::GetCurrentContext();
 				ImGuiWindow* window = ImGui::GetCurrentWindow();
-				const auto mouse = glm::vec2{ImGui::GetMousePos()};
+				const auto abs_mouse = glm::vec2{ImGui::GetMousePos()};
+				const auto rel_mouse = abs_mouse - glmwinpos;
 				ImDrawList* drawlist = ImGui::GetWindowDrawList();
 				
+				// @Todo : Abstract this?
 				if(selectedEntityPtr->has<MeshRenderer>())
 				{
 					auto& mr = selectedEntityPtr->get<MeshRenderer>();
@@ -410,7 +420,7 @@ public:
 					std::array<ImVec2, 8> screen_aabb;
 					for(int i = 0; i < 8; ++i)
 					{
-						screen_aabb[i] = project(aabb[i]);
+						screen_aabb[i] = project(aabb[i]) + glmwinpos;
 					}
 					// Bounding Box Gizmo
 					constexpr std::array<size_t, 24> segments{
@@ -442,14 +452,14 @@ public:
 				for(int i = 0; i < 3; ++i)
 				{
 					const ImGuiID id = window->GetID(labels[i]);
-					bool hovered = point_line_distance(mouse, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
+					bool hovered = point_line_distance(rel_mouse, gizmo_points[0], gizmo_points[1 + i]) < 5.0f;
 					if(hovered)
 						ImGui::SetHoveredID(id);
 					bool active = id == g->ActiveId;
 				
 					if(active && ImGui::IsMouseDragging(0))
 					{
-						const auto newP = mouse;
+						const auto newP = rel_mouse;
 						const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
 						ImGui::ResetMouseDragDelta(0);
 						const auto newR = getScreenRay(newP.x, newP.y);
@@ -475,7 +485,7 @@ public:
 						ImGui::SetActiveID(id, window);
 						ImGui::GetIO().WantCaptureMouse = true;
 					}
-					drawlist->AddLine(gizmo_points[0], gizmo_points[i + 1], 
+					drawlist->AddLine(glmwinpos + gizmo_points[0], glmwinpos + gizmo_points[i + 1], 
 						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);
 				}
 				////////////////////////////////////////////////////
@@ -498,14 +508,14 @@ public:
 				for(int i = 0; i < 3; ++i)
 				{
 					const ImGuiID id = window->GetID(rot_labels[i]);
-					bool hovered = glm::distance(mouse, rot_gizmo_points[1 + i]) < 10.0f;
+					bool hovered = glm::distance(rel_mouse, rot_gizmo_points[1 + i]) < 10.0f;
 					if(hovered)
 						ImGui::SetHoveredID(id);
 					bool active = id == g->ActiveId;
 					
 					if(active && ImGui::IsMouseDragging(0))
 					{
-						const auto newP = mouse;
+						const auto newP = rel_mouse;
 						const auto oldP = newP - glm::vec2{ImGui::GetMouseDragDelta()};
 						ImGui::ResetMouseDragDelta(0);
 						const auto newR = getScreenRay(newP.x, newP.y);
@@ -554,12 +564,12 @@ public:
 							, 1.0}};
 					for(size_t p = 0; p < circle_precision - 1; ++p)
 					{
-						drawlist->AddLine(project(gp + circle[p]), 
-							project(gp + circle[p + 1]),
+						drawlist->AddLine(glmwinpos + project(gp + circle[p]), 
+							glmwinpos + project(gp + circle[p + 1]),
 							ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
 					}
 
-					drawlist->AddCircle(rot_gizmo_points[i + 1], 10.0,
+					drawlist->AddCircle(glmwinpos + rot_gizmo_points[i + 1], 10.0,
 						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));
 				}
 				

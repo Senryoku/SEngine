@@ -6,10 +6,9 @@
 #include <Skybox.hpp>
 #include <Camera.hpp>
 
-#include <Meta.hpp>
+#include <ComponentTypes.hpp>
 
-#include <SpotLight.hpp>
-using ComponentTypes = TList<Transformation, MeshRenderer, SpotLight>;
+using ComponentTypes = TList<Transformation, MeshRenderer, SpotLight, CollisionBox>;
 
 /**
  * @todo Octree

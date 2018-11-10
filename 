@@ -1,0 +1,72 @@
+[1mdiff --git a/exe/Tests.cpp b/exe/Tests.cpp[m
+[1mindex a5dabf1..1e15e1d 100644[m
+[1m--- a/exe/Tests.cpp[m
+[1m+++ b/exe/Tests.cpp[m
+[36m@@ -286,6 +286,9 @@[m [mpublic:[m
+ 		bool load_scene = false;[m
+ 		bool load_model = false;[m
+ 		[m
+[32m+[m		[32mauto winpos = ImGui::GetMainViewport()->Pos;[m
+[32m+[m		[32mglm::vec2 glmwinpos{winpos.x, winpos.y};[m
+[32m+[m[41m		[m
+ 		// Menu[m
+ 		if(ImGui::BeginMainMenuBar())[m
+ 		{[m
+[36m@@ -343,8 +346,8 @@[m [mpublic:[m
+ 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);[m
+ 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0, 2.5));[m
+ 			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20.0f), ImGuiCond_Always);[m
+[31m-			ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 20.f), ImGuiCond_Always);[m
+[31m-			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize);[m
+[32m+[m			[32mImGui::SetNextWindowPos(ImVec2(winpos.x, winpos.y + ImGui::GetIO().DisplaySize.y - 20.f), ImGuiCond_Always);[m
+[32m+[m			[32mImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);[m
+ 			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);[m
+ 			ImGui::SameLine(125, 0);[m
+ 			ImGui::TextColored(LogColors[Log::_logs.front().type], "%s", Log::_logs.front().str().c_str());[m
+[36m@@ -377,10 +380,11 @@[m [mpublic:[m
+ 				auto& transform = selectedEntityPtr->get<Transformation>();[m
+ 				[m
+ 				// Dummy Window for "on field" widgets[m
+[32m+[m				[32mImGui::SetNextWindowPos(ImGui::GetMainViewport()->Pos, ImGuiCond_Always);[m
+ 				ImGui::SetNextWindowSize(ImVec2{static_cast<float>(_width), static_cast<float>(_height)});[m
+ 				ImGui::SetNextWindowBgAlpha(0.0);[m
+ 				ImGui::Begin("SelectedObject", nullptr,[m
+[31m-					ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);[m
+[32m+[m					[32mImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoNav|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);[m
+ 				[m
+ 				ImGuiContext* g = ImGui::GetCurrentContext();[m
+ 				ImGuiWindow* window = ImGui::GetCurrentWindow();[m
+[36m@@ -410,7 +414,7 @@[m [mpublic:[m
+ 					std::array<ImVec2, 8> screen_aabb;[m
+ 					for(int i = 0; i < 8; ++i)[m
+ 					{[m
+[31m-						screen_aabb[i] = project(aabb[i]);[m
+[32m+[m						[32mscreen_aabb[i] = project(aabb[i]) + glmwinpos;[m
+ 					}[m
+ 					// Bounding Box Gizmo[m
+ 					constexpr std::array<size_t, 24> segments{[m
+[36m@@ -475,7 +479,7 @@[m [mpublic:[m
+ 						ImGui::SetActiveID(id, window);[m
+ 						ImGui::GetIO().WantCaptureMouse = true;[m
+ 					}[m
+[31m-					drawlist->AddLine(gizmo_points[0], gizmo_points[i + 1], [m
+[32m+[m					[32mdrawlist->AddLine(glmwinpos + gizmo_points[0], glmwinpos + gizmo_points[i + 1],[m[41m [m
+ 						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)), 2.0);[m
+ 				}[m
+ 				////////////////////////////////////////////////////[m
+[36m@@ -554,12 +558,12 @@[m [mpublic:[m
+ 							, 1.0}};[m
+ 					for(size_t p = 0; p < circle_precision - 1; ++p)[m
+ 					{[m
+[31m-						drawlist->AddLine(project(gp + circle[p]), [m
+[31m-							project(gp + circle[p + 1]),[m
+[32m+[m						[32mdrawlist->AddLine(glmwinpos + project(gp + circle[p]),[m[41m [m
+[32m+[m							[32mglmwinpos + project(gp + circle[p + 1]),[m
+ 							ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));[m
+ 					}[m
+ [m
+[31m-					drawlist->AddCircle(rot_gizmo_points[i + 1], 10.0,[m
+[32m+[m					[32mdrawlist->AddCircle(glmwinpos + rot_gizmo_points[i + 1], 10.0,[m
+ 						ImGui::ColorConvertFloat4ToU32(ImVec4(i == 0, i == 1, i == 2, active ? 1.0 : 0.5)));[m
+ 				}[m
+ 				[m

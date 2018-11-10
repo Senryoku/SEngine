@@ -51,12 +51,14 @@ INCLUDE_DIRECTORIES(${GLM_INCLUDE_DIR})
 #dear imgui
 set(IMGUI_ROOT "ext/imgui")
 INCLUDE_DIRECTORIES(${IMGUI_ROOT})
-set(IMGUIGLFW_ROOT "ext/imgui/examples/opengl3_example")
+set(IMGUIGLFW_ROOT "ext/imgui/examples/")
 INCLUDE_DIRECTORIES(${IMGUIGLFW_ROOT})
 set(SOURCE_FILES ${SOURCE_FILES}
 	${IMGUI_ROOT}/imgui.cpp
+	${IMGUI_ROOT}/imgui_widgets.cpp
 	${IMGUI_ROOT}/imgui_draw.cpp
-	${IMGUIGLFW_ROOT}/imgui_impl_glfw_gl3.cpp
+	${IMGUIGLFW_ROOT}/imgui_impl_opengl3.cpp
+	${IMGUIGLFW_ROOT}/imgui_impl_glfw.cpp
 )
 
 set(TINYOBJLOADER_ROOT "ext/tinyobjloader")
@@ -98,7 +100,7 @@ REC_SOURCE(${CMAKE_SOURCE_DIR}/src)
 
 AUX_SOURCE_DIRECTORY(exe/ EXECUTABLES)
 
-list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Wall ${CMAKE_CXX_FLAGS}")
+list(APPEND CMAKE_CXX_FLAGS "-std=c++17 -fopenmp -Wall -Wfatal-errors ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
