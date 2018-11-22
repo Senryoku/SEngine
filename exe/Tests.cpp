@@ -290,8 +290,58 @@ public:
 		bool load_scene = false;
 		bool load_model = false;
 		
+		constexpr float statusbar_height = 20.0f;
+		
 		auto winpos = ImGui::GetMainViewport()->Pos;
 		glm::vec2 glmwinpos{winpos.x, winpos.y};
+		
+		// Setup main docking space
+		{
+			static bool opt_fullscreen_persistant = true;
+			static ImGuiDockNodeFlags opt_flags = ImGuiDockNodeFlags_PassthruDockspace | ImGuiDockNodeFlags_NoDockingInCentralNode;
+			bool opt_fullscreen = opt_fullscreen_persistant;
+
+			// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+			// because it would be confusing to have two docking targets within each others.
+			ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+			if (opt_fullscreen)
+			{
+				ImGuiViewport* viewport = ImGui::GetMainViewport();
+				auto size = viewport->Size;
+				size.y -= statusbar_height;
+				ImGui::SetNextWindowPos(viewport->Pos);
+				ImGui::SetNextWindowSize(size);
+				ImGui::SetNextWindowViewport(viewport->ID);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+				window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+				window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+			}
+
+			// When using ImGuiDockNodeFlags_PassthruDockspace, DockSpace() will render our background and handle the pass-thru hole, so we ask Begin() to not render a background.
+			if (opt_flags & ImGuiDockNodeFlags_PassthruDockspace)
+				window_flags |= ImGuiWindowFlags_NoBackground;
+
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+			bool open = true;
+			ImGui::Begin("DockSpace", &open, window_flags);
+			ImGui::PopStyleVar();
+
+			if (opt_fullscreen)
+				ImGui::PopStyleVar(2);
+
+			ImGui::DockSpace(ImGui::GetID("Dockspace"), ImVec2(0.0f, 0.0f), opt_flags);
+			ImGui::End();
+		}
+		
+		/*
+		ImGui::Begin("Render");
+		ImVec2 win_size = ImGui::GetWindowContentRegionMax();
+		win_size.x -= ImGui::GetWindowContentRegionMin().x;
+		win_size.y -= ImGui::GetWindowContentRegionMin().y;
+		ImGui::Image(reinterpret_cast<ImTextureID>(_postProcessBuffer.getColor(0).getName()), win_size);
+		ImGui::End();
+		*/
 		
 		// Menu
 		if(ImGui::BeginMainMenuBar())
@@ -349,8 +399,8 @@ public:
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0, 2.5));
-			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, 20.0f), ImGuiCond_Always);
-			ImGui::SetNextWindowPos(ImVec2(winpos.x, winpos.y + ImGui::GetIO().DisplaySize.y - 20.f), ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x, statusbar_height), ImGuiCond_Always);
+			ImGui::SetNextWindowPos(ImVec2(winpos.x, winpos.y + ImGui::GetIO().DisplaySize.y - statusbar_height), ImGuiCond_Always);
 			ImGui::Begin("statusbar", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus);
 			ImGui::Text("FPS: %f", ImGui::GetIO().Framerate);
 			ImGui::SameLine(125, 0);
@@ -390,6 +440,9 @@ public:
 				ImGui::Begin("SelectedObject", nullptr,
 					ImGuiWindowFlags_NoDecoration|ImGuiWindowFlags_NoNav|ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoSavedSettings|ImGuiWindowFlags_NoInputs);
 				
+				
+				//ImGui::DockSpace(ImGui::GetID("Dockspace"), ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruDockspace);
+		
 				ImGuiContext* g = ImGui::GetCurrentContext();
 				ImGuiWindow* window = ImGui::GetCurrentWindow();
 				const auto abs_mouse = glm::vec2{ImGui::GetMousePos()};
