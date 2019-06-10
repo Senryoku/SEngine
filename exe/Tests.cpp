@@ -463,7 +463,7 @@ public:
 					mr.getMesh().draw();
 					
 					blend.setUniform("Color", glm::vec4(1.0, 1.0, 1.0, 0.1));
-					mr.draw_aabb();
+					mr.draw_bounding_box();
 					
 					Program::useNone();
 					Context::disable(Capability::Blend);

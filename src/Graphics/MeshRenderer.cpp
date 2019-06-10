@@ -118,16 +118,16 @@ void MeshRenderer::update_aabb_vertices()
 	};
 	for(int i = 0; i < 12 * 3; ++i)
 		_aabb_vertices[i] = aabb[indexes[i]];
-	_aabb_vertices_buffer.data(&_aabb_vertices[0], sizeof(GLfloat) * _aabb_vertices.size(), Buffer::Usage::DynamicDraw);
+	_aabb_vertices_buffer.data(&_aabb_vertices[0], 3 * sizeof(GLfloat) * _aabb_vertices.size(), Buffer::Usage::DynamicDraw);
 }
 
-void MeshRenderer::draw_aabb() const
+void MeshRenderer::draw_bounding_box() const
 {
 	_aabb_vertices_buffer.bind();
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	setUniform("ModelMatrix", getTransformation().getGlobalMatrix());
-	glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+	glDrawArrays(GL_TRIANGLES, 0, 12 * 3 * 3);
 }
 
 void MeshRenderer::occlusion_query()
@@ -137,7 +137,7 @@ void MeshRenderer::occlusion_query()
 	glDepthMask(GL_FALSE);
 	Context::disable(Capability::CullFace);
 	_occlusion_query.begin(Query::Target::AnySamplesPassed);
-	draw_aabb();
+	draw_bounding_box();
 	_occlusion_query.end();
 	Context::enable(Capability::CullFace);
 	glDepthMask(GL_TRUE);

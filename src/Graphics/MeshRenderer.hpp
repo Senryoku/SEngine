@@ -20,7 +20,7 @@ public:
 	void occlusion_query();
 	inline void draw() const;
 	inline void draw_occlusion_culled() const;
-	void draw_aabb() const;
+	void draw_bounding_box() const;
 
 	inline Material& getMaterial()             { return _material; }
 	inline const Material& getMaterial() const { return _material; }
